@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION min 3.11) # FetchContent is new in version 3.11.
+cmake_minimum_required(VERSION 3.11) # FetchContent is new in version 3.11.
 project(DH2323Project)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -18,4 +18,4 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(glm)
 
-target_link_libraries(main PRIVATE glm::glm)
+target_link_libraries(DH2323Project PRIVATE glm::glm)
