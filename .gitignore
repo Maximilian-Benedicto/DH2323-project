@@ -1,5 +1,7 @@
 # Folders
 build/
+lib/
+.vscode/
 
 # Prerequisites
 *.d
@@ -43,5 +45,4 @@ build/
 # debug information files
 *.dwo
 
-# VS Code
-.vscode/
+
