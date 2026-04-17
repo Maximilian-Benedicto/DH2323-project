@@ -5,7 +5,7 @@
 
 #define SDL_MAIN_HANDLED // circumvent failure of SDL_Init() when not using SDL_main() as an entry point.
 
-#include <SDL.h>
+#include <SDL3/SDL.h>
 #include <glm/glm.hpp>
 
 class Window
@@ -13,6 +13,7 @@ class Window
 private:
     int width;
     int height;
+    int scale;
     bool fullscreen;
 
     SDL_Renderer *sdl_renderer = NULL;
@@ -23,7 +24,7 @@ private:
 
 public:
     ~Window();
-    Window(int width, int height, bool fullscreen = false);
+    Window(int width, int height, int scale = 1, bool fullscreen = false);
     void clearPixels();
     void putPixel(int x, int y, glm::vec3 color);
     void render();

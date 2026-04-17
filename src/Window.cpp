@@ -1,5 +1,5 @@
-// from https://github.com/lemonad/DH2323-Skeleton
-#include <SDL.h>
+// from https://github.com/lemonad/DH2323-Skeleton (rewritten for SDL3)
+#include <SDL3/SDL.h>
 #include <iostream>
 #include <glm/glm.hpp>
 #include "Window.h"
@@ -15,10 +15,11 @@ using namespace std;
  * In this case, width and height is only used for the
  * size of the pixel buffer.
  */
-Window::Window(int width, int height, bool fullscreen)
+Window::Window(int width, int height, int scale, bool fullscreen)
 {
     this->width = width;
     this->height = height;
+    this->scale = scale;
     this->fullscreen = fullscreen;
 
     if (!initializeSDL() ||
@@ -53,7 +54,7 @@ Window::~Window()
  */
 bool Window::initializeSDL()
 {
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) < 0)
+    if (SDL_Init(SDL_INIT_VIDEO) < 0)
     {
         cout << "Could not initialize SDL: " << SDL_GetError() << endl;
         return false;
@@ -69,22 +70,21 @@ bool Window::initializeSDL()
  */
 bool Window::createWindow()
 {
-    int flags = SDL_WINDOW_ALLOW_HIGHDPI;
-    if (fullscreen)
-    {
-        flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
-    }
+    SDL_WindowFlags flags = SDL_WINDOW_HIGH_PIXEL_DENSITY;
 
     sdl_window = SDL_CreateWindow("SDL",
-                                  SDL_WINDOWPOS_UNDEFINED,
-                                  SDL_WINDOWPOS_UNDEFINED,
-                                  width,
-                                  height,
+                                  width * scale,
+                                  height * scale,
                                   flags);
     if (sdl_window == NULL)
     {
         cout << "Could not create SDL window: " << SDL_GetError() << endl;
         return false;
+    }
+
+    if (fullscreen)
+    {
+        SDL_SetWindowFullscreen(sdl_window, true);
     }
 
     return true;
@@ -98,20 +98,19 @@ bool Window::createWindow()
  */
 bool Window::createRenderer()
 {
-    // Just pick any renderer available (providing no flags gives
+    // Just pick any renderer available (providing NULL name gives
     // priority to available hardware accelerated renderers.)
-    sdl_renderer = SDL_CreateRenderer(sdl_window,
-                                      -1,
-                                      SDL_RENDERER_PRESENTVSYNC);
+    sdl_renderer = SDL_CreateRenderer(sdl_window, NULL);
     if (sdl_renderer == NULL)
     {
         cout << "Could not create SDL renderer: " << SDL_GetError() << endl;
         return false;
     }
 
+    SDL_SetRenderVSync(sdl_renderer, 1);
+
     // Make the scaled rendering look smoother.
-    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
-    SDL_RenderSetLogicalSize(sdl_renderer, width, height);
+    SDL_SetRenderLogicalPresentation(sdl_renderer, width, height, SDL_LOGICAL_PRESENTATION_LETTERBOX);
     return true;
 }
 
@@ -137,6 +136,8 @@ bool Window::createTexture()
         cout << "Could not create SDL texture: " << SDL_GetError() << endl;
         return false;
     }
+
+    SDL_SetTextureScaleMode(sdl_texture, SDL_SCALEMODE_LINEAR);
 
     return true;
 }
@@ -210,7 +211,7 @@ void Window::render()
                       width * sizeof(Uint32));
 
     SDL_RenderClear(sdl_renderer);
-    SDL_RenderCopy(sdl_renderer, sdl_texture, NULL, NULL);
+    SDL_RenderTexture(sdl_renderer, sdl_texture, NULL, NULL);
     SDL_RenderPresent(sdl_renderer);
 }
 
@@ -222,12 +223,11 @@ void Window::render()
 bool Window::saveBMP(const char *filename)
 {
     // TODO big endian support?
-    SDL_Surface *surface = SDL_CreateRGBSurfaceFrom(pixel_buffer,
-                                                    width,
-                                                    height,
-                                                    32,
-                                                    width * 4,
-                                                    0, 0, 0, 0);
+    SDL_Surface *surface = SDL_CreateSurfaceFrom(width,
+                                                 height,
+                                                 SDL_PIXELFORMAT_ARGB8888,
+                                                 pixel_buffer,
+                                                 width * 4);
     if (surface == NULL)
     {
         cout << "Could not create SDL surface for bitmap: "
@@ -236,7 +236,7 @@ bool Window::saveBMP(const char *filename)
     }
 
     SDL_SaveBMP(surface, filename);
-    SDL_FreeSurface(surface);
+    SDL_DestroySurface(surface);
     return true;
 }
 
@@ -252,14 +252,14 @@ bool Window::quitEvent()
 
     while (SDL_PollEvent(&event))
     {
-        if (event.type == SDL_QUIT)
+        if (event.type == SDL_EVENT_QUIT)
         {
             return true;
         }
 
-        if (event.type == SDL_KEYDOWN)
+        if (event.type == SDL_EVENT_KEY_DOWN)
         {
-            if (event.key.keysym.sym == SDLK_ESCAPE)
+            if (event.key.key == SDLK_ESCAPE)
             {
                 return true;
             }
