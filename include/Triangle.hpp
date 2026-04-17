@@ -28,6 +28,4 @@ public:
     }
 };
 
-void Load(std::vector<Triangle> &triangles);
-
 #endif

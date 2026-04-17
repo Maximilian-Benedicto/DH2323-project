@@ -2,7 +2,7 @@
 #include <SDL3/SDL.h>
 #include <iostream>
 #include <glm/glm.hpp>
-#include "Window.h"
+#include "Window.hpp"
 
 using namespace std;
 
@@ -70,7 +70,7 @@ bool Window::initializeSDL()
  */
 bool Window::createWindow()
 {
-    SDL_WindowFlags flags = SDL_WINDOW_HIGH_PIXEL_DENSITY;
+    SDL_WindowFlags flags = (SDL_WindowFlags)(SDL_WINDOW_HIGH_PIXEL_DENSITY | SDL_WINDOW_RESIZABLE);
 
     sdl_window = SDL_CreateWindow("SDL",
                                   width * scale,
@@ -275,4 +275,37 @@ bool Window::quitEvent()
 void Window::setWindowTitle(const char *title)
 {
     SDL_SetWindowTitle(sdl_window, title);
+}
+
+/*
+ * Updates the logical render resolution
+ */
+void Window::setRenderResolution(int newWidth, int newHeight)
+{
+    this->width = newWidth;
+    this->height = newHeight;
+
+    if (sdl_texture != NULL)
+    {
+        SDL_DestroyTexture(sdl_texture);
+        sdl_texture = NULL;
+    }
+    if (pixel_buffer != NULL)
+    {
+        free(pixel_buffer);
+        pixel_buffer = NULL;
+    }
+
+    SDL_SetRenderLogicalPresentation(sdl_renderer, width, height, SDL_LOGICAL_PRESENTATION_LETTERBOX);
+    createTexture();
+    createPixelBuffer();
+}
+
+/*
+ * Gets the current logical render resolution
+ */
+void Window::getRenderResolution(int &outWidth, int &outHeight)
+{
+    outWidth = width;
+    outHeight = height;
 }
