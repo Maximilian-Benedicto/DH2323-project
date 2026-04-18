@@ -5,6 +5,9 @@
 #include <vector>
 #include "Triangle.hpp"
 
+/**
+ * @brief A class that can load the Cornell Box as a list of triangles.
+ */
 class CornellBox
 {
 public:

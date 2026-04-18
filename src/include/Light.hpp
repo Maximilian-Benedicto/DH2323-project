@@ -3,7 +3,9 @@
 
 #include "glm/glm.hpp"
 
-// Isotropic omni-light
+/**
+ * @brief Simple class representing a point light source in the scene.
+ */
 class Light
 {
 public:

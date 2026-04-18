@@ -2,12 +2,12 @@
 #include <cmath>
 #include <glm/glm.hpp>
 #include <algorithm>
-#include "Window.hpp"
-#include "Triangle.hpp"
-#include "Camera.hpp"
-#include "Light.hpp"
-#include "CornellBox.hpp"
-#include "StanfordBunny.hpp"
+#include "include/Window.hpp"
+#include "include/Triangle.hpp"
+#include "include/Camera.hpp"
+#include "include/Light.hpp"
+#include "include/CornellBox.hpp"
+#include "include/StanfordBunny.hpp"
 #include "Lambertian.cpp"
 #include "Dipole.cpp"
 

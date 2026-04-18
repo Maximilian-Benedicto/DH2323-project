@@ -4,6 +4,9 @@
 #include "Triangle.hpp"
 #include "happly.h"
 
+/**
+ * @brief A class that can load the Stanford Bunny as a list of triangles.
+ */
 class StanfordBunny
 {
 public:

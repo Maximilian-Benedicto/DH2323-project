@@ -11,8 +11,6 @@ class Window;
 
 /**
  * @brief Abstract interface for a Ray Tracing engine.
- * Ensures any implementation (Whitted, Path Tracing, etc.)
- * adheres to the same input/output contract.
  */
 class IRayTracer
 {

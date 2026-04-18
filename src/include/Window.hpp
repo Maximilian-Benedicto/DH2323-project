@@ -8,6 +8,9 @@
 #include <SDL3/SDL.h>
 #include <glm/glm.hpp>
 
+/**
+ * @brief A simple wrapper around SDL that provides a pixel buffer and rendering functionality for the ray tracer.
+ */
 class Window
 {
 private:

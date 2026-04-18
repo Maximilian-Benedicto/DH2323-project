@@ -1,9 +1,9 @@
 
-#include "IRayTracer.hpp"
-#include "Camera.hpp"
-#include "Light.hpp"
-#include "Triangle.hpp"
-#include "Window.hpp"
+#include "include/IRayTracer.hpp"
+#include "include/Camera.hpp"
+#include "include/Light.hpp"
+#include "include/Triangle.hpp"
+#include "include/Window.hpp"
 
 using namespace glm;
 using namespace std;

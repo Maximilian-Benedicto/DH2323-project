@@ -3,6 +3,9 @@
 
 #include <glm/glm.hpp>
 
+/**
+ * @brief simple camera class that holds the position and orientation of the camera in 3D space.
+ */
 class Camera
 {
 public:

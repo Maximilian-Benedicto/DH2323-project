@@ -4,7 +4,9 @@
 #include <glm/glm.hpp>
 #include <vector>
 
-// Used to describe a triangular surface:
+/**
+ * @brief Simple class representing a triangle in 3D space, defined by its three vertices, normal vector, and color.
+ */
 class Triangle
 {
 public:
