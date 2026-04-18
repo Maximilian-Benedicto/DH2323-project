@@ -102,16 +102,33 @@ private:
         return D;
     }
 
+    mat3 RotationMatrix(const float pitch, const float roll, const float yaw)
+    {
+        mat3 Rx = mat3{
+            1.0f, 0.0f, 0.0f,
+            0.0f, (float)cos(pitch), (float)-sin(pitch),
+            0.0f, (float)sin(pitch), (float)cos(pitch)};
+
+        mat3 Ry = mat3{
+            (float)cos(yaw), 0.0f, (float)sin(yaw),
+            0.0f, 1.0f, 0.0f,
+            (float)-sin(yaw), 0.0f, (float)cos(yaw)};
+
+        mat3 Rz = mat3{
+            (float)cos(roll), (float)-sin(roll), 0.0f,
+            (float)sin(roll), (float)cos(roll), 0.0f,
+            0.0f, 0.0f, 1.0f};
+
+        return Ry * Rz * Rx;
+    }
+
 public:
     void render(const vector<Triangle> &triangles, const Light &light, const Camera &camera, Window &window) override
     {
         int renderWidth, renderHeight;
         window.getRenderResolution(renderWidth, renderHeight);
 
-        mat3 R = mat3{
-            (float)cos(camera.yaw), 0.0f, (float)sin(camera.yaw),
-            0.0f, 1.0f, 0.0f,
-            (float)-sin(camera.yaw), 0.0f, (float)cos(camera.yaw)};
+        mat3 R = RotationMatrix(camera.pitch, camera.roll, camera.yaw);
 
         // Loop through window pixels
         for (int y = 0; y < renderHeight; ++y)
@@ -123,7 +140,6 @@ public:
                 vec3 dir((float)x - renderWidth / 2.0f, (float)y - renderHeight / 2.0f, camera.focalLength);
 
                 // Apply rotation matrix
-                start = start * R;
                 dir = dir * R;
 
                 // Find closest ray intersection

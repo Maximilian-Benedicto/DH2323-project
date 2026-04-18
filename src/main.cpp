@@ -74,33 +74,47 @@ void Update(void)
     // Get keystrokes
     const Uint8 *keystate = (const Uint8 *)SDL_GetKeyboardState(NULL);
 
-    // Camera controls
-    if (keystate[SDL_SCANCODE_UP])
-        camera.position.z += cameraSpeed; // CAMERA MOVE FORWARD
-    if (keystate[SDL_SCANCODE_DOWN])
-        camera.position.z -= cameraSpeed; // CAMERA MOVE BACK
+    // Camera movement
+    if (keystate[SDL_SCANCODE_W])
+        camera.position.z += cameraSpeed; // FORWARD
+    if (keystate[SDL_SCANCODE_S])
+        camera.position.z -= cameraSpeed; // BACKWARD
+    if (keystate[SDL_SCANCODE_A])
+        camera.position.x -= cameraSpeed; // LEFT
+    if (keystate[SDL_SCANCODE_D])
+        camera.position.x += cameraSpeed; // RIGHT
     if (keystate[SDL_SCANCODE_SPACE])
-        camera.position.y -= cameraSpeed; // CAMERA MOVE UP
+        camera.position.y += cameraSpeed; // UP
     if (keystate[SDL_SCANCODE_LSHIFT])
-        camera.position.y += cameraSpeed; // CAMERA MOVE DOWN
+        camera.position.y -= cameraSpeed; // DOWN
+
+    // Camera rotation
+    if (keystate[SDL_SCANCODE_UP])
+        camera.pitch += rotationSpeed; // LOOK UP
+    if (keystate[SDL_SCANCODE_DOWN])
+        camera.pitch -= rotationSpeed; // LOOK DOWN
     if (keystate[SDL_SCANCODE_LEFT])
-        camera.yaw += rotationSpeed; // CAMERA ROTATE LEFT
+        camera.yaw -= rotationSpeed; // TURN LEFT
     if (keystate[SDL_SCANCODE_RIGHT])
-        camera.yaw -= rotationSpeed; // CAMERA ROTATE RIGHT
+        camera.yaw += rotationSpeed; // TURN RIGHT
+    if (keystate[SDL_SCANCODE_Q])
+        camera.roll -= rotationSpeed; // ROLL LEFT
+    if (keystate[SDL_SCANCODE_E])
+        camera.roll += rotationSpeed; // ROLL RIGHT
 
     // Light controls
-    if (keystate[SDL_SCANCODE_A])
-        light.position.x -= lightSpeed; // LIGHT MOVE LEFT
-    if (keystate[SDL_SCANCODE_D])
-        light.position.x += lightSpeed; // LIGHT MOVE RIGHT
-    if (keystate[SDL_SCANCODE_Q])
-        light.position.y += lightSpeed; // LIGHT MOVE UP
-    if (keystate[SDL_SCANCODE_E])
-        light.position.y -= lightSpeed; // LIGHT MOVE DOWN
-    if (keystate[SDL_SCANCODE_W])
-        light.position.z += lightSpeed; // LIGHT MOVE FORWARD
-    if (keystate[SDL_SCANCODE_S])
-        light.position.z -= lightSpeed; // LIGHT MOVE BACK
+    if (keystate[SDL_SCANCODE_J])
+        light.position.x -= lightSpeed; // LEFT
+    if (keystate[SDL_SCANCODE_L])
+        light.position.x += lightSpeed; // RIGHT
+    if (keystate[SDL_SCANCODE_U])
+        light.position.y += lightSpeed; // UP
+    if (keystate[SDL_SCANCODE_O])
+        light.position.y -= lightSpeed; // DOWN
+    if (keystate[SDL_SCANCODE_I])
+        light.position.z += lightSpeed; // FORWARD
+    if (keystate[SDL_SCANCODE_K])
+        light.position.z -= lightSpeed; // BACKWARD
 
     // Resolution controls (changes size of the pixel buffer with + and - keys)
     static int lastResChangeTime = 0;
