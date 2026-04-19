@@ -70,7 +70,7 @@ int main(int argc, char *argv[])
 
     cornellBox = new CornellBox();
     stanfordBunny = new StanfordBunny();
-    stanfordBunny->resolution = StanfordBunny::Resolution::FULL;
+    stanfordBunny->resolution = StanfordBunny::Resolution::LOW;
     cornellBox->Load();
     stanfordBunny->Load();
     activeModel = cornellBox;
@@ -90,7 +90,8 @@ int main(int argc, char *argv[])
 
     StopRenderThread();
 
-    window->saveBMP("screenshot.bmp");
+    const string filename = "screenshot_" + to_string(time(nullptr)) + ".bmp";
+    window->saveBMP(filename.c_str());
 
     delete lambertian;
     delete dipole;

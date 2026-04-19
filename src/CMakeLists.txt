@@ -44,3 +44,13 @@ FetchContent_MakeAvailable(happly )
 target_include_directories(DH2323Project PRIVATE ${happly_SOURCE_DIR})
 
 target_link_libraries(DH2323Project PRIVATE glm::glm SDL3::SDL3)
+
+if(WIN32)
+	# Ensure SDL3.dll and other runtime DLL dependencies are placed beside the executable.
+	add_custom_command(TARGET DH2323Project POST_BUILD
+		COMMAND ${CMAKE_COMMAND} -E copy_if_different
+			$<TARGET_RUNTIME_DLLS:DH2323Project>
+			$<TARGET_FILE_DIR:DH2323Project>
+		COMMAND_EXPAND_LISTS
+	)
+endif()
