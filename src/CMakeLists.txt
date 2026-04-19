@@ -9,10 +9,10 @@ add_executable(DH2323Project
     Window.cpp 
     LambertianShader.cpp 
     DipoleShader.cpp 
-    WireframeShader.cpp 
-    
+    WireframeShader.cpp
+    StanfordBunny.cpp
+    CornellBox.cpp
 )
-target_include_directories(DH2323Project PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../include)
 
 include(FetchContent)
 
@@ -32,5 +32,15 @@ FetchContent_Declare(
 )
 
 FetchContent_MakeAvailable(SDL3)
+
+FetchContent_Declare(
+	happly
+	GIT_REPOSITORY	https://github.com/nmwsharp/happly
+	GIT_TAG 	master
+)
+
+FetchContent_MakeAvailable(happly )
+
+target_include_directories(DH2323Project PRIVATE ${happly_SOURCE_DIR})
 
 target_link_libraries(DH2323Project PRIVATE glm::glm SDL3::SDL3)

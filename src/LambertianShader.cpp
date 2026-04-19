@@ -1,8 +1,10 @@
-#include "include/LambertianShader.hpp"
-#include "include/Camera.hpp"
-#include "include/Light.hpp"
-#include "include/Triangle.hpp"
+#include "LambertianShader.hpp"
+#include "Camera.hpp"
+#include "Light.hpp"
+#include "Triangle.hpp"
 #include <iostream>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/rotate_vector.hpp>
 
 using namespace glm;
 using namespace std;
@@ -65,29 +67,15 @@ vec3 LambertianShader::DirectLight(const Intersection &i, const vector<Triangle>
     return D;
 }
 
-mat3 LambertianShader::RotationMatrix(float pitch, float roll, float yaw)
-{
-    mat3 Rx = mat3{
-        1.0f, 0.0f, 0.0f,
-        0.0f, cos(pitch), -sin(pitch),
-        0.0f, sin(pitch), cos(pitch)};
-
-    mat3 Ry = mat3{
-        cos(yaw), 0.0f, sin(yaw),
-        0.0f, 1.0f, 0.0f,
-        -sin(yaw), 0.0f, cos(yaw)};
-
-    mat3 Rz = mat3{
-        cos(roll), -sin(roll), 0.0f,
-        sin(roll), cos(roll), 0.0f,
-        0.0f, 0.0f, 1.0f};
-
-    return Ry * Rz * Rx;
-}
-
 void LambertianShader::render(Uint32 *pixelBuffer, int width, int height, const std::vector<Triangle> &triangles, const Light &light, const Camera &camera, std::atomic<bool> &killFlag)
 {
-    mat3 R = RotationMatrix(camera.pitch, camera.roll, camera.yaw);
+    vec3 right = normalize(cross(vec3(0.0f, 1.0f, 0.0f), camera.direction));
+    vec3 up = normalize(cross(camera.direction, right));
+
+    // Apply roll rotation about camera direction
+    up = glm::rotate(up, camera.roll, camera.direction);
+    right = glm::rotate(right, camera.roll, camera.direction);
+
     vec3 start = camera.position;
 
     for (int y = 0; y < height; ++y)
@@ -96,8 +84,10 @@ void LambertianShader::render(Uint32 *pixelBuffer, int width, int height, const 
         {
             if (killFlag)
                 return;
-            vec3 dir((float)x - width / 2.0f, (float)y - height / 2.0f, camera.focalLength);
-            dir = dir * R;
+
+            float dx = (float)x - width / 2.0f;
+            float dy = (float)y - height / 2.0f;
+            vec3 dir = normalize(camera.direction * camera.focalLength + right * dx + up * dy);
 
             Intersection closestIntersection;
             bool found = ClosestIntersection(start, dir, triangles, closestIntersection);

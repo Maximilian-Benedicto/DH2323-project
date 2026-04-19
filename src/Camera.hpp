@@ -1,0 +1,20 @@
+#ifndef CAMERA_H
+#define CAMERA_H
+
+#include <glm/glm.hpp>
+
+/**
+ * @brief simple camera class that holds the position and orientation of the camera in 3D space.
+ */
+class Camera
+{
+public:
+    glm::vec3 position;
+    glm::vec3 direction;
+    float focalLength;
+    float roll;
+
+    Camera(glm::vec3 position, glm::vec3 direction, float focalLength) : position(position), direction(glm::normalize(direction)), focalLength(focalLength), roll(0) {}
+};
+
+#endif

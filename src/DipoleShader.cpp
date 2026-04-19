@@ -1,7 +1,7 @@
-#include "include/DipoleShader.hpp"
-#include "include/Camera.hpp"
-#include "include/Light.hpp"
-#include "include/Triangle.hpp"
+#include "DipoleShader.hpp"
+#include "Camera.hpp"
+#include "Light.hpp"
+#include "Triangle.hpp"
 #include <iostream>
 
 using namespace glm;

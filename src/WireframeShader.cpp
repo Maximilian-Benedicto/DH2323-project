@@ -1,34 +1,17 @@
-#include "include/WireframeShader.hpp"
-#include "include/Camera.hpp"
-#include "include/Light.hpp"
-#include "include/Triangle.hpp"
+#include "WireframeShader.hpp"
+#include "Camera.hpp"
+#include "Light.hpp"
+#include "Triangle.hpp"
 #include <iostream>
 #include <algorithm>
+#include <glm/gtc/matrix_transform.hpp>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/rotate_vector.hpp>
 
 using namespace glm;
 using namespace std;
 
 WireframeShader::WireframeShader() {}
-
-mat3 WireframeShader::RotationMatrix(float pitch, float roll, float yaw)
-{
-    mat3 Rx = mat3{
-        1.0f, 0.0f, 0.0f,
-        0.0f, cos(pitch), -sin(pitch),
-        0.0f, sin(pitch), cos(pitch)};
-
-    mat3 Ry = mat3{
-        cos(yaw), 0.0f, sin(yaw),
-        0.0f, 1.0f, 0.0f,
-        -sin(yaw), 0.0f, cos(yaw)};
-
-    mat3 Rz = mat3{
-        cos(roll), -sin(roll), 0.0f,
-        sin(roll), cos(roll), 0.0f,
-        0.0f, 0.0f, 1.0f};
-
-    return Ry * Rz * Rx;
-}
 
 void WireframeShader::DrawLine(Uint32 *pixelBuffer, int width, int height, int x0, int y0, int x1, int y1, Uint32 color)
 {
@@ -68,8 +51,11 @@ void WireframeShader::render(Uint32 *pixelBuffer, int width, int height, const s
         pixelBuffer[i] = 0xFF000000;
     }
 
-    mat3 R = RotationMatrix(camera.pitch, camera.roll, camera.yaw);
-    mat3 RT = transpose(R); // Inverse rotation to move points into camera space
+    vec3 right = normalize(cross(vec3(0.0f, 1.0f, 0.0f), camera.direction));
+    vec3 up = normalize(cross(camera.direction, right));
+    up = glm::rotate(up, camera.roll, camera.direction);
+
+    mat4 viewMatrix = glm::lookAt(camera.position, camera.position + camera.direction, up);
 
     for (size_t i = 0; i < triangles.size(); ++i)
     {
@@ -82,11 +68,12 @@ void WireframeShader::render(Uint32 *pixelBuffer, int width, int height, const s
 
         for (int j = 0; j < 3; ++j)
         {
-            // Translate to camera center and rotate
-            vec3 vCam = RT * (v[j] - camera.position);
+            // Translate to camera space
+            vec4 vCam4 = viewMatrix * vec4(v[j], 1.0f);
+            vec3 vCam = vec3(vCam4);
 
-            // Only draw if in front of camera
-            if (vCam.z <= 0.1f)
+            // Only draw if in front of camera (in OpenGL / glm::lookAt, forward is -z)
+            if (vCam.z >= -0.1f)
             {
                 outOfBounds[j] = true;
                 continue;
@@ -94,7 +81,7 @@ void WireframeShader::render(Uint32 *pixelBuffer, int width, int height, const s
 
             // Project
             float px = vCam.x / vCam.z * camera.focalLength + width / 2.0f;
-            float py = vCam.y / vCam.z * camera.focalLength + height / 2.0f;
+            float py = -vCam.y / vCam.z * camera.focalLength + height / 2.0f;
             p[j][0] = (int)px;
             p[j][1] = (int)py;
         }
@@ -106,5 +93,36 @@ void WireframeShader::render(Uint32 *pixelBuffer, int width, int height, const s
             DrawLine(pixelBuffer, width, height, p[1][0], p[1][1], p[2][0], p[2][1], 0xFF00FF00);
         if (!outOfBounds[2] && !outOfBounds[0])
             DrawLine(pixelBuffer, width, height, p[2][0], p[2][1], p[0][0], p[0][1], 0xFF00FF00);
+    }
+
+    // Render the light source as a 6-point star aligned with x, y, z axes
+    if (!killFlag)
+    {
+        float size = 0.1f; // Length of the star arms in world space
+        vec3 pts[6] = {
+            light.position + vec3(size, 0.0f, 0.0f), light.position - vec3(size, 0.0f, 0.0f),
+            light.position + vec3(0.0f, size, 0.0f), light.position - vec3(0.0f, size, 0.0f),
+            light.position + vec3(0.0f, 0.0f, size), light.position - vec3(0.0f, 0.0f, size)};
+
+        Uint32 lightColor = 0xFFFFFF00; // Yellow
+
+        for (int i = 0; i < 3; ++i)
+        {
+            vec4 p1Cam4 = viewMatrix * vec4(pts[i * 2], 1.0f);
+            vec3 p1Cam = vec3(p1Cam4);
+            vec4 p2Cam4 = viewMatrix * vec4(pts[i * 2 + 1], 1.0f);
+            vec3 p2Cam = vec3(p2Cam4);
+
+            // Only draw if both points of the line are in front of the camera
+            if (p1Cam.z < -0.1f && p2Cam.z < -0.1f)
+            {
+                float px1 = p1Cam.x / p1Cam.z * camera.focalLength + width / 2.0f;
+                float py1 = -p1Cam.y / p1Cam.z * camera.focalLength + height / 2.0f;
+                float px2 = p2Cam.x / p2Cam.z * camera.focalLength + width / 2.0f;
+                float py2 = -p2Cam.y / p2Cam.z * camera.focalLength + height / 2.0f;
+
+                DrawLine(pixelBuffer, width, height, (int)px1, (int)py1, (int)px2, (int)py2, lightColor);
+            }
+        }
     }
 }

@@ -2,7 +2,7 @@
 #include <SDL3/SDL.h>
 #include <iostream>
 #include <glm/glm.hpp>
-#include "include/Window.hpp"
+#include "Window.hpp"
 
 using namespace std;
 
