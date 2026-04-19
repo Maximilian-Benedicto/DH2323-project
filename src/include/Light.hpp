@@ -4,7 +4,7 @@
 #include "glm/glm.hpp"
 
 /**
- * @brief Simple class representing a point light source in the scene.
+ * @brief class representing a point light source in the scene.
  */
 class Light
 {

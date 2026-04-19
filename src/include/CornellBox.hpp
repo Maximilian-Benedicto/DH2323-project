@@ -7,6 +7,7 @@
 
 /**
  * @brief A class that can load the Cornell Box as a list of triangles.
+ * Provided by DH2323 course
  */
 class CornellBox
 {

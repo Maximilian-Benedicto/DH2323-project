@@ -5,7 +5,7 @@
 #include "happly.h"
 
 /**
- * @brief A class that can load the Stanford Bunny as a list of triangles.
+ * @brief class that can load the Stanford Bunny as a list of triangles.
  */
 class StanfordBunny
 {

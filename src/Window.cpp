@@ -1,4 +1,4 @@
-// from https://github.com/lemonad/DH2323-Skeleton (rewritten for SDL3)
+// from https://github.com/lemonad/DH2323-Skeleton (heavily modified)
 #include <SDL3/SDL.h>
 #include <iostream>
 #include <glm/glm.hpp>

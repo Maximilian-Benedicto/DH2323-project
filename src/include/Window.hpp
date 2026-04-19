@@ -1,7 +1,7 @@
 #ifndef WINDOW_H
 #define WINDOW_H
 
-// from https://github.com/lemonad/DH2323-Skeleton (Heavily modified)
+// from https://github.com/lemonad/DH2323-Skeleton (heavily modified)
 
 #define SDL_MAIN_HANDLED // circumvent failure of SDL_Init() when not using SDL_main() as an entry point.
 
@@ -36,6 +36,7 @@ public:
     void setWindowTitle(const char *title);
     void setRenderResolution(int newWidth, int newHeight);
     void getRenderResolution(int &outWidth, int &outHeight);
+    Uint32 *getPixelBuffer() { return pixel_buffer; }
 
 private:
     bool initializeSDL();

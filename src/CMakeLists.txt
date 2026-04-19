@@ -4,7 +4,14 @@ project(DH2323Project)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall")
 
-add_executable(DH2323Project main.cpp Window.cpp Lambertian.cpp Dipole.cpp)
+add_executable(DH2323Project 
+    main.cpp 
+    Window.cpp 
+    LambertianShader.cpp 
+    DipoleShader.cpp 
+    WireframeShader.cpp 
+    
+)
 target_include_directories(DH2323Project PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../include)
 
 include(FetchContent)
