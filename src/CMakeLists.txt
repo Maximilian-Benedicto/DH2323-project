@@ -13,6 +13,7 @@ add_executable(DH2323Project
     CornellBox.cpp
     PlyModel.cpp
     ObjModel.cpp
+    Material.cpp
 )
 
 include(FetchContent)
