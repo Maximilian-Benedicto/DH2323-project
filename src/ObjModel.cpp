@@ -59,7 +59,7 @@ void ObjModel::Load()
             vec3 v2(attrib.vertices[3 * idx0.vertex_index + 0], attrib.vertices[3 * idx0.vertex_index + 1], attrib.vertices[3 * idx0.vertex_index + 2]);
 
             // Add the unrolled triangle to the vector
-            triangles.push_back(Triangle(v0, v1, v2, vec3(1.0f, 1.0f, 1.0f)));
+            triangles.push_back(Triangle(v0, v1, v2, vec3(1, 1, 1)));
             index_offset += fv;
         }
     }

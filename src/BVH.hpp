@@ -4,6 +4,7 @@
 #include <vector>
 #include <algorithm>
 #include <glm/glm.hpp>
+#include <limits>
 #include "Triangle.hpp"
 
 /**
@@ -12,10 +13,10 @@
 struct AABB
 {
     // Minimum corner of the box (initialized to a very large value so it can be grown)
-    glm::vec3 min = glm::vec3(1e30f);
+    glm::vec3 min = glm::vec3(std::numeric_limits<float>::infinity());
 
     // Maximum corner of the box (initialized to a very small value so it can be grown)
-    glm::vec3 max = glm::vec3(-1e30f);
+    glm::vec3 max = glm::vec3(-std::numeric_limits<float>::infinity());
 
     // Grow the AABB to include a point
     void grow(glm::vec3 p);
@@ -51,7 +52,6 @@ class BVH
 {
 public:
     std::vector<BVHNode> bvhNodes;
-    std::vector<Triangle> triangles;
     int rootNodeIdx = 0;
     int nodesUsed = 1;
 
@@ -68,13 +68,13 @@ private:
      * @brief Update the bounding box of a node based on the triangles it contains (for leaf nodes) or its children (for internal nodes).
      * @param nodeIdx The index of the node to update
      */
-    void updateNodeBounds(int nodeIdx);
+    void updateNodeBounds(int nodeIdx, std::vector<Triangle> &triangles);
 
     /**
      * @brief Recursively subdivide a node into two child nodes. This will reorder the triangle list to improve spatial locality.
      * @param nodeIdx The index of the node to subdivide
      */
-    void subdivide(int nodeIdx);
+    void subdivide(int nodeIdx, std::vector<Triangle> &triangles);
 };
 
 #endif

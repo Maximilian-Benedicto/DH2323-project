@@ -10,7 +10,7 @@ void AABB::grow(glm::vec3 p)
 
 void AABB::grow(const AABB &b)
 {
-    if (b.min.x != 1e30f)
+    if (b.min.x != std::numeric_limits<float>::infinity()) // Only grow if b is valid
     {
         grow(b.min);
         grow(b.max);
@@ -23,9 +23,13 @@ float AABB::area() const
     return e.x * e.y + e.y * e.z + e.z * e.x;
 }
 
-BVH::BVH(std::vector<Triangle> &inputTriangles)
+BVH::BVH(std::vector<Triangle> &triangles)
 {
-    this->triangles = inputTriangles;
+    if (triangles.empty())
+    {
+        nodesUsed = 0;
+        return;
+    }
 
     // Allocate worst-case node count: 2N - 1
     bvhNodes.resize(triangles.size() * 2 - 1);
@@ -35,15 +39,15 @@ BVH::BVH(std::vector<Triangle> &inputTriangles)
     root.leftFirst = 0;
     root.triCount = triangles.size();
 
-    updateNodeBounds(rootNodeIdx);
-    subdivide(rootNodeIdx);
+    updateNodeBounds(rootNodeIdx, triangles);
+    subdivide(rootNodeIdx, triangles);
 }
 
-void BVH::updateNodeBounds(int nodeIdx)
+void BVH::updateNodeBounds(int nodeIdx, std::vector<Triangle> &triangles)
 {
     BVHNode &node = bvhNodes[nodeIdx];
-    node.aabb.min = glm::vec3(1e30f);
-    node.aabb.max = glm::vec3(-1e30f);
+    node.aabb.min = glm::vec3(std::numeric_limits<float>::infinity());
+    node.aabb.max = glm::vec3(-std::numeric_limits<float>::infinity());
 
     // Loop over triangles in this node and grow the AABB to include them
     for (int i = 0; i < node.triCount; i++)
@@ -55,7 +59,7 @@ void BVH::updateNodeBounds(int nodeIdx)
     }
 }
 
-void BVH::subdivide(int nodeIdx)
+void BVH::subdivide(int nodeIdx, std::vector<Triangle> &triangles)
 {
     BVHNode &node = bvhNodes[nodeIdx];
 
@@ -114,9 +118,9 @@ void BVH::subdivide(int nodeIdx)
     node.triCount = 0;
 
     // Update bounds and recurse
-    updateNodeBounds(leftChildIdx);
-    updateNodeBounds(rightChildIdx);
+    updateNodeBounds(leftChildIdx, triangles);
+    updateNodeBounds(rightChildIdx, triangles);
 
-    subdivide(leftChildIdx);
-    subdivide(rightChildIdx);
+    subdivide(leftChildIdx, triangles);
+    subdivide(rightChildIdx, triangles);
 }

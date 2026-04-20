@@ -86,7 +86,7 @@ int main(int argc, char *argv[])
     // Load models
     cornellBox = new CornellBox();
     plyModel = new PlyModel("../model/bun_zipper.ply");
-    objModel = new ObjModel("../model/sponza.obj");
+    objModel = new ObjModel("../model/sponza/sponza.obj");
     cornellBox->Load();
     plyModel->Load();
     objModel->Load();
@@ -119,6 +119,14 @@ int main(int argc, char *argv[])
     // Save screenshot
     const string filename = "screenshot_" + to_string(time(nullptr)) + ".bmp";
     window->saveBMP(filename.c_str());
+
+    delete cornellBVH;
+    delete plyBVH;
+    delete objBVH;
+
+    delete cornellBox;
+    delete plyModel;
+    delete objModel;
 
     delete lambertian;
     delete dipole;
@@ -302,18 +310,21 @@ void Update(void)
         if (keystate[SDL_SCANCODE_4])
         {
             activeModel = cornellBox;
+            activeBVH = cornellBVH;
             changed = true;
             lastModelSwitchTime = t;
         }
         if (keystate[SDL_SCANCODE_5])
         {
             activeModel = plyModel;
+            activeBVH = plyBVH;
             changed = true;
             lastModelSwitchTime = t;
         }
         if (keystate[SDL_SCANCODE_6])
         {
             activeModel = objModel;
+            activeBVH = objBVH;
             changed = true;
             lastModelSwitchTime = t;
         }
