@@ -48,7 +48,7 @@ void WireframeShader::DrawLine(Uint32 *pixelBuffer, int width, int height, int x
     }
 }
 
-void WireframeShader::render(Uint32 *pixelBuffer, int width, int height, const std::vector<Triangle> &triangles, const Light &light, const Camera &camera, std::atomic<bool> &killFlag)
+void WireframeShader::render(Uint32 *pixelBuffer, int width, int height, const BVH &bvh, const std::vector<Triangle> &triangles, const Light &light, const Camera &camera, std::atomic<bool> &killFlag)
 {
     // Clear buffer to black
     for (int i = 0; i < width * height; ++i)

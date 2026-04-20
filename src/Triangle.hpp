@@ -5,7 +5,7 @@
 #include <vector>
 
 /**
- * @brief Simple class representing a triangle in 3D space, defined by its three vertices, normal vector, and color.
+ * @brief Simple class representing a triangle in 3D space, defined by its three vertices, normal vector, color and centroid.
  */
 class Triangle
 {

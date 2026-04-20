@@ -23,9 +23,10 @@ float AABB::area() const
     return e.x * e.y + e.y * e.z + e.z * e.x;
 }
 
-void BVH::build(const std::vector<Triangle> &inputTriangles)
+BVH::BVH(std::vector<Triangle> &inputTriangles)
 {
-    triangles = inputTriangles;
+    this->triangles = inputTriangles;
+
     // Allocate worst-case node count: 2N - 1
     bvhNodes.resize(triangles.size() * 2 - 1);
 
@@ -66,7 +67,7 @@ void BVH::subdivide(int nodeIdx)
     AABB centroidBounds;
     for (int i = 0; i < node.triCount; i++)
     {
-        centroidBounds.grow(triangles[node.leftFirst + i].centroid());
+        centroidBounds.grow(triangles[node.leftFirst + i].centroid);
     }
 
     // Split along the longest axis of the centroid bounds
@@ -83,7 +84,7 @@ void BVH::subdivide(int nodeIdx)
     int j = i + node.triCount - 1;
     while (i <= j)
     {
-        if (triangles[i].centroid()[axis] < splitPos)
+        if (triangles[i].centroid[axis] < splitPos)
         {
             i++;
         }

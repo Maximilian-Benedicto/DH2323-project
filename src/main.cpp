@@ -18,6 +18,7 @@
 #include "DipoleShader.hpp"
 #include "WireframeShader.hpp"
 #include "ObjModel.hpp"
+#include "BVH.hpp"
 
 using namespace std;
 using glm::vec3;
@@ -31,16 +32,26 @@ int screenHeight = 100;
 Window *window;
 int t;
 
-// Model and shader variables
+// Scene mesh triangles
 vector<Triangle> triangles;
+
+// Shaders
 Shader *activeShader;
 LambertianShader *lambertian;
 DipoleShader *dipole;
 WireframeShader *wireframe;
+
+// Models
 Model *activeModel;
 CornellBox *cornellBox;
 PlyModel *plyModel;
 ObjModel *objModel;
+
+// BVHs for each model
+BVH *cornellBVH;
+BVH *plyBVH;
+BVH *objBVH;
+BVH *activeBVH;
 
 // Rendering thread variables
 std::thread renderThread;
@@ -80,12 +91,19 @@ int main(int argc, char *argv[])
     plyModel->Load();
     objModel->Load();
 
-    activeModel = cornellBox;
+    // Build BVHs for each model
+    cornellBVH = new BVH(cornellBox->triangles);
+    plyBVH = new BVH(plyModel->triangles);
+    objBVH = new BVH(objModel->triangles);
 
     // Initialize shaders
     lambertian = new LambertianShader();
     dipole = new DipoleShader();
     wireframe = new WireframeShader();
+
+    // Set the active model, BVH, and shader
+    activeBVH = cornellBVH;
+    activeModel = cornellBox;
     activeShader = wireframe;
 
     StartRenderThread();
@@ -130,7 +148,7 @@ void StartRenderThread()
     window->getRenderResolution(w, h);
     Uint32 *buffer = window->getPixelBuffer();
     renderThread = std::thread([w, h, buffer]()
-                               { activeShader->render(buffer, w, h, triangles, light, camera, killFlag); });
+                               { activeShader->render(buffer, w, h, *activeBVH, triangles, light, camera, killFlag); });
 }
 
 void Update(void)
@@ -268,6 +286,9 @@ void Update(void)
         }
         if (keystate[SDL_SCANCODE_3])
         {
+            if (activeShader == wireframe)
+                wireframe->showBVH = !wireframe->showBVH;
+
             activeShader = wireframe;
             changed = true;
             lastShaderSwitchTime = t;

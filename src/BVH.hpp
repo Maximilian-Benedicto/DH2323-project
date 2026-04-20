@@ -55,11 +55,13 @@ public:
     int rootNodeIdx = 0;
     int nodesUsed = 1;
 
+    ~BVH() = default;
+
     /**
      * @brief Build the BVH from a list of triangles. This will reorder the triangle list to improve spatial locality.
-     * @param inputTriangles The list of triangles to build the BVH from
+     * @param inputTriangles The list of triangles to build the BVH from (rearranged in-place)
      */
-    void build(const std::vector<Triangle> &inputTriangles);
+    BVH(std::vector<Triangle> &inputTriangles);
 
 private:
     /**
