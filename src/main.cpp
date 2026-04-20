@@ -12,11 +12,12 @@
 #include "Camera.hpp"
 #include "Light.hpp"
 #include "CornellBox.hpp"
-#include "StanfordBunny.hpp"
+#include "PlyModel.hpp"
 #include "Shader.hpp"
 #include "LambertianShader.hpp"
 #include "DipoleShader.hpp"
 #include "WireframeShader.hpp"
+#include "ObjModel.hpp"
 
 using namespace std;
 using glm::vec3;
@@ -38,7 +39,8 @@ DipoleShader *dipole;
 WireframeShader *wireframe;
 Model *activeModel;
 CornellBox *cornellBox;
-StanfordBunny *stanfordBunny;
+PlyModel *plyModel;
+ObjModel *objModel;
 
 // Rendering thread variables
 std::thread renderThread;
@@ -72,10 +74,12 @@ int main(int argc, char *argv[])
 
     // Load models
     cornellBox = new CornellBox();
-    stanfordBunny = new StanfordBunny();
-    stanfordBunny->resolution = StanfordBunny::Resolution::LOW;
+    plyModel = new PlyModel("../model/bun_zipper.ply");
+    objModel = new ObjModel("../model/sponza.obj");
     cornellBox->Load();
-    stanfordBunny->Load();
+    plyModel->Load();
+    objModel->Load();
+
     activeModel = cornellBox;
 
     // Initialize shaders
@@ -282,7 +286,13 @@ void Update(void)
         }
         if (keystate[SDL_SCANCODE_5])
         {
-            activeModel = stanfordBunny;
+            activeModel = plyModel;
+            changed = true;
+            lastModelSwitchTime = t;
+        }
+        if (keystate[SDL_SCANCODE_6])
+        {
+            activeModel = objModel;
             changed = true;
             lastModelSwitchTime = t;
         }
