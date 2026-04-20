@@ -57,19 +57,8 @@ void ObjModel::Load()
             vec3 v1(attrib.vertices[3 * idx1.vertex_index + 0], attrib.vertices[3 * idx1.vertex_index + 1], attrib.vertices[3 * idx1.vertex_index + 2]);
             vec3 v2(attrib.vertices[3 * idx0.vertex_index + 0], attrib.vertices[3 * idx0.vertex_index + 1], attrib.vertices[3 * idx0.vertex_index + 2]);
 
-            // Extract Colors
-            vec3 color(0.75f, 0.75f, 0.75f);
-            if (!attrib.colors.empty())
-            {
-                // Average the vertex colors for the triangle color
-                vec3 c0 = {attrib.colors[3 * idx0.vertex_index + 0], attrib.colors[3 * idx0.vertex_index + 1], attrib.colors[3 * idx0.vertex_index + 2]};
-                vec3 c1 = {attrib.colors[3 * idx1.vertex_index + 0], attrib.colors[3 * idx1.vertex_index + 1], attrib.colors[3 * idx1.vertex_index + 2]};
-                vec3 c2 = {attrib.colors[3 * idx2.vertex_index + 0], attrib.colors[3 * idx2.vertex_index + 1], attrib.colors[3 * idx2.vertex_index + 2]};
-                color = (c0 + c1 + c2) / 3.0f;
-            }
-
             // Add the unrolled triangle to the vector
-            triangles.push_back(Triangle(v0, v1, v2, color));
+            triangles.push_back(Triangle(v0, v1, v2, vec3(1.0f, 1.0f, 1.0f)));
             index_offset += fv;
         }
     }
