@@ -6,7 +6,7 @@
 #include <glm/glm.hpp>
 
 /**
- * @brief A shader that renders the wireframe of the triangles in the scene
+ * @brief Shader that renders the wireframe of the triangles in the scene
  */
 class WireframeShader : public Shader
 {

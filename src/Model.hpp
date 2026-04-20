@@ -4,6 +4,9 @@
 #include <vector>
 #include "Triangle.hpp"
 
+/**
+ * @brief Abstract base class for 3D models, which consist of a collection of triangles.
+ */
 class Model
 {
 public:
@@ -12,7 +15,7 @@ public:
     virtual ~Model() = default;
 
     /**
-     * @brief load the triangles into the vector.
+     * @brief Load the triangles into the vector.
      */
     virtual void Load() = 0;
 };

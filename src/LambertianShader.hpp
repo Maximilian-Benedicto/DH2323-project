@@ -8,7 +8,7 @@
 #include <glm/glm.hpp>
 
 /**
- * @brief A shader that implements Lambertian diffuse shading with hard shadows and a simple ambient term.
+ * @brief Shader that implements Lambertian diffuse shading with hard shadows and a simple ambient term.
  */
 class LambertianShader : public Shader
 {

@@ -24,14 +24,14 @@ void CornellBox::Room()
 {
 
     // Corners of the Cornell Box
-    glm::vec3 A(L, 0, 0);
-    glm::vec3 B(0, 0, 0);
-    glm::vec3 C(L, 0, L);
-    glm::vec3 D(0, 0, L);
-    glm::vec3 E(L, L, 0);
-    glm::vec3 F(0, L, 0);
-    glm::vec3 G(L, L, L);
-    glm::vec3 H(0, L, L);
+    const glm::vec3 A(L, 0, 0);
+    const glm::vec3 B(0, 0, 0);
+    const glm::vec3 C(L, 0, L);
+    const glm::vec3 D(0, 0, L);
+    const glm::vec3 E(L, L, 0);
+    const glm::vec3 F(0, L, 0);
+    const glm::vec3 G(L, L, L);
+    const glm::vec3 H(0, L, L);
 
     // Floor:
     triangles.push_back(Triangle(C, B, A, GREEN));
@@ -58,14 +58,14 @@ void CornellBox::ShortBlock()
 {
 
     // Corners of the short block
-    glm::vec3 A = glm::vec3(290, 0, 114);
-    glm::vec3 B = glm::vec3(130, 0, 65);
-    glm::vec3 C = glm::vec3(240, 0, 272);
-    glm::vec3 D = glm::vec3(82, 0, 225);
-    glm::vec3 E = glm::vec3(290, 165, 114);
-    glm::vec3 F = glm::vec3(130, 165, 65);
-    glm::vec3 G = glm::vec3(240, 165, 272);
-    glm::vec3 H = glm::vec3(82, 165, 225);
+    const glm::vec3 A = glm::vec3(290, 0, 114);
+    const glm::vec3 B = glm::vec3(130, 0, 65);
+    const glm::vec3 C = glm::vec3(240, 0, 272);
+    const glm::vec3 D = glm::vec3(82, 0, 225);
+    const glm::vec3 E = glm::vec3(290, 165, 114);
+    const glm::vec3 F = glm::vec3(130, 165, 65);
+    const glm::vec3 G = glm::vec3(240, 165, 272);
+    const glm::vec3 H = glm::vec3(82, 165, 225);
 
     // Front
     triangles.push_back(Triangle(E, B, A, RED));
@@ -91,14 +91,14 @@ void CornellBox::ShortBlock()
 void CornellBox::TallBlock()
 {
     // Corners of the tall block
-    glm::vec3 A = glm::vec3(423, 0, 247);
-    glm::vec3 B = glm::vec3(265, 0, 296);
-    glm::vec3 C = glm::vec3(472, 0, 406);
-    glm::vec3 D = glm::vec3(314, 0, 456);
-    glm::vec3 E = glm::vec3(423, 330, 247);
-    glm::vec3 F = glm::vec3(265, 330, 296);
-    glm::vec3 G = glm::vec3(472, 330, 406);
-    glm::vec3 H = glm::vec3(314, 330, 456);
+    const glm::vec3 A = glm::vec3(423, 0, 247);
+    const glm::vec3 B = glm::vec3(265, 0, 296);
+    const glm::vec3 C = glm::vec3(472, 0, 406);
+    const glm::vec3 D = glm::vec3(314, 0, 456);
+    const glm::vec3 E = glm::vec3(423, 330, 247);
+    const glm::vec3 F = glm::vec3(265, 330, 296);
+    const glm::vec3 G = glm::vec3(472, 330, 406);
+    const glm::vec3 H = glm::vec3(314, 330, 456);
 
     // Front
     triangles.push_back(Triangle(E, B, A, BLUE));

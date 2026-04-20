@@ -4,6 +4,9 @@
 #include "Model.hpp"
 #include <glm/glm.hpp>
 
+/**
+ * @brief The Cornell Box model, which consists of a simple box-shaped room with two blocks in it.
+ */
 class CornellBox : public Model
 {
 private:
@@ -28,7 +31,7 @@ private:
     void ScaleToUnitCube();
 
 public:
-        void Load() override;
+    void Load() override;
 };
 
 #endif

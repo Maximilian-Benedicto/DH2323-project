@@ -1,7 +1,7 @@
 #include <iostream>
 #include <cmath>
 #include <glm/glm.hpp>
-#define GLM_ENABLE_EXPERIMENTAL
+#define GLM_ENABLE_EXPERIMENTAL // For rotate_vector
 #include <glm/gtx/rotate_vector.hpp>
 #include <algorithm>
 #include <thread>
@@ -13,7 +13,6 @@
 #include "Light.hpp"
 #include "CornellBox.hpp"
 #include "StanfordBunny.hpp"
-
 #include "Shader.hpp"
 #include "LambertianShader.hpp"
 #include "DipoleShader.hpp"
@@ -25,12 +24,13 @@ using glm::vec3;
 // ----------------------------------------------------------------------------
 // GLOBAL VARIABLES
 
+// Window variables
 int screenWidth = 100;
 int screenHeight = 100;
 Window *window;
 int t;
 
-// Render variables
+// Model and shader variables
 vector<Triangle> triangles;
 Shader *activeShader;
 LambertianShader *lambertian;
@@ -40,10 +40,12 @@ Model *activeModel;
 CornellBox *cornellBox;
 StanfordBunny *stanfordBunny;
 
+// Rendering thread variables
 std::thread renderThread;
 std::atomic<bool> killFlag(false);
 
-Light light(glm::vec3(0, -0.5, -0.7), 14.f * glm::vec3(1, 1, 1)); // Omni-light
+// Camera and light variables
+Light light(glm::vec3(0, -0.5, -0.7), 14.f * glm::vec3(1, 1, 1));
 Camera camera(glm::vec3(0, 0, -2), glm::vec3(0, 0, 1), screenHeight / 2.0f);
 
 // Movement variables
@@ -66,8 +68,9 @@ void ResetCamera();
 int main(int argc, char *argv[])
 {
     window = new Window(screenWidth, screenHeight, 10, false);
-    t = SDL_GetTicks(); // Set start value for timer.
+    t = SDL_GetTicks();
 
+    // Load models
     cornellBox = new CornellBox();
     stanfordBunny = new StanfordBunny();
     stanfordBunny->resolution = StanfordBunny::Resolution::LOW;
@@ -75,6 +78,7 @@ int main(int argc, char *argv[])
     stanfordBunny->Load();
     activeModel = cornellBox;
 
+    // Initialize shaders
     lambertian = new LambertianShader();
     dipole = new DipoleShader();
     wireframe = new WireframeShader();
@@ -90,6 +94,7 @@ int main(int argc, char *argv[])
 
     StopRenderThread();
 
+    // Save screenshot
     const string filename = "screenshot_" + to_string(time(nullptr)) + ".bmp";
     window->saveBMP(filename.c_str());
 
@@ -131,6 +136,7 @@ void Update(void)
 
     const Uint8 *keystate = (const Uint8 *)SDL_GetKeyboardState(NULL);
 
+    // Flags to track if we need to restart the render thread after processing input
     bool changed = false;
     bool resChanged = false;
 
@@ -324,7 +330,8 @@ void Update(void)
 void Draw()
 {
     window->render();
-    // SDL_Delay(16); // Roughly 60 FPS
+    while (t - SDL_GetTicks() < 16)
+        ; // Cap framerate to ~60 fps
 }
 
 void ResetCamera()

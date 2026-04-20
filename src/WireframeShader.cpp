@@ -15,28 +15,35 @@ WireframeShader::WireframeShader() {}
 
 void WireframeShader::DrawLine(Uint32 *pixelBuffer, int width, int height, int x0, int y0, int x1, int y1, Uint32 color)
 {
-    int dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
-    int dy = -abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
-    int err = dx + dy, e2;
+    // Bresenham's line algorithm (source: https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm)
+
+    const int dx = abs(x1 - x0);
+    const int sx = x0 < x1 ? 1 : -1;
+    const int dy = -abs(y1 - y0);
+    const int sy = y0 < y1 ? 1 : -1;
+    int error = dx + dy;
 
     while (true)
     {
         if (x0 >= 0 && x0 < width && y0 >= 0 && y0 < height)
-        {
+
             pixelBuffer[y0 * width + x0] = color;
-        }
-        if (x0 == x1 && y0 == y1)
-            break;
-        e2 = 2 * err;
+
+        int e2 = 2 * error;
         if (e2 >= dy)
         {
-            err += dy;
-            x0 += sx;
+            if (x0 == x1)
+                break;
+            error = error + dy;
+            x0 = x0 + sx;
         }
+
         if (e2 <= dx)
         {
-            err += dx;
-            y0 += sy;
+            if (y0 == y1)
+                break;
+            error = error + dx;
+            y0 = y0 + sy;
         }
     }
 }
@@ -51,21 +58,24 @@ void WireframeShader::render(Uint32 *pixelBuffer, int width, int height, const s
         pixelBuffer[i] = 0xFF000000;
     }
 
+    // Compute camera basis vectors and view matrix
     vec3 right = normalize(cross(vec3(0.0f, 1.0f, 0.0f), camera.direction));
     vec3 up = normalize(cross(camera.direction, right));
     up = glm::rotate(up, camera.roll, camera.direction);
 
+    // In OpenGL / glm::lookAt, the camera looks in the -z direction, so we add the direction to the position to get the target point
     mat4 viewMatrix = glm::lookAt(camera.position, camera.position + camera.direction, up);
 
     for (size_t i = 0; i < triangles.size(); ++i)
     {
+        // Kill render thread if flag is set
         if (killFlag)
             return;
 
+        // Project triangle vertices to screen space
         vec3 v[3] = {triangles[i].v0, triangles[i].v1, triangles[i].v2};
         int p[3][2];
         bool outOfBounds[3] = {false, false, false};
-
         for (int j = 0; j < 3; ++j)
         {
             // Translate to camera space
@@ -104,8 +114,10 @@ void WireframeShader::render(Uint32 *pixelBuffer, int width, int height, const s
             light.position + vec3(0.0f, size, 0.0f), light.position - vec3(0.0f, size, 0.0f),
             light.position + vec3(0.0f, 0.0f, size), light.position - vec3(0.0f, 0.0f, size)};
 
-        Uint32 lightColor = 0xFFFFFF00; // Yellow
+        // Yellow color for the light star
+        Uint32 lightColor = 0xFFFFFF00;
 
+        // Project and draw the star arms
         for (int i = 0; i < 3; ++i)
         {
             vec4 p1Cam4 = viewMatrix * vec4(pts[i * 2], 1.0f);
