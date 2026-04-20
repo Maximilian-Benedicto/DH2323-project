@@ -71,7 +71,7 @@ vec3 LambertianShader::DirectLight(const Intersection &i, const vector<Triangle>
     return D;
 }
 
-void LambertianShader::render(Uint32 *pixelBuffer, int width, int height, const std::vector<Triangle> &triangles, const Light &light, const Camera &camera, std::atomic<bool> &killFlag)
+void LambertianShader::render(Uint32 *pixelBuffer, int width, int height, const BVH &bvh, const std::vector<Triangle> &triangles, const Light &light, const Camera &camera, std::atomic<bool> &killFlag)
 {
     // Compute camera basis vectors
     vec3 right = normalize(cross(vec3(0.0f, 1.0f, 0.0f), camera.direction));

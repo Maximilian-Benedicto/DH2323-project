@@ -143,5 +143,7 @@ void CornellBox::ScaleToUnitCube()
         triangle.v2.y *= -1;
 
         triangle.ComputeNormal();
+
+        triangle.ComputeCentroid();
     }
 }

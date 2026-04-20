@@ -59,7 +59,7 @@ void ObjModel::Load()
             vec3 v2(attrib.vertices[3 * idx0.vertex_index + 0], attrib.vertices[3 * idx0.vertex_index + 1], attrib.vertices[3 * idx0.vertex_index + 2]);
 
             // Add the unrolled triangle to the vector
-            triangles.push_back(Triangle(v0, v1, v2, vec3(1.0f, 1.0f, 1.0f)));
+            triangles.push_back(Triangle(v0, v1, v2, vec3(1, 1, 1)));
             index_offset += fv;
         }
     }
@@ -72,7 +72,7 @@ void ObjModel::ScaleToUnitCube()
     if (triangles.empty())
         return;
 
-    // 1. Find bounding box to calculate center and max axis length
+    // Find bounding box to calculate center and max axis length
     glm::vec3 minPos(1e9f);
     glm::vec3 maxPos(-1e9f);
     for (const Triangle &triangle : triangles)
@@ -94,7 +94,7 @@ void ObjModel::ScaleToUnitCube()
         triangle.v1 = (triangle.v1 - center) * scaleSize;
         triangle.v2 = (triangle.v2 - center) * scaleSize;
 
-        // 2. Flip X and Y (if needed by your coordinate system)
+        // Flip X and Y
         triangle.v0.x *= -1;
         triangle.v1.x *= -1;
         triangle.v2.x *= -1;
@@ -103,7 +103,10 @@ void ObjModel::ScaleToUnitCube()
         triangle.v1.y *= -1;
         triangle.v2.y *= -1;
 
-        // 4. Recalculate normals
+        // Recalculate normals
         triangle.ComputeNormal();
+
+        // Recalculate centroids
+        triangle.ComputeCentroid();
     }
 }
