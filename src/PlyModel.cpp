@@ -2,6 +2,7 @@
 #include "happly.h"
 #include "PlyModel.hpp"
 #include "Triangle.hpp"
+#include <algorithm>
 #include <glm/glm.hpp>
 #include <vector>
 

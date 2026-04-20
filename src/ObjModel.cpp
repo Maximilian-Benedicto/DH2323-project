@@ -1,5 +1,6 @@
 #define TINYOBJLOADER_IMPLEMENTATION
 #include "tiny_obj_loader.h"
+#include <algorithm>
 #include <iostream>
 #include <vector>
 #include <glm/glm.hpp>
