@@ -14,6 +14,7 @@ add_executable(DH2323Project
     PlyModel.cpp
     ObjModel.cpp
     Material.cpp
+    BVH.cpp
 )
 
 include(FetchContent)

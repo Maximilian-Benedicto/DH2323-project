@@ -65,7 +65,7 @@ void PlyModel::ScaleToUnitCube()
         triangle.v1 = (triangle.v1 - center) * scaleSize;
         triangle.v2 = (triangle.v2 - center) * scaleSize;
 
-        // 2. Flip X and Y (if needed by your coordinate system)
+        // Flip X and Y
         triangle.v0.x *= -1;
         triangle.v1.x *= -1;
         triangle.v2.x *= -1;
@@ -74,7 +74,10 @@ void PlyModel::ScaleToUnitCube()
         triangle.v1.y *= -1;
         triangle.v2.y *= -1;
 
-        // 4. Recalculate normals
+        // Recalculate normals
         triangle.ComputeNormal();
+
+        // Recalculate centroids
+        triangle.ComputeCentroid();
     }
 }
