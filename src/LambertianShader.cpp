@@ -132,6 +132,15 @@ vec3 LambertianShader::DirectLight(const Intersection &i, const BVH &bvh, const 
     vec3 rUnit = normalize(r);
     vec3 D = B * glm::max(dot(rUnit, nUnit), 0.0f);
 
+    // Get intersection uv coordinates for texture mapping
+    glm::vec2 uv = i.uv;
+    if (triangles[i.triangleIndex].textureFile != "")
+    {
+        // Sample texture color using uv coordinates (this is a placeholder, you would need to implement actual texture loading and sampling)
+        vec3 textureColor = vec3(1, 1, 1); // Replace with actual texture sampling
+        D *= textureColor;
+    }
+
     return D;
 }
 

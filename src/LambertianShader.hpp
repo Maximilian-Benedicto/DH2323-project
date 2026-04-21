@@ -18,6 +18,7 @@ private:
         glm::vec3 position;
         float distance;
         int triangleIndex;
+        glm::vec2 uv;
     };
 
     glm::vec3 indirectLight;

@@ -16,6 +16,7 @@ public:
     ObjModel(const std::string &filename) : filename(filename) {}
 
     void Load() override;
+    glm::vec3 SampleTexture(const std::string &textureFile, const glm::vec2 &uv);
 };
 
 #endif

@@ -43,7 +43,7 @@ FetchContent_MakeAvailable(SDL3)
 
 FetchContent_Declare(
     happly
-    GIT_REPOSITORY  https://github.com/nmwsharp/happly
+    GIT_REPOSITORY  https://github.com/nmwsharp/happly.git
     GIT_TAG     master
 )
 
@@ -57,9 +57,19 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(tinyobjloader)
 
+FetchContent_Declare(
+    stb
+    GIT_REPOSITORY  https://github.com/nothings/stb.git
+    GIT_TAG     master
+)
+
+FetchContent_MakeAvailable(stb)
+
+
 target_include_directories(DH2323Project PRIVATE 
     ${happly_SOURCE_DIR}
     ${tinyobjloader_SOURCE_DIR}
+    ${stb_SOURCE_DIR}
 )
 
 target_link_libraries(DH2323Project PRIVATE glm::glm SDL3::SDL3)

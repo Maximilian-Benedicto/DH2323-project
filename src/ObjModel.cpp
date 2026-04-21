@@ -1,5 +1,9 @@
 #define TINYOBJLOADER_IMPLEMENTATION
 #include "tiny_obj_loader.h"
+
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 #include <algorithm>
 #include <iostream>
 #include <vector>
@@ -10,6 +14,7 @@
 
 void ObjModel::Load()
 {
+    using glm::vec2;
     using glm::vec3;
 
     tinyobj::ObjReaderConfig reader_config;
@@ -58,8 +63,25 @@ void ObjModel::Load()
             vec3 v1(attrib.vertices[3 * idx1.vertex_index + 0], attrib.vertices[3 * idx1.vertex_index + 1], attrib.vertices[3 * idx1.vertex_index + 2]);
             vec3 v2(attrib.vertices[3 * idx0.vertex_index + 0], attrib.vertices[3 * idx0.vertex_index + 1], attrib.vertices[3 * idx0.vertex_index + 2]);
 
+            // Extract Texture Coordinates (UV)
+            vec2 uv0(attrib.texcoords[2 * idx2.texcoord_index + 0], attrib.texcoords[2 * idx2.texcoord_index + 1]);
+            vec2 uv1(attrib.texcoords[2 * idx1.texcoord_index + 0], attrib.texcoords[2 * idx1.texcoord_index + 1]);
+            vec2 uv2(attrib.texcoords[2 * idx0.texcoord_index + 0], attrib.texcoords[2 * idx0.texcoord_index + 1]);
+
+            // Get texture file path for this triangle
+            std::string textureFile;
+            if (idx0.texcoord_index >= 0)
+            {
+                int material_id = shapes[s].mesh.material_ids[f];
+                if (material_id >= 0 && material_id < reader.GetMaterials().size())
+                {
+                    const tinyobj::material_t &mat = reader.GetMaterials()[material_id];
+                    textureFile = mat.diffuse_texname;
+                }
+            }
+
             // Add the unrolled triangle to the vector
-            triangles.push_back(Triangle(v0, v1, v2, vec3(1, 1, 1)));
+            triangles.push_back(Triangle(v0, v1, v2, uv0, uv1, uv2, textureFile, vec3(1, 1, 1)));
             index_offset += fv;
         }
     }
