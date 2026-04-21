@@ -24,7 +24,7 @@ private:
 
     bool ClosestIntersection(glm::vec3 start, glm::vec3 dir, const BVH &bvh, const std::vector<Triangle> &triangles, Intersection &closestIntersection);
     glm::vec3 DirectLight(const Intersection &i, const BVH &bvh, const std::vector<Triangle> &triangles, const Light &light);
-    bool SlabIntersection(const AABB &aabb, const glm::vec3 &start, const glm::vec3 &dir, glm::vec3 &close, glm::vec3 &far);
+    bool SlabIntersection(const AABB &aabb, const glm::vec3 &start, const glm::vec3 &dir, float &tClose);
 
 public:
     LambertianShader();

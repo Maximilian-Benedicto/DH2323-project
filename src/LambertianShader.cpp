@@ -18,6 +18,7 @@ bool LambertianShader::ClosestIntersection(vec3 start, vec3 dir, const BVH &bvh,
     BVHNode node = bvh.bvhNodes[bvh.rootNodeIdx];
 
     bool leaf = node.isLeaf();
+    bool found = false;
 
     while (!leaf)
     {
@@ -25,11 +26,58 @@ bool LambertianShader::ClosestIntersection(vec3 start, vec3 dir, const BVH &bvh,
         BVHNode leftChild = bvh.bvhNodes[node.leftFirst];
         BVHNode rightChild = bvh.bvhNodes[node.leftFirst + 1];
 
-        // Check if left child intersects with the ray
+        // Get left intersection
+        float leftClose;
+        bool leftIntersect = SlabIntersection(leftChild.aabb, start, dir, leftClose);
 
-        bool found = false;
+        // Get right intersection
+        float rightClose;
+        bool rightIntersect = SlabIntersection(rightChild.aabb, start, dir, rightClose);
 
-        for (size_t i = 0; i < triangles.size(); i++)
+        // The ray did not intersect any triangles
+        if (!leftIntersect && !rightIntersect)
+            return found;
+
+        // The ray intersects only left box
+        if (leftIntersect && !rightIntersect)
+        {
+            // Go to the left child
+            node = bvh.bvhNodes[node.leftFirst];
+            leaf = node.isLeaf();
+            continue;
+        }
+
+        // The ray intersects only right box
+        if (rightIntersect && !leftIntersect)
+        {
+            // Go to the right child
+            node = bvh.bvhNodes[node.leftFirst + 1];
+            leaf = node.isLeaf();
+            continue;
+        }
+
+        // Left box is closer
+        if (leftClose < rightClose)
+        {
+            // Go to the left child
+            node = bvh.bvhNodes[node.leftFirst];
+            leaf = node.isLeaf();
+            continue;
+        }
+
+        // Right box is closer
+        if (rightClose < leftClose)
+        {
+            // Go to the right child
+            node = bvh.bvhNodes[node.leftFirst + 1];
+            leaf = node.isLeaf();
+            continue;
+        }
+    }
+
+    if (leaf)
+    {
+        for (size_t i = node.leftFirst; i < i + node.triCount; i++)
         {
             // Ray-triangle intersection algorithm
             Triangle triangle = triangles[i];
@@ -60,9 +108,9 @@ bool LambertianShader::ClosestIntersection(vec3 start, vec3 dir, const BVH &bvh,
                 found = true;
             }
         }
-
-        return found;
     }
+
+    return found;
 }
 
 vec3 LambertianShader::DirectLight(const Intersection &i, const BVH &bvh, const vector<Triangle> &triangles, const Light &light)
