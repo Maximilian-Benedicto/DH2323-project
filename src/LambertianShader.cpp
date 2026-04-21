@@ -13,100 +13,101 @@ LambertianShader::LambertianShader() : indirectLight(vec3(0.5f, 0.5f, 0.5f)) {}
 
 bool LambertianShader::ClosestIntersection(vec3 start, vec3 dir, const BVH &bvh, const vector<Triangle> &triangles, Intersection &closestIntersection)
 {
-
-    // Start at the root
-    BVHNode node = bvh.bvhNodes[bvh.rootNodeIdx];
-
-    bool leaf = node.isLeaf();
     bool found = false;
+    if (bvh.nodesUsed == 0)
+        return false;
 
-    while (!leaf)
+    float closestDistance = std::numeric_limits<float>::infinity();
+    std::vector<int> stack;
+    stack.push_back(bvh.rootNodeIdx);
+
+    // Iterative BVH traversal using a stack
+    while (!stack.empty())
     {
-        // Get children
-        BVHNode leftChild = bvh.bvhNodes[node.leftFirst];
-        BVHNode rightChild = bvh.bvhNodes[node.leftFirst + 1];
+        int nodeIdx = stack.back();
+        stack.pop_back();
 
-        // Get left intersection
+        const BVHNode &node = bvh.bvhNodes[nodeIdx];
+
+        // Skip nodes that dont intersect or are farther than the closest intersection found so far
+        float nodeTClose;
+        if (!SlabIntersection(node.aabb, start, dir, nodeTClose))
+            continue;
+        if (nodeTClose > closestDistance)
+            continue;
+
+        // If this is a leaf node, check for intersection with each triangle
+        if (node.isLeaf())
+        {
+            int first = node.leftFirst;
+            int end = first + node.triCount;
+            for (int i = first; i < end; ++i)
+            {
+                // Ray-triangle intersection algorithm
+                const Triangle &triangle = triangles[i];
+                vec3 v0 = triangle.v0;
+                vec3 v1 = triangle.v1;
+                vec3 v2 = triangle.v2;
+                vec3 e1 = v1 - v0;
+                vec3 e2 = v2 - v0;
+                vec3 b = start - v0;
+                mat3 A(-dir, e1, e2);
+                vec3 x = inverse(A) * b;
+
+                // Get distance t along the ray, and barycentric coordinate u and v
+                float t = x.x;
+                float u = x.y;
+                float v = x.z;
+
+                // Check if the intersection is valid
+                if (!(0 <= t && 0 <= u && 0 <= v && u + v <= 1))
+                    continue;
+
+                // Update closest intersection if this one is closer
+                vec3 position = start + dir * t;
+                float distance = length(dir * t);
+                if (!found || distance < closestDistance)
+                {
+                    // Update closest intersection
+                    closestIntersection = {position, distance, i};
+                    closestDistance = distance;
+                    found = true;
+                }
+            }
+            continue;
+        }
+
+        int leftIdx = node.leftFirst;
+        int rightIdx = node.leftFirst + 1;
+        const BVHNode &leftChild = bvh.bvhNodes[leftIdx];
+        const BVHNode &rightChild = bvh.bvhNodes[rightIdx];
+
         float leftClose;
-        bool leftIntersect = SlabIntersection(leftChild.aabb, start, dir, leftClose);
-
-        // Get right intersection
         float rightClose;
+        bool leftIntersect = SlabIntersection(leftChild.aabb, start, dir, leftClose);
         bool rightIntersect = SlabIntersection(rightChild.aabb, start, dir, rightClose);
 
-        // The ray did not intersect any triangles
-        if (!leftIntersect && !rightIntersect)
-            return found;
-
-        // The ray intersects only left box
-        if (leftIntersect && !rightIntersect)
+        if (leftIntersect && rightIntersect)
         {
-            // Go to the left child
-            node = bvh.bvhNodes[node.leftFirst];
-            leaf = node.isLeaf();
-            continue;
-        }
-
-        // The ray intersects only right box
-        if (rightIntersect && !leftIntersect)
-        {
-            // Go to the right child
-            node = bvh.bvhNodes[node.leftFirst + 1];
-            leaf = node.isLeaf();
-            continue;
-        }
-
-        // Left box is closer
-        if (leftClose < rightClose)
-        {
-            // Go to the left child
-            node = bvh.bvhNodes[node.leftFirst];
-            leaf = node.isLeaf();
-            continue;
-        }
-
-        // Right box is closer
-        if (rightClose < leftClose)
-        {
-            // Go to the right child
-            node = bvh.bvhNodes[node.leftFirst + 1];
-            leaf = node.isLeaf();
-            continue;
-        }
-    }
-
-    if (leaf)
-    {
-        for (size_t i = node.leftFirst; i < i + node.triCount; i++)
-        {
-            // Ray-triangle intersection algorithm
-            Triangle triangle = triangles[i];
-            vec3 v0 = triangle.v0;
-            vec3 v1 = triangle.v1;
-            vec3 v2 = triangle.v2;
-            vec3 e1 = v1 - v0;
-            vec3 e2 = v2 - v0;
-            vec3 b = start - v0;
-            mat3 A(-dir, e1, e2);
-            vec3 x = inverse(A) * b;
-
-            // Get distance t along the ray, and barycentric coordinate u and v
-            float t = x.x;
-            float u = x.y;
-            float v = x.z;
-
-            // Check if the intersection is valid
-            if (!(0 <= t && 0 <= u && 0 <= v && u + v <= 1))
-                continue;
-
-            // Update closest intersection if this one is closer
-            vec3 position = start + dir * t;
-            float distance = length(dir * t);
-            if (!found || distance < closestIntersection.distance)
+            // Traverse the closer child first to increase chances of early termination
+            if (leftClose < rightClose)
             {
-                closestIntersection = {position, distance, (int)i};
-                found = true;
+                stack.push_back(rightIdx);
+                stack.push_back(leftIdx);
             }
+            else
+            {
+                stack.push_back(leftIdx);
+                stack.push_back(rightIdx);
+            }
+        }
+        else if (leftIntersect)
+        {
+            stack.push_back(leftIdx);
+        }
+        else if (rightIntersect)
+        {
+            stack.push_back(rightIdx);
         }
     }
 
@@ -186,30 +187,49 @@ bool LambertianShader::SlabIntersection(const AABB &aabb, const glm::vec3 &start
 
     // Source (https://en.wikipedia.org/wiki/Slab_method)
 
+    // Get the low and high corners of the AABB
     const vec3 l = aabb.min;
     const vec3 h = aabb.max;
-
     vec3 tiLow;
     vec3 tiHigh;
 
+    // Avoid division by zero by treating very small directions as parallel to the slab planes
+    const float eps = 1e-8f;
+
+    // Compute intersection t values for each pair of planes
     for (int i = 0; i < 3; i++)
     {
-        tiLow[i] = (l[i] - start[i]) / dir[i];
-        tiHigh[i] = (h[i] - start[i]) / dir[i];
+        // If the ray is parallel to the planes, check if the start point is between them
+        if (abs(dir[i]) < eps)
+        {
+            if (start[i] < l[i] || start[i] > h[i])
+                return false;
+
+            // Set t values to -inf and +inf so they won't affect the final intersection interval
+            tiLow[i] = -std::numeric_limits<float>::infinity();
+            tiHigh[i] = std::numeric_limits<float>::infinity();
+        }
+        else
+        {
+            // Compute t values for the planes
+            tiLow[i] = (l[i] - start[i]) / dir[i];
+            tiHigh[i] = (h[i] - start[i]) / dir[i];
+        }
     }
 
     vec3 tiClose;
     vec3 tiFar;
 
+    // Get the near and far t values for the intersection interval
     for (size_t i = 0; i < 3; i++)
     {
         tiClose[i] = glm::min(tiLow[i], tiHigh[i]);
         tiFar[i] = glm::max(tiLow[i], tiHigh[i]);
     }
 
-        float tNear = glm::max(tiClose.x, glm::max(tiClose.y, tiClose.z));
-        float tFar = glm::min(tiClose.x, glm::min(tiClose.y, tiClose.z));
+    float tNear = glm::max(tiClose.x, glm::max(tiClose.y, tiClose.z));
+    float tFar = glm::min(tiFar.x, glm::min(tiFar.y, tiFar.z));
 
-    tClose = tNear;
-    return tFar >= tNear;
+    tClose = glm::max(tNear, 0.0f);
+    return tFar >= tNear && tFar >= 0.0f;
 }
