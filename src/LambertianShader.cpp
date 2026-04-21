@@ -71,7 +71,7 @@ bool LambertianShader::ClosestIntersection(vec3 start, vec3 dir, const Model &mo
                 if (!found || distance < closestDistance)
                 {
                     // Update closest intersection
-                    closestIntersection = {position, distance, i};
+                    closestIntersection = {position, distance, i, vec2(u, v)};
                     closestDistance = distance;
                     found = true;
                 }

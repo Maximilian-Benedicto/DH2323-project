@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <thread>
 #include <atomic>
+#include <memory>
 
 #include "Window.hpp"
 #include "Triangle.hpp"
@@ -31,20 +32,11 @@ int screenHeight = 100;
 Window *window;
 int t;
 
-// Scene mesh triangles
-vector<Triangle> triangles;
-
-// Shaders
-Shader *activeShader;
-LambertianShader *lambertian;
-DipoleShader *dipole;
-WireframeShader *wireframe;
-
-// Models
-Model *activeModel;
-CornellBox *cornellBox;
-PlyModel *plyModel;
-ObjModel *objModel;
+// Scene variables (unique pointers for polymorphism))
+vector<unique_ptr<Shader>> shaders;
+vector<unique_ptr<Model>> models;
+size_t activeModelIdx;
+size_t activeShaderIdx;
 
 // Rendering thread variables
 std::thread renderThread;
@@ -77,21 +69,22 @@ int main(int argc, char *argv[])
     t = SDL_GetTicks();
 
     // Load models
-    cornellBox = new CornellBox();
-    plyModel = new PlyModel("model/bun_zipper.ply");
-    objModel = new ObjModel("model/sponza/sponza.obj");
-    cornellBox->Load();
-    plyModel->Load();
-    objModel->Load();
+    models = vector<unique_ptr<Model>>(3);
+    models[0] = make_unique<CornellBox>();
+    models[1] = make_unique<PlyModel>("model/bun_zipper.ply");
+    models[2] = make_unique<ObjModel>("model/sponza/sponza.obj");
+    for (auto &model : models)
+        model->Load();
 
     // Initialize shaders
-    lambertian = new LambertianShader();
-    dipole = new DipoleShader();
-    wireframe = new WireframeShader();
+    shaders = vector<unique_ptr<Shader>>(3);
+    shaders[0] = make_unique<WireframeShader>();
+    shaders[1] = make_unique<DipoleShader>();
+    shaders[2] = make_unique<LambertianShader>();
 
     // Set the active model and shader
-    activeModel = cornellBox;
-    activeShader = wireframe;
+    activeModelIdx = 0;
+    activeShaderIdx = 0;
 
     StartRenderThread();
 
@@ -107,13 +100,6 @@ int main(int argc, char *argv[])
     const string filename = "screenshot_" + to_string(time(nullptr)) + ".bmp";
     window->saveBMP(filename.c_str());
 
-    delete cornellBox;
-    delete plyModel;
-    delete objModel;
-
-    delete lambertian;
-    delete dipole;
-    delete wireframe;
     delete window;
 
     return 0;
@@ -133,13 +119,12 @@ void StopRenderThread()
 
 void StartRenderThread()
 {
-    triangles = activeModel->triangles;
     killFlag = false;
     int w, h;
     window->getRenderResolution(w, h);
     Uint32 *buffer = window->getPixelBuffer();
     renderThread = std::thread([w, h, buffer]()
-                               { activeShader->render(buffer, w, h, *activeModel, light, camera, killFlag); });
+                               { shaders[activeShaderIdx]->render(buffer, w, h, *models[activeModelIdx], light, camera, killFlag); });
 }
 
 void Update(void)
@@ -261,50 +246,27 @@ void Update(void)
 
     // Shader switching
     static int lastShaderSwitchTime = 0;
-    if (t - lastShaderSwitchTime > 200)
+    if ((t - lastShaderSwitchTime > 200) && keystate[SDL_SCANCODE_1])
     {
-        if (keystate[SDL_SCANCODE_1])
-        {
-            activeShader = lambertian;
-            changed = true;
-            lastShaderSwitchTime = t;
-        }
-        if (keystate[SDL_SCANCODE_2])
-        {
-            activeShader = dipole;
-            changed = true;
-            lastShaderSwitchTime = t;
-        }
-        if (keystate[SDL_SCANCODE_3])
-        {
-            if (activeShader == wireframe)
-                wireframe->showBVH = !wireframe->showBVH;
-
-            activeShader = wireframe;
-            changed = true;
-            lastShaderSwitchTime = t;
-        }
+        activeShaderIdx = (++activeShaderIdx) % shaders.size();
+        changed = true;
+        lastShaderSwitchTime = t;
     }
 
     // Model switching
     static int lastModelSwitchTime = 0;
-    if (t - lastModelSwitchTime > 200)
+    if ((t - lastModelSwitchTime > 200) && keystate[SDL_SCANCODE_2])
     {
-        if (keystate[SDL_SCANCODE_4])
+        activeModelIdx = (++activeModelIdx) % models.size();
+        changed = true;
+        lastModelSwitchTime = t;
+    }
+    if ((t - lastModelSwitchTime > 200) && keystate[SDL_SCANCODE_3])
+    {
+        // Use dynamic_cast to check if the current shader is WireframeShader
+        if (WireframeShader *wfShader = dynamic_cast<WireframeShader *>(shaders[activeShaderIdx].get()))
         {
-            activeModel = cornellBox;
-            changed = true;
-            lastModelSwitchTime = t;
-        }
-        if (keystate[SDL_SCANCODE_5])
-        {
-            activeModel = plyModel;
-            changed = true;
-            lastModelSwitchTime = t;
-        }
-        if (keystate[SDL_SCANCODE_6])
-        {
-            activeModel = objModel;
+            wfShader->showBVH = !wfShader->showBVH; // Toggle BVH visualization in wireframe shader
             changed = true;
             lastModelSwitchTime = t;
         }

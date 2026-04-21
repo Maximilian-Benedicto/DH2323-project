@@ -75,13 +75,19 @@ Texture::~Texture()
 
 glm::vec3 Texture::Sample(const glm::vec2 &uv) const
 {
-    // Wrap UV coordinates
-    float u = uv.x - floor(uv.x);
-    float v = uv.y - floor(uv.y);
+    if (width <= 0 || height <= 0 || channels <= 0 || data == nullptr)
+        return glm::vec3(1.0f, 0.0f, 1.0f);
+
+    // Clamp UV coordinates at texture borders.
+    float u = glm::clamp(uv.x, 0.0f, 1.0f);
+    float v = glm::clamp(uv.y, 0.0f, 1.0f);
+
+    // OBJ UVs are typically bottom-left origin while image memory is top-left.
+    v = 1.0f - v;
 
     // Convert to pixel coordinates
-    int x = static_cast<int>(u * width);
-    int y = static_cast<int>(v * height);
+    int x = static_cast<int>(u * static_cast<float>(width - 1));
+    int y = static_cast<int>(v * static_cast<float>(height - 1));
 
     // Get pixel color
     int index = (y * width + x) * channels;

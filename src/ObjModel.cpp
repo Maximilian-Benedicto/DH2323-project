@@ -86,7 +86,7 @@ void ObjModel::Load()
             tinyobj::index_t idx1 = shapes[s].mesh.indices[index_offset + 1];
             tinyobj::index_t idx2 = shapes[s].mesh.indices[index_offset + 2];
 
-            // Extract Vertices (XYZ)
+            // Extract Vertices (reordered for correct winding order)
             vec3 v0(attrib.vertices[3 * idx2.vertex_index + 0], attrib.vertices[3 * idx2.vertex_index + 1], attrib.vertices[3 * idx2.vertex_index + 2]);
             vec3 v1(attrib.vertices[3 * idx1.vertex_index + 0], attrib.vertices[3 * idx1.vertex_index + 1], attrib.vertices[3 * idx1.vertex_index + 2]);
             vec3 v2(attrib.vertices[3 * idx0.vertex_index + 0], attrib.vertices[3 * idx0.vertex_index + 1], attrib.vertices[3 * idx0.vertex_index + 2]);
@@ -96,9 +96,10 @@ void ObjModel::Load()
             vec2 uv1(0.0f);
             vec2 uv2(0.0f);
 
-            if (idx0.texcoord_index >= 0)
+            // Keep UVs aligned with vertex reorder
+            if (idx2.texcoord_index >= 0)
             {
-                size_t texcoordOffset = static_cast<size_t>(2 * idx0.texcoord_index);
+                size_t texcoordOffset = static_cast<size_t>(2 * idx2.texcoord_index);
                 if (texcoordOffset + 1 < attrib.texcoords.size())
                     uv0 = vec2(attrib.texcoords[texcoordOffset + 0], attrib.texcoords[texcoordOffset + 1]);
             }
@@ -110,9 +111,9 @@ void ObjModel::Load()
                     uv1 = vec2(attrib.texcoords[texcoordOffset + 0], attrib.texcoords[texcoordOffset + 1]);
             }
 
-            if (idx2.texcoord_index >= 0)
+            if (idx0.texcoord_index >= 0)
             {
-                size_t texcoordOffset = static_cast<size_t>(2 * idx2.texcoord_index);
+                size_t texcoordOffset = static_cast<size_t>(2 * idx0.texcoord_index);
                 if (texcoordOffset + 1 < attrib.texcoords.size())
                     uv2 = vec2(attrib.texcoords[texcoordOffset + 0], attrib.texcoords[texcoordOffset + 1]);
             }
