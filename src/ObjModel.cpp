@@ -1,24 +1,29 @@
 #define TINYOBJLOADER_IMPLEMENTATION
 #include "tiny_obj_loader.h"
 
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
-
 #include <algorithm>
+#include <filesystem>
 #include <iostream>
 #include <vector>
 #include <glm/glm.hpp>
 
 #include "ObjModel.hpp"
 #include "Triangle.hpp"
+#include "Texture.hpp"
+#include "BVH.hpp"
 
 void ObjModel::Load()
 {
     using glm::vec2;
     using glm::vec3;
+    namespace fs = std::filesystem;
+
+    const fs::path objPath(filename);
+    const fs::path objDir = objPath.parent_path();
 
     tinyobj::ObjReaderConfig reader_config;
     reader_config.triangulate = true; // Force everything to be triangles
+    reader_config.mtl_search_path = objDir.string();
     tinyobj::ObjReader reader;
 
     // Parse the .obj file
@@ -33,12 +38,35 @@ void ObjModel::Load()
     auto &attrib = reader.GetAttrib();
     auto &shapes = reader.GetShapes();
     triangles.clear();
+    textures.clear();
+    std::vector<bool> materialHasTexture;
     size_t total_faces = 0;
     for (const auto &shape : shapes)
     {
         total_faces += shape.mesh.num_face_vertices.size();
     }
     triangles.reserve(total_faces);
+
+    // Load textures for all materials
+    materialHasTexture.reserve(reader.GetMaterials().size());
+    textures.reserve(reader.GetMaterials().size());
+    for (const auto &mat : reader.GetMaterials())
+    {
+        const std::string &diffuseTexname = mat.diffuse_texname;
+        if (diffuseTexname.empty())
+        {
+            materialHasTexture.push_back(false);
+            textures.emplace_back("");
+            continue;
+        }
+
+        fs::path texturePath(diffuseTexname);
+        if (texturePath.is_relative())
+            texturePath = objDir / texturePath;
+
+        materialHasTexture.push_back(true);
+        textures.emplace_back(texturePath.lexically_normal().string());
+    }
 
     // Loop over shapes (different meshes in the file)
     for (size_t s = 0; s < shapes.size(); s++)
@@ -64,29 +92,50 @@ void ObjModel::Load()
             vec3 v2(attrib.vertices[3 * idx0.vertex_index + 0], attrib.vertices[3 * idx0.vertex_index + 1], attrib.vertices[3 * idx0.vertex_index + 2]);
 
             // Extract Texture Coordinates (UV)
-            vec2 uv0(attrib.texcoords[2 * idx2.texcoord_index + 0], attrib.texcoords[2 * idx2.texcoord_index + 1]);
-            vec2 uv1(attrib.texcoords[2 * idx1.texcoord_index + 0], attrib.texcoords[2 * idx1.texcoord_index + 1]);
-            vec2 uv2(attrib.texcoords[2 * idx0.texcoord_index + 0], attrib.texcoords[2 * idx0.texcoord_index + 1]);
+            vec2 uv0(0.0f);
+            vec2 uv1(0.0f);
+            vec2 uv2(0.0f);
 
-            // Get texture file path for this triangle
-            std::string textureFile;
             if (idx0.texcoord_index >= 0)
             {
-                int material_id = shapes[s].mesh.material_ids[f];
-                if (material_id >= 0 && material_id < reader.GetMaterials().size())
-                {
-                    const tinyobj::material_t &mat = reader.GetMaterials()[material_id];
-                    textureFile = mat.diffuse_texname;
-                }
+                size_t texcoordOffset = static_cast<size_t>(2 * idx0.texcoord_index);
+                if (texcoordOffset + 1 < attrib.texcoords.size())
+                    uv0 = vec2(attrib.texcoords[texcoordOffset + 0], attrib.texcoords[texcoordOffset + 1]);
+            }
+
+            if (idx1.texcoord_index >= 0)
+            {
+                size_t texcoordOffset = static_cast<size_t>(2 * idx1.texcoord_index);
+                if (texcoordOffset + 1 < attrib.texcoords.size())
+                    uv1 = vec2(attrib.texcoords[texcoordOffset + 0], attrib.texcoords[texcoordOffset + 1]);
+            }
+
+            if (idx2.texcoord_index >= 0)
+            {
+                size_t texcoordOffset = static_cast<size_t>(2 * idx2.texcoord_index);
+                if (texcoordOffset + 1 < attrib.texcoords.size())
+                    uv2 = vec2(attrib.texcoords[texcoordOffset + 0], attrib.texcoords[texcoordOffset + 1]);
+            }
+
+            // Get texture index for this triangle, -1 if no texture
+            int materialId = shapes[s].mesh.material_ids[f];
+            size_t textureIdx = static_cast<size_t>(-1);
+            if (materialId >= 0)
+            {
+                size_t materialIdx = static_cast<size_t>(materialId);
+                if (materialIdx < materialHasTexture.size() && materialHasTexture[materialIdx])
+                    textureIdx = materialIdx;
             }
 
             // Add the unrolled triangle to the vector
-            triangles.push_back(Triangle(v0, v1, v2, uv0, uv1, uv2, textureFile, vec3(1, 1, 1)));
+            triangles.push_back(Triangle(v0, v1, v2, uv0, uv1, uv2, textureIdx, vec3(1, 1, 1)));
             index_offset += fv;
         }
     }
 
     ScaleToUnitCube();
+
+    bvh = BVH(triangles);
 }
 
 void ObjModel::ScaleToUnitCube()

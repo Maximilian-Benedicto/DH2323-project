@@ -4,6 +4,7 @@
 #include "Shader.hpp"
 #include <vector>
 #include <glm/glm.hpp>
+#include "Model.hpp"
 
 /**
  * @brief Shader that renders the wireframe of the triangles in the scene
@@ -16,7 +17,7 @@ private:
 public:
     bool showBVH = false;
     WireframeShader();
-    void render(Uint32 *pixelBuffer, int width, int height, const BVH &bvh, const std::vector<Triangle> &triangles, const Light &light, const Camera &camera, std::atomic<bool> &killFlag) override;
+    void render(Uint32 *pixelBuffer, int width, int height, const Model &model, const Light &light, const Camera &camera, std::atomic<bool> &killFlag) override;
 };
 
 #endif

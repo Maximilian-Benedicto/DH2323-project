@@ -13,13 +13,9 @@ add_executable(DH2323Project
     CornellBox.cpp
     PlyModel.cpp
     ObjModel.cpp
+    Texture.cpp
     Material.cpp
     BVH.cpp
-)
-
-add_executable(SlabIntersectionTest
-    SlabIntersectionTest.cpp
-    LambertianShader.cpp
 )
 
 include(FetchContent)
@@ -73,7 +69,14 @@ target_include_directories(DH2323Project PRIVATE
 )
 
 target_link_libraries(DH2323Project PRIVATE glm::glm SDL3::SDL3)
-target_link_libraries(SlabIntersectionTest PRIVATE glm::glm SDL3::SDL3)
+
+
+# Copy runtime model assets next to the built executable so relative paths are stable.
+add_custom_command(TARGET DH2323Project POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_CURRENT_SOURCE_DIR}/../model
+        $<TARGET_FILE_DIR:DH2323Project>/model
+)
 
 if(WIN32)
     # Ensure SDL3.dll and other runtime DLL dependencies are placed beside the executable.
