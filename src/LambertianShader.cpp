@@ -133,7 +133,35 @@ void LambertianShader::render(Uint32 *pixelBuffer, int width, int height, const 
     }
 }
 
-bool SlabIntersection(const AABB &aabb, const glm::vec3 &start, const glm::vec3 &dir, glm::vec3 &close, glm::vec3 &far)
+bool LambertianShader::SlabIntersection(const AABB &aabb, const glm::vec3 &start, const glm::vec3 &dir, float &tClose)
 {
-    return false;
+
+    // Source (https://en.wikipedia.org/wiki/Slab_method)
+
+    const vec3 l = aabb.min;
+    const vec3 h = aabb.max;
+
+    vec3 tiLow;
+    vec3 tiHigh;
+
+    for (int i = 0; i < 3; i++)
+    {
+        tiLow[i] = (l[i] - start[i]) / dir[i];
+        tiHigh[i] = (h[i] - start[i]) / dir[i];
+    }
+
+    vec3 tiClose;
+    vec3 tiFar;
+
+    for (size_t i = 0; i < 3; i++)
+    {
+        tiClose[i] = glm::min(tiLow[i], tiHigh[i]);
+        tiFar[i] = glm::max(tiLow[i], tiHigh[i]);
+    }
+
+        float tNear = glm::max(tiClose.x, glm::max(tiClose.y, tiClose.z));
+        float tFar = glm::min(tiClose.x, glm::min(tiClose.y, tiClose.z));
+
+    tClose = tNear;
+    return tFar >= tNear;
 }
