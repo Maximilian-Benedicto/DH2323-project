@@ -11,53 +11,68 @@ using namespace std;
 
 LambertianShader::LambertianShader() : indirectLight(vec3(0.5f, 0.5f, 0.5f)) {}
 
-bool LambertianShader::ClosestIntersection(vec3 start, vec3 dir, const vector<Triangle> &triangles, Intersection &closestIntersection)
+bool LambertianShader::ClosestIntersection(vec3 start, vec3 dir, const BVH &bvh, const vector<Triangle> &triangles, Intersection &closestIntersection)
 {
-    bool found = false;
 
-    for (size_t i = 0; i < triangles.size(); i++)
+    // Start at the root
+    BVHNode node = bvh.bvhNodes[bvh.rootNodeIdx];
+
+    bool leaf = node.isLeaf();
+
+    while (!leaf)
     {
-        // Ray-triangle intersection algorithm
-        Triangle triangle = triangles[i];
-        vec3 v0 = triangle.v0;
-        vec3 v1 = triangle.v1;
-        vec3 v2 = triangle.v2;
-        vec3 e1 = v1 - v0;
-        vec3 e2 = v2 - v0;
-        vec3 b = start - v0;
-        mat3 A(-dir, e1, e2);
-        vec3 x = inverse(A) * b;
+        // Get children
+        BVHNode leftChild = bvh.bvhNodes[node.leftFirst];
+        BVHNode rightChild = bvh.bvhNodes[node.leftFirst + 1];
 
-        // Get distance t along the ray, and barycentric coordinate u and v
-        float t = x.x;
-        float u = x.y;
-        float v = x.z;
+        // Check if left child intersects with the ray
 
-        // Check if the intersection is valid
-        if (!(0 <= t && 0 <= u && 0 <= v && u + v <= 1))
-            continue;
+        bool found = false;
 
-        // Update closest intersection if this one is closer
-        vec3 position = start + dir * t;
-        float distance = length(dir * t);
-        if (!found || distance < closestIntersection.distance)
+        for (size_t i = 0; i < triangles.size(); i++)
         {
-            closestIntersection = {position, distance, (int)i};
-            found = true;
-        }
-    }
+            // Ray-triangle intersection algorithm
+            Triangle triangle = triangles[i];
+            vec3 v0 = triangle.v0;
+            vec3 v1 = triangle.v1;
+            vec3 v2 = triangle.v2;
+            vec3 e1 = v1 - v0;
+            vec3 e2 = v2 - v0;
+            vec3 b = start - v0;
+            mat3 A(-dir, e1, e2);
+            vec3 x = inverse(A) * b;
 
-    return found;
+            // Get distance t along the ray, and barycentric coordinate u and v
+            float t = x.x;
+            float u = x.y;
+            float v = x.z;
+
+            // Check if the intersection is valid
+            if (!(0 <= t && 0 <= u && 0 <= v && u + v <= 1))
+                continue;
+
+            // Update closest intersection if this one is closer
+            vec3 position = start + dir * t;
+            float distance = length(dir * t);
+            if (!found || distance < closestIntersection.distance)
+            {
+                closestIntersection = {position, distance, (int)i};
+                found = true;
+            }
+        }
+
+        return found;
+    }
 }
 
-vec3 LambertianShader::DirectLight(const Intersection &i, const vector<Triangle> &triangles, const Light &light)
+vec3 LambertianShader::DirectLight(const Intersection &i, const BVH &bvh, const vector<Triangle> &triangles, const Light &light)
 {
     // Check if the light is visible from the intersection point
     vec3 r = light.position - i.position;
     vec3 nUnit = triangles[i.triangleIndex].normal;
     vec3 start = i.position + nUnit * 1e-4f; // Offset start point to avoid self-intersection
     Intersection reverse;
-    if (ClosestIntersection(start, r, triangles, reverse))
+    if (ClosestIntersection(start, r, bvh, triangles, reverse))
     {
         if (length(start - reverse.position) < length(r))
             return vec3(0, 0, 0);
@@ -98,13 +113,13 @@ void LambertianShader::render(Uint32 *pixelBuffer, int width, int height, const 
 
             // Find closest intersection of ray with scene
             Intersection closestIntersection;
-            bool found = ClosestIntersection(start, dir, triangles, closestIntersection);
+            bool found = ClosestIntersection(start, dir, bvh, triangles, closestIntersection);
 
             // Compute color at intersection point
             vec3 color(0, 0, 0);
             if (found)
             {
-                vec3 directL = DirectLight(closestIntersection, triangles, light);
+                vec3 directL = DirectLight(closestIntersection, bvh, triangles, light);
                 color = (triangles[closestIntersection.triangleIndex].color / (float)M_PI) * (directL + indirectLight);
             }
 
@@ -116,4 +131,9 @@ void LambertianShader::render(Uint32 *pixelBuffer, int width, int height, const 
             pixelBuffer[y * width + x] = rgba;
         }
     }
+}
+
+bool SlabIntersection(const AABB &aabb, const glm::vec3 &start, const glm::vec3 &dir, glm::vec3 &close, glm::vec3 &far)
+{
+    return false;
 }
