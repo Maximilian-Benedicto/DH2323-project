@@ -17,6 +17,11 @@ add_executable(DH2323Project
     BVH.cpp
 )
 
+add_executable(SlabIntersectionTest
+    SlabIntersectionTest.cpp
+    LambertianShader.cpp
+)
+
 include(FetchContent)
 
 
@@ -58,6 +63,7 @@ target_include_directories(DH2323Project PRIVATE
 )
 
 target_link_libraries(DH2323Project PRIVATE glm::glm SDL3::SDL3)
+target_link_libraries(SlabIntersectionTest PRIVATE glm::glm SDL3::SDL3)
 
 if(WIN32)
     # Ensure SDL3.dll and other runtime DLL dependencies are placed beside the executable.

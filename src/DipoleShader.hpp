@@ -13,6 +13,14 @@ class DipoleShader : public Shader
 public:
     DipoleShader();
     void render(Uint32 *pixelBuffer, int width, int height, const BVH &bvh, const std::vector<Triangle> &triangles, const Light &light, const Camera &camera, std::atomic<bool> &killFlag) override;
+private:
+    float PhaseFunction (float cosTheta);
+    float ScalarDistance (float x1, float x2);
+    float PositiveDistance (float r);
+    float NegativeDistance (float r);
+    float DiffuseReflectance (float r);
+    float MultipleScattering (float r);
+
 };
 
 #endif

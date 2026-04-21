@@ -3,6 +3,7 @@
 
 #include <glm/glm.hpp>
 #include <vector>
+#include "Material.hpp"
 
 /**
  * @brief Simple class representing a triangle in 3D space, defined by its three vertices, normal vector, color and centroid.
@@ -16,12 +17,14 @@ public:
     glm::vec3 normal;
     glm::vec3 color;
     glm::vec3 centroid;
+    Material material;
 
     Triangle(glm::vec3 v0, glm::vec3 v1, glm::vec3 v2, glm::vec3 color)
         : v0(v0), v1(v1), v2(v2), color(color)
     {
         ComputeNormal();
         ComputeCentroid();
+        material = Material::Marble();
     }
 
     void ComputeNormal()
