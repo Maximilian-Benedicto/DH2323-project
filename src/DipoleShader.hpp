@@ -14,21 +14,47 @@ class DipoleShader : public Shader
 public:
     DipoleShader();
     void render(Uint32 *pixelBuffer, int width, int height, const Model &model, const Light &light, const Camera &camera, std::atomic<bool> &killFlag) override;
+
 private:
-    float ScalarDistance (vec3 xi, vec3 xo);
-    float PositiveDistance (float r);
-    float NegativeDistance (float r);
-    float DiffuseReflectance (float r);
+    // Raytracing functions
+
+    /**
+     * @brief Struct to hold information about an intersection between a ray and the model
+     */
+    struct Intersection
+    {
+        glm::vec3 position;
+        float distance;
+        int triangleIndex;
+        glm::vec2 uv;
+    };
+
+    /**
+     * @brief Find the closest intersection of a ray with the model. Returns true if an intersection is found, false otherwise.
+     */
+    bool ClosestIntersection(glm::vec3 start, glm::vec3 dir, const Model &model, Intersection &closestIntersection);
+
+    /**
+     * @brief Find the intersection of a ray with an axis-aligned bounding box.
+     */
+    bool SlabIntersection(const AABB &aabb, const glm::vec3 &start, const glm::vec3 &dir, float &tClose);
+
+    // Dipole model functions
+
+    float ScalarDistance(glm::vec3 xi, glm::vec3 xo);
+    float PositiveDistance(float r);
+    float NegativeDistance(float r);
+    float DiffuseReflectance(float r);
     float FresnelReflectance(float cosTheta);
     float FresnelTransmittance(float cosTheta);
-    float MultipleScattering (vec3 xi, vec3 w1, vec3 xo, vec3 w0);
-    vec3 OutgoingRadiance (vec3 xo, vec3 wo, vec3 xi, vec3 w1, vec3 wop, vec3 wip);
-    vec3 IncidentRadiance (vec3 xi, vec3 wi);
-    float Fresnel (vec3 wo, vec3 wi);
-    float Exponential (vec3 xo, vec3 xi);
-    float GeometryFactor (vec3 n, vec3 wo, vec3 wi);
-    vec3 SingleScattering(vec3 xo, vec3 wo);
-    float PhaseFunction (float cosTheta);
+    float MultipleScattering(glm::vec3 xi, glm::vec3 w1, glm::vec3 xo, glm::vec3 w0);
+    glm::vec3 OutgoingRadiance(glm::vec3 xo, glm::vec3 wo, glm::vec3 xi, glm::vec3 w1, glm::vec3 wop, glm::vec3 wip);
+    glm::vec3 IncidentRadiance(glm::vec3 xi, glm::vec3 wi);
+    float Fresnel(glm::vec3 wo, glm::vec3 wi);
+    float Exponential(glm::vec3 xo, glm::vec3 xi);
+    float GeometryFactor(glm::vec3 n, glm::vec3 wo, glm::vec3 wi);
+    glm::vec3 SingleScattering(glm::vec3 xo, glm::vec3 wo);
+    float PhaseFunction(float cosTheta);
 };
 
 #endif
