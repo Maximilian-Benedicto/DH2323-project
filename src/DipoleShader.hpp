@@ -12,6 +12,15 @@
 class DipoleShader : public Shader
 {
 public:
+    enum Mode
+    {
+        NORMAL,           // Visualize surface normals
+        SINGLE_SCATTER,   // Visualize single scattering component
+        MULTIPLE_SCATTER, // Visualize multiple scattering component
+        FRESNEL,          // Visualize Fresnel reflectance
+        FULL              // Visualize full dipole model
+    };
+    Mode mode;
     DipoleShader();
     void render(Uint32 *pixelBuffer, int width, int height, const Model &model, const Light &light, const Camera &camera, std::atomic<bool> &killFlag) override;
 

@@ -43,7 +43,6 @@ void DipoleShader::render(Uint32 *pixelBuffer, int width, int height, const Mode
 
             // TODO: call dipole model functions to compute color
             // For now, just visualize the normal of the intersected triangle
-
             vec3 color(0.0f, 0.0f, 0.0f);
             if (found)
                 color = model.triangles[closestIntersection.triangleIndex].normal;
