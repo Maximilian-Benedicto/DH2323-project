@@ -6,58 +6,52 @@
 #include "CornellBox.hpp"
 
 /**
- * @brief Load the Cornell Box
- * @param triangles The vector to write the mesh triangles into
+ * @brief Build Cornell Box geometry and acceleration structures.
  */
-void CornellBox::Load()
-{
+void CornellBox::load() {
     triangles.clear();
     triangles.reserve(5 * 2 * 3);
 
-    Room();
-    ShortBlock();
-    TallBlock();
-    ScaleToUnitCube();
+    room();
+    shortBlock();
+    tallBlock();
+    scaleToUnitCube();
     bvh = BVH(triangles);
 }
 
-void CornellBox::Room()
-{
-
+void CornellBox::room() {
     // Corners of the Cornell Box
-    const glm::vec3 A(L, 0, 0);
+    const glm::vec3 A(kL, 0, 0);
     const glm::vec3 B(0, 0, 0);
-    const glm::vec3 C(L, 0, L);
-    const glm::vec3 D(0, 0, L);
-    const glm::vec3 E(L, L, 0);
-    const glm::vec3 F(0, L, 0);
-    const glm::vec3 G(L, L, L);
-    const glm::vec3 H(0, L, L);
+    const glm::vec3 C(kL, 0, kL);
+    const glm::vec3 D(0, 0, kL);
+    const glm::vec3 E(kL, kL, 0);
+    const glm::vec3 F(0, kL, 0);
+    const glm::vec3 G(kL, kL, kL);
+    const glm::vec3 H(0, kL, kL);
 
     // Floor:
-    triangles.push_back(Triangle(C, B, A, GREEN));
-    triangles.push_back(Triangle(C, D, B, GREEN));
+    triangles.push_back(Triangle(C, B, A, kGreen));
+    triangles.push_back(Triangle(C, D, B, kGreen));
 
     // Left wall
-    triangles.push_back(Triangle(A, E, C, PURPLE));
-    triangles.push_back(Triangle(C, E, G, PURPLE));
+    triangles.push_back(Triangle(A, E, C, kPurple));
+    triangles.push_back(Triangle(C, E, G, kPurple));
 
     // Right wall
-    triangles.push_back(Triangle(F, B, D, YELLOW));
-    triangles.push_back(Triangle(H, F, D, YELLOW));
+    triangles.push_back(Triangle(F, B, D, kYellow));
+    triangles.push_back(Triangle(H, F, D, kYellow));
 
     // Ceiling
-    triangles.push_back(Triangle(E, F, G, CYAN));
-    triangles.push_back(Triangle(F, H, G, CYAN));
+    triangles.push_back(Triangle(E, F, G, kCyan));
+    triangles.push_back(Triangle(F, H, G, kCyan));
 
     // Back wall
-    triangles.push_back(Triangle(G, D, C, WHITE));
-    triangles.push_back(Triangle(G, H, D, WHITE));
+    triangles.push_back(Triangle(G, D, C, kWhite));
+    triangles.push_back(Triangle(G, H, D, kWhite));
 }
 
-void CornellBox::ShortBlock()
-{
-
+void CornellBox::shortBlock() {
     // Corners of the short block
     const glm::vec3 A = glm::vec3(290, 0, 114);
     const glm::vec3 B = glm::vec3(130, 0, 65);
@@ -69,28 +63,27 @@ void CornellBox::ShortBlock()
     const glm::vec3 H = glm::vec3(82, 165, 225);
 
     // Front
-    triangles.push_back(Triangle(E, B, A, RED));
-    triangles.push_back(Triangle(E, F, B, RED));
+    triangles.push_back(Triangle(E, B, A, kRed));
+    triangles.push_back(Triangle(E, F, B, kRed));
 
     // Front
-    triangles.push_back(Triangle(F, D, B, RED));
-    triangles.push_back(Triangle(F, H, D, RED));
+    triangles.push_back(Triangle(F, D, B, kRed));
+    triangles.push_back(Triangle(F, H, D, kRed));
 
     // BACK
-    triangles.push_back(Triangle(H, C, D, RED));
-    triangles.push_back(Triangle(H, G, C, RED));
+    triangles.push_back(Triangle(H, C, D, kRed));
+    triangles.push_back(Triangle(H, G, C, kRed));
 
     // LEFT
-    triangles.push_back(Triangle(G, E, C, RED));
-    triangles.push_back(Triangle(E, A, C, RED));
+    triangles.push_back(Triangle(G, E, C, kRed));
+    triangles.push_back(Triangle(E, A, C, kRed));
 
     // TOP
-    triangles.push_back(Triangle(G, F, E, RED));
-    triangles.push_back(Triangle(G, H, F, RED));
+    triangles.push_back(Triangle(G, F, E, kRed));
+    triangles.push_back(Triangle(G, H, F, kRed));
 }
 
-void CornellBox::TallBlock()
-{
+void CornellBox::tallBlock() {
     // Corners of the tall block
     const glm::vec3 A = glm::vec3(423, 0, 247);
     const glm::vec3 B = glm::vec3(265, 0, 296);
@@ -102,34 +95,36 @@ void CornellBox::TallBlock()
     const glm::vec3 H = glm::vec3(314, 330, 456);
 
     // Front
-    triangles.push_back(Triangle(E, B, A, BLUE));
-    triangles.push_back(Triangle(E, F, B, BLUE));
+    triangles.push_back(Triangle(E, B, A, kBlue));
+    triangles.push_back(Triangle(E, F, B, kBlue));
 
     // Front
-    triangles.push_back(Triangle(F, D, B, BLUE));
-    triangles.push_back(Triangle(F, H, D, BLUE));
+    triangles.push_back(Triangle(F, D, B, kBlue));
+    triangles.push_back(Triangle(F, H, D, kBlue));
 
     // BACK
-    triangles.push_back(Triangle(H, C, D, BLUE));
-    triangles.push_back(Triangle(H, G, C, BLUE));
+    triangles.push_back(Triangle(H, C, D, kBlue));
+    triangles.push_back(Triangle(H, G, C, kBlue));
 
     // LEFT
-    triangles.push_back(Triangle(G, E, C, BLUE));
-    triangles.push_back(Triangle(E, A, C, BLUE));
+    triangles.push_back(Triangle(G, E, C, kBlue));
+    triangles.push_back(Triangle(E, A, C, kBlue));
 
     // TOP
-    triangles.push_back(Triangle(G, F, E, BLUE));
-    triangles.push_back(Triangle(G, H, F, BLUE));
+    triangles.push_back(Triangle(G, F, E, kBlue));
+    triangles.push_back(Triangle(G, H, F, kBlue));
 }
 
-void CornellBox::ScaleToUnitCube()
-{
+/**
+ * @brief Normalize Cornell Box coordinates to renderer unit space.
+ * @details Scales from millimeter-style scene units to [-1,1]^3 and mirrors X/Y to match camera convention.
+ */
+void CornellBox::scaleToUnitCube() {
     // Scale to the volume [-1,1]^3
-    for (Triangle &triangle : triangles)
-    {
-        triangle.v0 *= 2 / L;
-        triangle.v1 *= 2 / L;
-        triangle.v2 *= 2 / L;
+    for (Triangle &triangle : triangles) {
+        triangle.v0 *= 2 / kL;
+        triangle.v1 *= 2 / kL;
+        triangle.v2 *= 2 / kL;
 
         triangle.v0 -= glm::vec3(1, 1, 1);
         triangle.v1 -= glm::vec3(1, 1, 1);
@@ -143,8 +138,8 @@ void CornellBox::ScaleToUnitCube()
         triangle.v1.y *= -1;
         triangle.v2.y *= -1;
 
-        triangle.ComputeNormal();
+        triangle.computeNormal();
 
-        triangle.ComputeCentroid();
+        triangle.computeCentroid();
     }
 }

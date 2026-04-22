@@ -1,5 +1,5 @@
-#ifndef STANFORDBUNNY_HPP
-#define STANFORDBUNNY_HPP
+#ifndef PLY_MODEL_HPP
+#define PLY_MODEL_HPP
 
 #include "Model.hpp"
 
@@ -12,12 +12,12 @@ private:
     std::string filename;
 
     // Scale the model to fit in the volume [-1,1]^3
-    void ScaleToUnitCube();
+    void scaleToUnitCube();
 
 public:
     PlyModel(std::string filename) : filename(filename) {}
 
-    void Load() override;
+    void load() override;
 };
 
 #endif

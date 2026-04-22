@@ -12,8 +12,12 @@ using namespace std;
 
 DipoleShader::DipoleShader() {}
 
-void DipoleShader::render(Uint32 *pixelBuffer, int width, int height, const Model &model, const Light &light, const Camera &camera, std::atomic<bool> &killFlag)
-{
+/**
+ * @brief Render a diagnostic dipole frame.
+ * @details Current implementation visualizes hit normals while dipole scattering equations are stubbed.
+ */
+void DipoleShader::render(Uint32 *pixelBuffer, int width, int height, const Model &model, const Light &light,
+                          const Camera &camera, std::atomic<bool> &shouldStopRenderThread) {
     // Compute camera basis vectors
     vec3 right = normalize(cross(vec3(0.0f, 1.0f, 0.0f), camera.direction));
     vec3 up = normalize(cross(camera.direction, right));
@@ -24,12 +28,10 @@ void DipoleShader::render(Uint32 *pixelBuffer, int width, int height, const Mode
 
     vec3 start = camera.position;
 
-    for (int y = 0; y < height; ++y)
-    {
-        for (int x = 0; x < width; ++x)
-        {
-            // Kill render thread if flag is set
-            if (killFlag)
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+            // Stop rendering early when a new frame is requested.
+            if (shouldStopRenderThread)
                 return;
 
             // Compute ray direction for this pixel
@@ -38,14 +40,14 @@ void DipoleShader::render(Uint32 *pixelBuffer, int width, int height, const Mode
             vec3 dir = normalize(camera.direction * camera.focalLength + right * dx + up * dy);
 
             // Find closest intersection of ray with scene
-            Intersection closestIntersection;
-            bool found = ClosestIntersection(start, dir, model, closestIntersection);
+            Intersection closestHit;
+            bool found = closestIntersection(start, dir, model, closestHit);
 
             // TODO: call dipole model functions to compute color
             // For now, just visualize the normal of the intersected triangle
             vec3 color(0.0f, 0.0f, 0.0f);
             if (found)
-                color = model.triangles[closestIntersection.triangleIndex].normal;
+                color = model.triangles[closestHit.triangleIndex].normal;
 
             // Write color to pixel buffer
             Uint8 r = Uint8(glm::clamp(255 * color.r, 0.f, 255.f));
@@ -57,8 +59,15 @@ void DipoleShader::render(Uint32 *pixelBuffer, int width, int height, const Mode
     }
 }
 
-bool DipoleShader::ClosestIntersection(vec3 start, vec3 dir, const Model &model, Intersection &closestIntersection)
-{
+/**
+ * @brief Find the nearest ray hit using iterative BVH traversal.
+ * @param start Ray origin.
+ * @param dir Ray direction.
+ * @param model Scene model containing triangles and BVH.
+ * @param closestHit Output nearest hit when true is returned.
+ * @return True if any triangle is intersected.
+ */
+bool DipoleShader::closestIntersection(vec3 start, vec3 dir, const Model &model, Intersection &closestHit) {
     bool found = false;
     if (model.bvh.nodesUsed == 0)
         return false;
@@ -68,8 +77,7 @@ bool DipoleShader::ClosestIntersection(vec3 start, vec3 dir, const Model &model,
     stack.push_back(model.bvh.rootNodeIdx);
 
     // Iterative BVH traversal using a stack
-    while (!stack.empty())
-    {
+    while (!stack.empty()) {
         int nodeIdx = stack.back();
         stack.pop_back();
 
@@ -77,19 +85,17 @@ bool DipoleShader::ClosestIntersection(vec3 start, vec3 dir, const Model &model,
 
         // Skip nodes that dont intersect or are farther than the closest intersection found so far
         float nodeTClose;
-        if (!SlabIntersection(node.aabb, start, dir, nodeTClose))
+        if (!slabIntersection(node.aabb, start, dir, nodeTClose))
             continue;
         if (nodeTClose > closestDistance)
             continue;
 
         // If this is a leaf node, check for intersection with each triangle
-        if (node.isLeaf())
-        {
+        if (node.isLeaf()) {
             int first = node.leftFirst;
             int end = first + node.triCount;
-            for (int i = first; i < end; ++i)
-            {
-                // Ray-triangle intersection algorithm
+            for (int i = first; i < end; ++i) {
+                // Solve ray-triangle intersection in barycentric coordinates.
                 const Triangle &triangle = model.triangles[i];
                 vec3 v0 = triangle.v0;
                 vec3 v1 = triangle.v1;
@@ -112,10 +118,9 @@ bool DipoleShader::ClosestIntersection(vec3 start, vec3 dir, const Model &model,
                 // Update closest intersection if this one is closer
                 vec3 position = start + dir * t;
                 float distance = length(dir * t);
-                if (!found || distance < closestDistance)
-                {
+                if (!found || distance < closestDistance) {
                     // Update closest intersection
-                    closestIntersection = {position, distance, i, vec2(u, v)};
+                    closestHit = {position, distance, i, vec2(u, v)};
                     closestDistance = distance;
                     found = true;
                 }
@@ -130,29 +135,21 @@ bool DipoleShader::ClosestIntersection(vec3 start, vec3 dir, const Model &model,
 
         float leftClose;
         float rightClose;
-        bool leftIntersect = SlabIntersection(leftChild.aabb, start, dir, leftClose);
-        bool rightIntersect = SlabIntersection(rightChild.aabb, start, dir, rightClose);
+        bool leftIntersect = slabIntersection(leftChild.aabb, start, dir, leftClose);
+        bool rightIntersect = slabIntersection(rightChild.aabb, start, dir, rightClose);
 
-        if (leftIntersect && rightIntersect)
-        {
+        if (leftIntersect && rightIntersect) {
             // Traverse the closer child first to increase chances of early termination
-            if (leftClose < rightClose)
-            {
+            if (leftClose < rightClose) {
                 stack.push_back(rightIdx);
                 stack.push_back(leftIdx);
-            }
-            else
-            {
+            } else {
                 stack.push_back(leftIdx);
                 stack.push_back(rightIdx);
             }
-        }
-        else if (leftIntersect)
-        {
+        } else if (leftIntersect) {
             stack.push_back(leftIdx);
-        }
-        else if (rightIntersect)
-        {
+        } else if (rightIntersect) {
             stack.push_back(rightIdx);
         }
     }
@@ -160,9 +157,15 @@ bool DipoleShader::ClosestIntersection(vec3 start, vec3 dir, const Model &model,
     return found;
 }
 
-bool DipoleShader::SlabIntersection(const AABB &aabb, const glm::vec3 &start, const glm::vec3 &dir, float &tClose)
-{
-
+/**
+ * @brief Test ray/AABB overlap with the slab method.
+ * @param aabb Axis-aligned bounding box.
+ * @param start Ray origin.
+ * @param dir Ray direction.
+ * @param tClose Earliest non-negative entry distance along the ray.
+ * @return True when the ray overlaps the AABB in front of the origin.
+ */
+bool DipoleShader::slabIntersection(const AABB &aabb, const glm::vec3 &start, const glm::vec3 &dir, float &tClose) {
     // Source (https://en.wikipedia.org/wiki/Slab_method)
 
     // Get the low and high corners of the AABB
@@ -175,20 +178,16 @@ bool DipoleShader::SlabIntersection(const AABB &aabb, const glm::vec3 &start, co
     const float eps = 1e-8f;
 
     // Compute intersection t values for each pair of planes
-    for (int i = 0; i < 3; i++)
-    {
+    for (int i = 0; i < 3; i++) {
         // If the ray is parallel to the planes, check if the start point is between them
-        if (abs(dir[i]) < eps)
-        {
+        if (abs(dir[i]) < eps) {
             if (start[i] < l[i] || start[i] > h[i])
                 return false;
 
             // Set t values to -inf and +inf so they won't affect the final intersection interval
             tiLow[i] = -std::numeric_limits<float>::infinity();
             tiHigh[i] = std::numeric_limits<float>::infinity();
-        }
-        else
-        {
+        } else {
             // Compute t values for the planes
             tiLow[i] = (l[i] - start[i]) / dir[i];
             tiHigh[i] = (h[i] - start[i]) / dir[i];
@@ -199,8 +198,7 @@ bool DipoleShader::SlabIntersection(const AABB &aabb, const glm::vec3 &start, co
     vec3 tiFar;
 
     // Get the near and far t values for the intersection interval
-    for (size_t i = 0; i < 3; i++)
-    {
+    for (size_t i = 0; i < 3; i++) {
         tiClose[i] = glm::min(tiLow[i], tiHigh[i]);
         tiFar[i] = glm::max(tiLow[i], tiHigh[i]);
     }
@@ -212,72 +210,58 @@ bool DipoleShader::SlabIntersection(const AABB &aabb, const glm::vec3 &start, co
     return tFar >= tNear && tFar >= 0.0f;
 }
 
-float DipoleShader::ScalarDistance(vec3 xi, vec3 xo)
-{
+float DipoleShader::scalarDistance(vec3 xi, vec3 xo) {
     return 0.0f;
 }
 
-float DipoleShader::PositiveDistance(float r)
-{
+float DipoleShader::positiveDistance(float r) {
     return 0.0f;
 }
 
-float DipoleShader::NegativeDistance(float r)
-{
+float DipoleShader::negativeDistance(float r) {
     return 0.0f;
 }
 
-float DipoleShader::DiffuseReflectance(float r)
-{
+float DipoleShader::diffuseReflectance(float r) {
     return 0.0f;
 }
 
-float DipoleShader::FresnelReflectance(float cosTheta)
-{
+float DipoleShader::fresnelReflectance(float cosTheta) {
     return 0.0f;
 }
 
-float DipoleShader::FresnelTransmittance(float cosTheta)
-{
+float DipoleShader::fresnelTransmittance(float cosTheta) {
     return 0.0f;
 }
 
-float DipoleShader::MultipleScattering(vec3 xi, vec3 w1, vec3 xo, vec3 w0)
-{
+float DipoleShader::multipleScattering(vec3 xi, vec3 w1, vec3 xo, vec3 w0) {
     return 0.0f;
 }
 
-vec3 OutgoingRadiance(vec3 xo, vec3 wo, vec3 xi, vec3 w1, vec3 wop, vec3 wip)
-{
+vec3 DipoleShader::outgoingRadiance(vec3 xo, vec3 wo, vec3 xi, vec3 w1, vec3 wop, vec3 wip) {
     return vec3(0.0f);
 }
 
-vec3 IncidentRadiance(vec3 xi, vec3 wi)
-{
+vec3 DipoleShader::incidentRadiance(vec3 xi, vec3 wi) {
     return vec3(0.0f);
 }
 
-float DipoleShader::Fresnel(vec3 wo, vec3 wi)
-{
+float DipoleShader::fresnel(vec3 wo, vec3 wi) {
     return 0.0f;
 }
 
-float DipoleShader::Exponential(vec3 xo, vec3 xi)
-{
+float DipoleShader::exponential(vec3 xo, vec3 xi) {
     return 0.0f;
 }
 
-float DipoleShader::GeometryFactor(vec3 n, vec3 wo, vec3 wi)
-{
+float DipoleShader::geometryFactor(vec3 n, vec3 wo, vec3 wi) {
     return 0.0f;
 }
 
-vec3 SingleScattering(vec3 xo, vec3 wo)
-{
+vec3 DipoleShader::singleScattering(vec3 xo, vec3 wo) {
     return vec3(0.0f);
 }
 
-float DipoleShader::PhaseFunction(float cosTheta)
-{
+float DipoleShader::phaseFunction(float cosTheta) {
     return 0.0f;
 }

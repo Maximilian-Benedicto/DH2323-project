@@ -13,8 +13,15 @@ using namespace std;
 
 LambertianShader::LambertianShader() : indirectLight(vec3(0.5f, 0.5f, 0.5f)) {}
 
-bool LambertianShader::ClosestIntersection(vec3 start, vec3 dir, const Model &model, Intersection &closestIntersection)
-{
+/**
+ * @brief Find the nearest ray hit using iterative BVH traversal.
+ * @param start Ray origin.
+ * @param dir Ray direction.
+ * @param model Scene model containing triangles and BVH.
+ * @param closestHit Output nearest hit when true is returned.
+ * @return True if any triangle is intersected.
+ */
+bool LambertianShader::closestIntersection(vec3 start, vec3 dir, const Model &model, Intersection &closestHit) {
     bool found = false;
     if (model.bvh.nodesUsed == 0)
         return false;
@@ -24,8 +31,7 @@ bool LambertianShader::ClosestIntersection(vec3 start, vec3 dir, const Model &mo
     stack.push_back(model.bvh.rootNodeIdx);
 
     // Iterative BVH traversal using a stack
-    while (!stack.empty())
-    {
+    while (!stack.empty()) {
         int nodeIdx = stack.back();
         stack.pop_back();
 
@@ -33,19 +39,17 @@ bool LambertianShader::ClosestIntersection(vec3 start, vec3 dir, const Model &mo
 
         // Skip nodes that dont intersect or are farther than the closest intersection found so far
         float nodeTClose;
-        if (!SlabIntersection(node.aabb, start, dir, nodeTClose))
+        if (!slabIntersection(node.aabb, start, dir, nodeTClose))
             continue;
         if (nodeTClose > closestDistance)
             continue;
 
         // If this is a leaf node, check for intersection with each triangle
-        if (node.isLeaf())
-        {
+        if (node.isLeaf()) {
             int first = node.leftFirst;
             int end = first + node.triCount;
-            for (int i = first; i < end; ++i)
-            {
-                // Ray-triangle intersection algorithm
+            for (int i = first; i < end; ++i) {
+                // Solve ray-triangle intersection in barycentric coordinates.
                 const Triangle &triangle = model.triangles[i];
                 vec3 v0 = triangle.v0;
                 vec3 v1 = triangle.v1;
@@ -68,10 +72,9 @@ bool LambertianShader::ClosestIntersection(vec3 start, vec3 dir, const Model &mo
                 // Update closest intersection if this one is closer
                 vec3 position = start + dir * t;
                 float distance = length(dir * t);
-                if (!found || distance < closestDistance)
-                {
+                if (!found || distance < closestDistance) {
                     // Update closest intersection
-                    closestIntersection = {position, distance, i, vec2(u, v)};
+                    closestHit = {position, distance, i, vec2(u, v)};
                     closestDistance = distance;
                     found = true;
                 }
@@ -86,29 +89,21 @@ bool LambertianShader::ClosestIntersection(vec3 start, vec3 dir, const Model &mo
 
         float leftClose;
         float rightClose;
-        bool leftIntersect = SlabIntersection(leftChild.aabb, start, dir, leftClose);
-        bool rightIntersect = SlabIntersection(rightChild.aabb, start, dir, rightClose);
+        bool leftIntersect = slabIntersection(leftChild.aabb, start, dir, leftClose);
+        bool rightIntersect = slabIntersection(rightChild.aabb, start, dir, rightClose);
 
-        if (leftIntersect && rightIntersect)
-        {
+        if (leftIntersect && rightIntersect) {
             // Traverse the closer child first to increase chances of early termination
-            if (leftClose < rightClose)
-            {
+            if (leftClose < rightClose) {
                 stack.push_back(rightIdx);
                 stack.push_back(leftIdx);
-            }
-            else
-            {
+            } else {
                 stack.push_back(leftIdx);
                 stack.push_back(rightIdx);
             }
-        }
-        else if (leftIntersect)
-        {
+        } else if (leftIntersect) {
             stack.push_back(leftIdx);
-        }
-        else if (rightIntersect)
-        {
+        } else if (rightIntersect) {
             stack.push_back(rightIdx);
         }
     }
@@ -116,15 +111,13 @@ bool LambertianShader::ClosestIntersection(vec3 start, vec3 dir, const Model &mo
     return found;
 }
 
-vec3 LambertianShader::DirectLight(const Intersection &i, const Model &model, const Light &light)
-{
+vec3 LambertianShader::directLight(const Intersection &hit, const Model &model, const Light &light) {
     // Check if the light is visible from the intersection point
-    vec3 r = light.position - i.position;
-    vec3 nUnit = model.triangles[i.triangleIndex].normal;
-    vec3 start = i.position + nUnit * 1e-4f; // Offset start point to avoid self-intersection
+    vec3 r = light.position - hit.position;
+    vec3 nUnit = model.triangles[hit.triangleIndex].normal;
+    vec3 start = hit.position + nUnit * 1e-4f;  // Offset start point to avoid self-intersection
     Intersection reverse;
-    if (ClosestIntersection(start, r, model, reverse))
-    {
+    if (closestIntersection(start, r, model, reverse)) {
         if (length(start - reverse.position) < length(r))
             return vec3(0, 0, 0);
     }
@@ -136,19 +129,22 @@ vec3 LambertianShader::DirectLight(const Intersection &i, const Model &model, co
 
     // Get intersection uv coordinates for texture mapping
     vec3 textureColor(1, 1, 1);
-    size_t textureIdx = model.triangles[i.triangleIndex].textureIdx;
-    if (textureIdx != -1)
-    {
-        const Triangle &triangle = model.triangles[i.triangleIndex];
-        vec2 uv = triangle.uv0 * (1 - i.uv.x - i.uv.y) + triangle.uv1 * i.uv.x + triangle.uv2 * i.uv.y;
-        textureColor = model.textures[textureIdx].Sample(uv);
+    size_t textureIdx = model.triangles[hit.triangleIndex].textureIdx;
+    if (textureIdx != -1) {
+        const Triangle &triangle = model.triangles[hit.triangleIndex];
+        vec2 uv = triangle.uv0 * (1 - hit.uv.x - hit.uv.y) + triangle.uv1 * hit.uv.x + triangle.uv2 * hit.uv.y;
+        textureColor = model.textures[textureIdx].sample(uv);
     }
 
     return D * textureColor;
 }
 
-void LambertianShader::render(Uint32 *pixelBuffer, int width, int height, const Model &model, const Light &light, const Camera &camera, std::atomic<bool> &killFlag)
-{
+/**
+ * @brief Render a Lambertian frame into the pixel buffer.
+ * @details Uses direct point-light shading with hard shadows plus a constant ambient term.
+ */
+void LambertianShader::render(Uint32 *pixelBuffer, int width, int height, const Model &model, const Light &light,
+                              const Camera &camera, std::atomic<bool> &shouldStopRenderThread) {
     // Compute camera basis vectors
     vec3 right = normalize(cross(vec3(0.0f, 1.0f, 0.0f), camera.direction));
     vec3 up = normalize(cross(camera.direction, right));
@@ -159,12 +155,10 @@ void LambertianShader::render(Uint32 *pixelBuffer, int width, int height, const 
 
     vec3 start = camera.position;
 
-    for (int y = 0; y < height; ++y)
-    {
-        for (int x = 0; x < width; ++x)
-        {
-            // Kill render thread if flag is set
-            if (killFlag)
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+            // Stop rendering early when a new frame is requested.
+            if (shouldStopRenderThread)
                 return;
 
             // Compute ray direction for this pixel
@@ -173,15 +167,14 @@ void LambertianShader::render(Uint32 *pixelBuffer, int width, int height, const 
             vec3 dir = normalize(camera.direction * camera.focalLength + right * dx + up * dy);
 
             // Find closest intersection of ray with scene
-            Intersection closestIntersection;
-            bool found = ClosestIntersection(start, dir, model, closestIntersection);
+            Intersection closestHit;
+            bool found = closestIntersection(start, dir, model, closestHit);
 
             // Compute color at intersection point
             vec3 color(0, 0, 0);
-            if (found)
-            {
-                vec3 directL = DirectLight(closestIntersection, model, light);
-                color = model.triangles[closestIntersection.triangleIndex].color * (directL + indirectLight);
+            if (found) {
+                vec3 directL = directLight(closestHit, model, light);
+                color = model.triangles[closestHit.triangleIndex].color * (directL + indirectLight);
             }
 
             // Write color to pixel buffer
@@ -194,9 +187,15 @@ void LambertianShader::render(Uint32 *pixelBuffer, int width, int height, const 
     }
 }
 
-bool LambertianShader::SlabIntersection(const AABB &aabb, const glm::vec3 &start, const glm::vec3 &dir, float &tClose)
-{
-
+/**
+ * @brief Test ray/AABB overlap with the slab method.
+ * @param aabb Axis-aligned bounding box.
+ * @param start Ray origin.
+ * @param dir Ray direction.
+ * @param tClose Earliest non-negative entry distance along the ray.
+ * @return True when the ray overlaps the AABB in front of the origin.
+ */
+bool LambertianShader::slabIntersection(const AABB &aabb, const glm::vec3 &start, const glm::vec3 &dir, float &tClose) {
     // Source (https://en.wikipedia.org/wiki/Slab_method)
 
     // Get the low and high corners of the AABB
@@ -209,20 +208,16 @@ bool LambertianShader::SlabIntersection(const AABB &aabb, const glm::vec3 &start
     const float eps = 1e-8f;
 
     // Compute intersection t values for each pair of planes
-    for (int i = 0; i < 3; i++)
-    {
+    for (int i = 0; i < 3; i++) {
         // If the ray is parallel to the planes, check if the start point is between them
-        if (abs(dir[i]) < eps)
-        {
+        if (abs(dir[i]) < eps) {
             if (start[i] < l[i] || start[i] > h[i])
                 return false;
 
             // Set t values to -inf and +inf so they won't affect the final intersection interval
             tiLow[i] = -std::numeric_limits<float>::infinity();
             tiHigh[i] = std::numeric_limits<float>::infinity();
-        }
-        else
-        {
+        } else {
             // Compute t values for the planes
             tiLow[i] = (l[i] - start[i]) / dir[i];
             tiHigh[i] = (h[i] - start[i]) / dir[i];
@@ -233,8 +228,7 @@ bool LambertianShader::SlabIntersection(const AABB &aabb, const glm::vec3 &start
     vec3 tiFar;
 
     // Get the near and far t values for the intersection interval
-    for (size_t i = 0; i < 3; i++)
-    {
+    for (size_t i = 0; i < 3; i++) {
         tiClose[i] = glm::min(tiLow[i], tiHigh[i]);
         tiFar[i] = glm::max(tiLow[i], tiHigh[i]);
     }

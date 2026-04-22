@@ -1,0 +1,15 @@
+BasedOnStyle: Google
+Language: Cpp
+Standard: c++17
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+ColumnLimit: 120
+PointerAlignment: Right
+ReferenceAlignment: Pointer
+DerivePointerAlignment: false
+BreakBeforeBraces: Attach
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortIfStatementsOnASingleLine: Never
+SortIncludes: Never
+SpaceBeforeParens: ControlStatements

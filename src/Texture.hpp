@@ -4,8 +4,11 @@
 #include <glm/glm.hpp>
 #include <string>
 
-struct Texture
-{
+/**
+ * @brief Move-only texture storage and UV sampling helper.
+ * @details Data ownership is tracked by usesStbAllocator to choose the correct deallocator.
+ */
+struct Texture {
     // Texture data is stored as a flat array of unsigned chars (RGBA format)
     unsigned char *data = nullptr;
 
@@ -34,9 +37,10 @@ struct Texture
 
     /**
      * @brief Sample the texture at given UV coordinates.
-     * @param uv The UV coordinates to sample
+     * @param uv The UV coordinates to sample.
+     * @return RGB color in [0,1], with UV clamping and OBJ bottom-left origin handling.
      */
-    glm::vec3 Sample(const glm::vec2 &uv) const;
+    glm::vec3 sample(const glm::vec2 &uv) const;
 };
 
 #endif

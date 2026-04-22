@@ -12,8 +12,11 @@
 #include "Texture.hpp"
 #include "BVH.hpp"
 
-void ObjModel::Load()
-{
+/**
+ * @brief Load an OBJ mesh with optional material textures.
+ * @details Texture storage is kept indexed by material id so Triangle::textureIdx remains a direct lookup key.
+ */
+void ObjModel::load() {
     using glm::vec2;
     using glm::vec3;
     namespace fs = std::filesystem;
@@ -22,7 +25,7 @@ void ObjModel::Load()
     const fs::path objDir = objPath.parent_path();
 
     tinyobj::ObjReaderConfig reader_config;
-    reader_config.triangulate = true; // Force everything to be triangles
+    reader_config.triangulate = true;  // Force everything to be triangles
     reader_config.mtl_search_path = objDir.string();
     tinyobj::ObjReader reader;
 
@@ -41,8 +44,7 @@ void ObjModel::Load()
     textures.clear();
     std::vector<bool> materialHasTexture;
     size_t total_faces = 0;
-    for (const auto &shape : shapes)
-    {
+    for (const auto &shape : shapes) {
         total_faces += shape.mesh.num_face_vertices.size();
     }
     triangles.reserve(total_faces);
@@ -50,11 +52,9 @@ void ObjModel::Load()
     // Load textures for all materials
     materialHasTexture.reserve(reader.GetMaterials().size());
     textures.reserve(reader.GetMaterials().size());
-    for (const auto &mat : reader.GetMaterials())
-    {
+    for (const auto &mat : reader.GetMaterials()) {
         const std::string &diffuseTexname = mat.diffuse_texname;
-        if (diffuseTexname.empty())
-        {
+        if (diffuseTexname.empty()) {
             materialHasTexture.push_back(false);
             textures.emplace_back("");
             continue;
@@ -69,15 +69,11 @@ void ObjModel::Load()
     }
 
     // Loop over shapes (different meshes in the file)
-    for (size_t s = 0; s < shapes.size(); s++)
-    {
-
+    for (size_t s = 0; s < shapes.size(); s++) {
         size_t index_offset = 0;
 
         // Loop over faces (triangles)
-        for (size_t f = 0; f < shapes[s].mesh.num_face_vertices.size(); f++)
-        {
-
+        for (size_t f = 0; f < shapes[s].mesh.num_face_vertices.size(); f++) {
             // We know this is 3 because we set triangulate = true
             size_t fv = size_t(shapes[s].mesh.num_face_vertices[f]);
 
@@ -87,9 +83,12 @@ void ObjModel::Load()
             tinyobj::index_t idx2 = shapes[s].mesh.indices[index_offset + 2];
 
             // Extract Vertices (reordered for correct winding order)
-            vec3 v0(attrib.vertices[3 * idx2.vertex_index + 0], attrib.vertices[3 * idx2.vertex_index + 1], attrib.vertices[3 * idx2.vertex_index + 2]);
-            vec3 v1(attrib.vertices[3 * idx1.vertex_index + 0], attrib.vertices[3 * idx1.vertex_index + 1], attrib.vertices[3 * idx1.vertex_index + 2]);
-            vec3 v2(attrib.vertices[3 * idx0.vertex_index + 0], attrib.vertices[3 * idx0.vertex_index + 1], attrib.vertices[3 * idx0.vertex_index + 2]);
+            vec3 v0(attrib.vertices[3 * idx2.vertex_index + 0], attrib.vertices[3 * idx2.vertex_index + 1],
+                    attrib.vertices[3 * idx2.vertex_index + 2]);
+            vec3 v1(attrib.vertices[3 * idx1.vertex_index + 0], attrib.vertices[3 * idx1.vertex_index + 1],
+                    attrib.vertices[3 * idx1.vertex_index + 2]);
+            vec3 v2(attrib.vertices[3 * idx0.vertex_index + 0], attrib.vertices[3 * idx0.vertex_index + 1],
+                    attrib.vertices[3 * idx0.vertex_index + 2]);
 
             // Extract Texture Coordinates (UV)
             vec2 uv0(0.0f);
@@ -97,22 +96,19 @@ void ObjModel::Load()
             vec2 uv2(0.0f);
 
             // Keep UVs aligned with vertex reorder
-            if (idx2.texcoord_index >= 0)
-            {
+            if (idx2.texcoord_index >= 0) {
                 size_t texcoordOffset = static_cast<size_t>(2 * idx2.texcoord_index);
                 if (texcoordOffset + 1 < attrib.texcoords.size())
                     uv0 = vec2(attrib.texcoords[texcoordOffset + 0], attrib.texcoords[texcoordOffset + 1]);
             }
 
-            if (idx1.texcoord_index >= 0)
-            {
+            if (idx1.texcoord_index >= 0) {
                 size_t texcoordOffset = static_cast<size_t>(2 * idx1.texcoord_index);
                 if (texcoordOffset + 1 < attrib.texcoords.size())
                     uv1 = vec2(attrib.texcoords[texcoordOffset + 0], attrib.texcoords[texcoordOffset + 1]);
             }
 
-            if (idx0.texcoord_index >= 0)
-            {
+            if (idx0.texcoord_index >= 0) {
                 size_t texcoordOffset = static_cast<size_t>(2 * idx0.texcoord_index);
                 if (texcoordOffset + 1 < attrib.texcoords.size())
                     uv2 = vec2(attrib.texcoords[texcoordOffset + 0], attrib.texcoords[texcoordOffset + 1]);
@@ -121,8 +117,7 @@ void ObjModel::Load()
             // Get texture index for this triangle, -1 if no texture
             int materialId = shapes[s].mesh.material_ids[f];
             size_t textureIdx = static_cast<size_t>(-1);
-            if (materialId >= 0)
-            {
+            if (materialId >= 0) {
                 size_t materialIdx = static_cast<size_t>(materialId);
                 if (materialIdx < materialHasTexture.size() && materialHasTexture[materialIdx])
                     textureIdx = materialIdx;
@@ -134,21 +129,24 @@ void ObjModel::Load()
         }
     }
 
-    ScaleToUnitCube();
+    scaleToUnitCube();
 
     bvh = BVH(triangles);
 }
 
-void ObjModel::ScaleToUnitCube()
-{
+/**
+ * @brief Normalize model geometry to fit approximately within [-1,1]^3.
+ * @details Geometry is centered, uniformly scaled by smallest axis extent, and mirrored on X/Y to match renderer
+ * conventions.
+ */
+void ObjModel::scaleToUnitCube() {
     if (triangles.empty())
         return;
 
     // Find bounding box to calculate center and max axis length
     glm::vec3 minPos(1e9f);
     glm::vec3 maxPos(-1e9f);
-    for (const Triangle &triangle : triangles)
-    {
+    for (const Triangle &triangle : triangles) {
         minPos = glm::min(minPos, glm::min(triangle.v0, glm::min(triangle.v1, triangle.v2)));
         maxPos = glm::max(maxPos, glm::max(triangle.v0, glm::max(triangle.v1, triangle.v2)));
     }
@@ -159,8 +157,7 @@ void ObjModel::ScaleToUnitCube()
     float scaleSize = 2.0f / minAxisLength;
 
     // Scale to the volume [-1,1]^3
-    for (Triangle &triangle : triangles)
-    {
+    for (Triangle &triangle : triangles) {
         // Center the model and scale it uniformly
         triangle.v0 = (triangle.v0 - center) * scaleSize;
         triangle.v1 = (triangle.v1 - center) * scaleSize;
@@ -176,9 +173,9 @@ void ObjModel::ScaleToUnitCube()
         triangle.v2.y *= -1;
 
         // Recalculate normals
-        triangle.ComputeNormal();
+        triangle.computeNormal();
 
         // Recalculate centroids
-        triangle.ComputeCentroid();
+        triangle.computeCentroid();
     }
 }

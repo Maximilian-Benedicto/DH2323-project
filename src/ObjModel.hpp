@@ -1,5 +1,5 @@
-#ifndef OBJMODEL_HPP
-#define OBJMODEL_HPP
+#ifndef OBJ_MODEL_HPP
+#define OBJ_MODEL_HPP
 
 #include "Model.hpp"
 
@@ -10,12 +10,12 @@ class ObjModel : public Model
 {
 private:
     std::string filename;
-    void ScaleToUnitCube();
+    void scaleToUnitCube();
 
 public:
     ObjModel(const std::string &filename) : filename(filename) {}
 
-    void Load() override;
+    void load() override;
 };
 
 #endif

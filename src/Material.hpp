@@ -30,18 +30,18 @@ public:
     Material() = default;
 
     // Recalculates all derived properties from the fundamentals
-    void ComputeDerivedProperties();
+    void computeDerivedProperties();
 
     // Factory methods for measured presets from the Jensen 2001 table
-    static Material Apple();
-    static Material Chicken1();
-    static Material Cream();
-    static Material Ketchup();
-    static Material Marble();
-    static Material Potato();
-    static Material SkimMilk();
-    static Material Skin1();
-    static Material WholeMilk();
+    static Material createApple();
+    static Material createChicken1();
+    static Material createCream();
+    static Material createKetchup();
+    static Material createMarble();
+    static Material createPotato();
+    static Material createSkimMilk();
+    static Material createSkin1();
+    static Material createWholeMilk();
 };
 
 #endif

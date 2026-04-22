@@ -14,8 +14,8 @@ using namespace std;
 
 WireframeShader::WireframeShader() {}
 
-void WireframeShader::DrawLine(Uint32 *pixelBuffer, int width, int height, int x0, int y0, int x1, int y1, Uint32 color)
-{
+void WireframeShader::drawLine(Uint32 *pixelBuffer, int width, int height, int x0, int y0, int x1, int y1,
+                               Uint32 color) {
     // Bresenham's line algorithm (source: https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm)
 
     const int dx = abs(x1 - x0);
@@ -24,23 +24,20 @@ void WireframeShader::DrawLine(Uint32 *pixelBuffer, int width, int height, int x
     const int sy = y0 < y1 ? 1 : -1;
     int error = dx + dy;
 
-    while (true)
-    {
+    while (true) {
         if (x0 >= 0 && x0 < width && y0 >= 0 && y0 < height)
 
             pixelBuffer[y0 * width + x0] = color;
 
         int e2 = 2 * error;
-        if (e2 >= dy)
-        {
+        if (e2 >= dy) {
             if (x0 == x1)
                 break;
             error = error + dy;
             x0 = x0 + sx;
         }
 
-        if (e2 <= dx)
-        {
+        if (e2 <= dx) {
             if (y0 == y1)
                 break;
             error = error + dx;
@@ -49,12 +46,11 @@ void WireframeShader::DrawLine(Uint32 *pixelBuffer, int width, int height, int x
     }
 }
 
-void WireframeShader::render(Uint32 *pixelBuffer, int width, int height, const Model &model, const Light &light, const Camera &camera, std::atomic<bool> &killFlag)
-{
+void WireframeShader::render(Uint32 *pixelBuffer, int width, int height, const Model &model, const Light &light,
+                             const Camera &camera, std::atomic<bool> &shouldStopRenderThread) {
     // Clear buffer to black
-    for (int i = 0; i < width * height; ++i)
-    {
-        if (killFlag)
+    for (int i = 0; i < width * height; ++i) {
+        if (shouldStopRenderThread)
             return;
         pixelBuffer[i] = 0xFF000000;
     }
@@ -64,22 +60,21 @@ void WireframeShader::render(Uint32 *pixelBuffer, int width, int height, const M
     vec3 up = normalize(cross(camera.direction, right));
     up = glm::rotate(up, camera.roll, camera.direction);
 
-    // In OpenGL / glm::lookAt, the camera looks in the -z direction, so we add the direction to the position to get the target point
+    // In OpenGL / glm::lookAt, the camera looks in the -z direction, so we add the direction to the position to get the
+    // target point
     mat4 viewMatrix = glm::lookAt(camera.position, camera.position + camera.direction, up);
 
     if (model.bvh.nodesUsed == 0)
         return;
 
     const int nodeCount = std::min<int>(model.bvh.nodesUsed, model.bvh.bvhNodes.size());
-    for (int idx = 0; idx < nodeCount; ++idx)
-    {
+    for (int idx = 0; idx < nodeCount; ++idx) {
         const BVHNode &node = model.bvh.bvhNodes[idx];
         // Kill render thread if flag is set
-        if (killFlag)
+        if (shouldStopRenderThread)
             return;
 
-        if (!node.isLeaf() && showBVH)
-        {
+        if (!node.isLeaf() && isShowingBvh) {
             // Bounding maximum/minimum
             vec3 min = node.aabb.min;
             vec3 max = node.aabb.max;
@@ -101,7 +96,8 @@ void WireframeShader::render(Uint32 *pixelBuffer, int width, int height, const M
             vec3 v7(max.x, max.y, max.z);
 
             // Line segments
-            vec3 pts[24] = {v0, v1, v2, v3, v4, v5, v6, v7, v0, v2, v1, v3, v4, v6, v5, v7, v0, v4, v1, v5, v2, v6, v3, v7};
+            vec3 pts[24] = {v0, v1, v2, v3, v4, v5, v6, v7, v0, v2, v1, v3,
+                            v4, v6, v5, v7, v0, v4, v1, v5, v2, v6, v3, v7};
 
             // Blue color for the bounding box, scale alpha based on size
             float boxSize = length(max - min);
@@ -109,50 +105,43 @@ void WireframeShader::render(Uint32 *pixelBuffer, int width, int height, const M
             Uint32 lightColor = (alpha << 24) | 0x000000FF;
 
             // Project and draw the 12 box edges (24 endpoints)
-            for (int i = 0; i < 12; ++i)
-            {
+            for (int i = 0; i < 12; ++i) {
                 vec4 p1Cam4 = viewMatrix * vec4(pts[i * 2], 1.0f);
                 vec3 p1Cam = vec3(p1Cam4);
                 vec4 p2Cam4 = viewMatrix * vec4(pts[i * 2 + 1], 1.0f);
                 vec3 p2Cam = vec3(p2Cam4);
 
                 // Only draw if both points of the line are in front of the camera
-                if (p1Cam.z < -0.1f && p2Cam.z < -0.1f)
-                {
+                if (p1Cam.z < -0.1f && p2Cam.z < -0.1f) {
                     float px1 = p1Cam.x / p1Cam.z * camera.focalLength + width / 2.0f;
                     float py1 = -p1Cam.y / p1Cam.z * camera.focalLength + height / 2.0f;
                     float px2 = p2Cam.x / p2Cam.z * camera.focalLength + width / 2.0f;
                     float py2 = -p2Cam.y / p2Cam.z * camera.focalLength + height / 2.0f;
 
                     // Reject lines completely outside the screen
-                    if ((px1 < 0 && px2 < 0) || (px1 >= width && px2 >= width) ||
-                        (py1 < 0 && py2 < 0) || (py1 >= height && py2 >= height))
+                    if ((px1 < 0 && px2 < 0) || (px1 >= width && px2 >= width) || (py1 < 0 && py2 < 0) ||
+                        (py1 >= height && py2 >= height))
                         continue;
 
-                    DrawLine(pixelBuffer, width, height, (int)px1, (int)py1, (int)px2, (int)py2, lightColor);
+                    drawLine(pixelBuffer, width, height, (int)px1, (int)py1, (int)px2, (int)py2, lightColor);
                 }
             }
-        }
-        else
-        {
+        } else {
             const size_t start = node.leftFirst;
             const size_t end = node.leftFirst + node.triCount;
 
-            for (size_t i = start; i < end; i++)
-            {
+            for (size_t i = start; i < end; i++) {
                 // Project triangle vertices to screen space
                 vec3 v[3] = {model.triangles[i].v0, model.triangles[i].v1, model.triangles[i].v2};
                 int p[3][2];
                 bool outOfBounds[3] = {false, false, false};
-                for (int j = 0; j < 3; ++j)
-                {
+                for (int j = 0; j < 3; ++j) {
                     // Translate to camera space
                     vec4 vCam4 = viewMatrix * vec4(v[j], 1.0f);
                     vec3 vCam = vec3(vCam4);
 
                     // Only draw if in front of camera (in OpenGL / glm::lookAt, forward is -z)
-                    if (vCam.z >= -0.1f)
-                    {
+                    if (vCam.z >= -0.1f) {
                         outOfBounds[j] = true;
                         continue;
                     }
@@ -166,44 +155,40 @@ void WireframeShader::render(Uint32 *pixelBuffer, int width, int height, const M
 
                 // Draw lines
                 if (!outOfBounds[0] && !outOfBounds[1])
-                    DrawLine(pixelBuffer, width, height, p[0][0], p[0][1], p[1][0], p[1][1], 0xFF00FF00);
+                    drawLine(pixelBuffer, width, height, p[0][0], p[0][1], p[1][0], p[1][1], 0xFF00FF00);
                 if (!outOfBounds[1] && !outOfBounds[2])
-                    DrawLine(pixelBuffer, width, height, p[1][0], p[1][1], p[2][0], p[2][1], 0xFF00FF00);
+                    drawLine(pixelBuffer, width, height, p[1][0], p[1][1], p[2][0], p[2][1], 0xFF00FF00);
                 if (!outOfBounds[2] && !outOfBounds[0])
-                    DrawLine(pixelBuffer, width, height, p[2][0], p[2][1], p[0][0], p[0][1], 0xFF00FF00);
+                    drawLine(pixelBuffer, width, height, p[2][0], p[2][1], p[0][0], p[0][1], 0xFF00FF00);
             }
         }
     }
 
     // Render the light source as a 6-point star aligned with x, y, z axes
-    if (!killFlag)
-    {
-        float size = 0.1f; // Length of the star arms in world space
-        vec3 pts[6] = {
-            light.position + vec3(size, 0.0f, 0.0f), light.position - vec3(size, 0.0f, 0.0f),
-            light.position + vec3(0.0f, size, 0.0f), light.position - vec3(0.0f, size, 0.0f),
-            light.position + vec3(0.0f, 0.0f, size), light.position - vec3(0.0f, 0.0f, size)};
+    if (!shouldStopRenderThread) {
+        float size = 0.1f;  // Length of the star arms in world space
+        vec3 pts[6] = {light.position + vec3(size, 0.0f, 0.0f), light.position - vec3(size, 0.0f, 0.0f),
+                       light.position + vec3(0.0f, size, 0.0f), light.position - vec3(0.0f, size, 0.0f),
+                       light.position + vec3(0.0f, 0.0f, size), light.position - vec3(0.0f, 0.0f, size)};
 
         // Yellow color for the light star
         Uint32 lightColor = 0xFFFFFF00;
 
         // Project and draw the star arms
-        for (int i = 0; i < 3; ++i)
-        {
+        for (int i = 0; i < 3; ++i) {
             vec4 p1Cam4 = viewMatrix * vec4(pts[i * 2], 1.0f);
             vec3 p1Cam = vec3(p1Cam4);
             vec4 p2Cam4 = viewMatrix * vec4(pts[i * 2 + 1], 1.0f);
             vec3 p2Cam = vec3(p2Cam4);
 
             // Only draw if both points of the line are in front of the camera
-            if (p1Cam.z < -0.1f && p2Cam.z < -0.1f)
-            {
+            if (p1Cam.z < -0.1f && p2Cam.z < -0.1f) {
                 float px1 = p1Cam.x / p1Cam.z * camera.focalLength + width / 2.0f;
                 float py1 = -p1Cam.y / p1Cam.z * camera.focalLength + height / 2.0f;
                 float px2 = p2Cam.x / p2Cam.z * camera.focalLength + width / 2.0f;
                 float py2 = -p2Cam.y / p2Cam.z * camera.focalLength + height / 2.0f;
 
-                DrawLine(pixelBuffer, width, height, (int)px1, (int)py1, (int)px2, (int)py2, lightColor);
+                drawLine(pixelBuffer, width, height, (int)px1, (int)py1, (int)px2, (int)py2, lightColor);
             }
         }
     }

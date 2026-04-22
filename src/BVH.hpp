@@ -10,8 +10,7 @@
 /**
  * @brief Axis-Aligned Bounding Box (AABB)
  */
-struct AABB
-{
+struct AABB {
     // Minimum corner of the box (initialized to a very large value so it can be grown)
     glm::vec3 min = glm::vec3(std::numeric_limits<float>::infinity());
 
@@ -31,28 +30,34 @@ struct AABB
 /**
  * @brief A flat BVH Node structure.
  */
-struct BVHNode
-{
+struct BVHNode {
     // Bounding box for this node
     AABB aabb;
 
     /**
-     * If this is a leaf node, leftFirst is the index of the first triangle in the leaf, and triCount is the number of triangles in the leaf.
-     * If this is an internal node, leftFirst is the index of the left child node, and triCount is 0.
+     * If this is a leaf node, leftFirst is the index of the first triangle in the leaf, and triCount is the number of
+     * triangles in the leaf. If this is an internal node, leftFirst is the index of the left child node, and triCount
+     * is 0.
      */
     int leftFirst, triCount;
 
-    bool isLeaf() const { return triCount > 0; };
+    bool isLeaf() const {
+        return triCount > 0;
+    };
 };
 
 /**
  * @brief Bounding Volume Hierarchy (BVH) for accelerating ray-triangle intersection tests.
  */
-class BVH
-{
-public:
+class BVH {
+   public:
+    /** Flat node storage for iterative traversal. */
     std::vector<BVHNode> bvhNodes;
+
+    /** Root node index when nodesUsed > 0. */
     int rootNodeIdx = 0;
+
+    /** Number of valid nodes in bvhNodes. Zero indicates an empty BVH. */
     int nodesUsed = 0;
 
     BVH() = default;
@@ -61,18 +66,21 @@ public:
     /**
      * @brief Build the BVH from a list of triangles. This will reorder the triangle list to improve spatial locality.
      * @param inputTriangles The list of triangles to build the BVH from (rearranged in-place)
+     * @details Leaves nodesUsed = 0 for empty input to prevent invalid root-node access.
      */
     BVH(std::vector<Triangle> &inputTriangles);
 
-private:
+   private:
     /**
-     * @brief Update the bounding box of a node based on the triangles it contains (for leaf nodes) or its children (for internal nodes).
+     * @brief Update the bounding box of a node based on the triangles it contains (for leaf nodes) or its children (for
+     * internal nodes).
      * @param nodeIdx The index of the node to update
      */
     void updateNodeBounds(int nodeIdx, std::vector<Triangle> &triangles);
 
     /**
-     * @brief Recursively subdivide a node into two child nodes. This will reorder the triangle list to improve spatial locality.
+     * @brief Recursively subdivide a node into two child nodes. This will reorder the triangle list to improve spatial
+     * locality.
      * @param nodeIdx The index of the node to subdivide
      */
     void subdivide(int nodeIdx, std::vector<Triangle> &triangles);

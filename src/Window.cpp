@@ -15,19 +15,13 @@ using namespace std;
  * In this case, width and height is only used for the
  * size of the pixel buffer.
  */
-Window::Window(int width, int height, int scale, bool fullscreen)
-{
+Window::Window(int width, int height, int scale, bool isFullscreen) {
     this->width = width;
     this->height = height;
     this->scale = scale;
-    this->fullscreen = fullscreen;
+    this->isFullscreen = isFullscreen;
 
-    if (!initializeSDL() ||
-        !createWindow() ||
-        !createRenderer() ||
-        !createTexture() ||
-        !createPixelBuffer())
-    {
+    if (!initializeSDL() || !createWindow() || !createRenderer() || !createTexture() || !createPixelBuffer()) {
         cout << "Could not initialize Window. Exiting." << endl;
         exit(1);
     }
@@ -39,11 +33,9 @@ Window::Window(int width, int height, int scale, bool fullscreen)
  * Free allocated pixel buffer. We don't have to destroy SDL
  * objects here because that is taken care of by SDL_Quit.
  */
-Window::~Window()
-{
-    if (pixel_buffer != NULL)
-    {
-        free(pixel_buffer);
+Window::~Window() {
+    if (pixelBuffer != nullptr) {
+        free(pixelBuffer);
     }
 }
 
@@ -52,10 +44,8 @@ Window::~Window()
  *
  * Returns true on success.
  */
-bool Window::initializeSDL()
-{
-    if (SDL_Init(SDL_INIT_VIDEO) < 0)
-    {
+bool Window::initializeSDL() {
+    if (!SDL_Init(SDL_INIT_VIDEO)) {
         cout << "Could not initialize SDL: " << SDL_GetError() << endl;
         return false;
     }
@@ -68,23 +58,17 @@ bool Window::initializeSDL()
  *
  * Returns true on success.
  */
-bool Window::createWindow()
-{
+bool Window::createWindow() {
     SDL_WindowFlags flags = (SDL_WindowFlags)(SDL_WINDOW_HIGH_PIXEL_DENSITY | SDL_WINDOW_RESIZABLE);
 
-    sdl_window = SDL_CreateWindow("SDL",
-                                  width * scale,
-                                  height * scale,
-                                  flags);
-    if (sdl_window == NULL)
-    {
+    sdlWindow = SDL_CreateWindow("SDL", width * scale, height * scale, flags);
+    if (sdlWindow == nullptr) {
         cout << "Could not create SDL window: " << SDL_GetError() << endl;
         return false;
     }
 
-    if (fullscreen)
-    {
-        SDL_SetWindowFullscreen(sdl_window, true);
+    if (isFullscreen) {
+        SDL_SetWindowFullscreen(sdlWindow, true);
     }
 
     return true;
@@ -96,21 +80,19 @@ bool Window::createWindow()
  *
  * Returns true on success.
  */
-bool Window::createRenderer()
-{
+bool Window::createRenderer() {
     // Just pick any renderer available (providing NULL name gives
     // priority to available hardware accelerated renderers.)
-    sdl_renderer = SDL_CreateRenderer(sdl_window, NULL);
-    if (sdl_renderer == NULL)
-    {
+    sdlRenderer = SDL_CreateRenderer(sdlWindow, nullptr);
+    if (sdlRenderer == nullptr) {
         cout << "Could not create SDL renderer: " << SDL_GetError() << endl;
         return false;
     }
 
-    SDL_SetRenderVSync(sdl_renderer, 1);
+    SDL_SetRenderVSync(sdlRenderer, 1);
 
     // Make the scaled rendering look smoother.
-    SDL_SetRenderLogicalPresentation(sdl_renderer, width, height, SDL_LOGICAL_PRESENTATION_LETTERBOX);
+    SDL_SetRenderLogicalPresentation(sdlRenderer, width, height, SDL_LOGICAL_PRESENTATION_LETTERBOX);
     return true;
 }
 
@@ -121,23 +103,17 @@ bool Window::createRenderer()
  *
  * Returns true on success.
  */
-bool Window::createTexture()
-{
+bool Window::createTexture() {
     // This represents a texture on the GPU.
     // SDL_TEXTUREACCESS_STREAMING tells SDL that this texture's
     // contents is going to change frequently.
-    sdl_texture = SDL_CreateTexture(sdl_renderer,
-                                    SDL_PIXELFORMAT_ARGB8888,
-                                    SDL_TEXTUREACCESS_STREAMING,
-                                    width,
-                                    height);
-    if (sdl_texture == NULL)
-    {
+    sdlTexture = SDL_CreateTexture(sdlRenderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, width, height);
+    if (sdlTexture == nullptr) {
         cout << "Could not create SDL texture: " << SDL_GetError() << endl;
         return false;
     }
 
-    SDL_SetTextureScaleMode(sdl_texture, SDL_SCALEMODE_LINEAR);
+    SDL_SetTextureScaleMode(sdlTexture, SDL_SCALEMODE_LINEAR);
 
     return true;
 }
@@ -147,11 +123,9 @@ bool Window::createTexture()
  *
  * Returns true on success.
  */
-bool Window::createPixelBuffer()
-{
-    pixel_buffer = (Uint32 *)calloc(width * height, sizeof(Uint32));
-    if (pixel_buffer == NULL)
-    {
+bool Window::createPixelBuffer() {
+    pixelBuffer = (Uint32 *)calloc(width * height, sizeof(Uint32));
+    if (pixelBuffer == nullptr) {
         cout << "Could not create SDL pixel buffer." << endl;
         return false;
     }
@@ -162,9 +136,8 @@ bool Window::createPixelBuffer()
 /*
  * Clears the pixel buffer (i.e. sets it to black).
  */
-void Window::clearPixels()
-{
-    memset(pixel_buffer, 0, width * height * sizeof(Uint32));
+void Window::clearPixels() {
+    memset(pixelBuffer, 0, width * height * sizeof(Uint32));
 }
 
 /*
@@ -172,11 +145,8 @@ void Window::clearPixels()
  * by a glm:vec3 which specifies the red, green and blue components
  * with numbers between 0.0 and 1.0 (inclusive).
  */
-void Window::putPixel(int x, int y, glm::vec3 color)
-{
-    if (x < 0 || x >= width ||
-        y < 0 || y >= height)
-    {
+void Window::putPixel(int x, int y, glm::vec3 color) {
+    if (x < 0 || x >= width || y < 0 || y >= height) {
         return;
     }
 
@@ -189,7 +159,7 @@ void Window::putPixel(int x, int y, glm::vec3 color)
     Uint32 rgba = (alpha << 24) + (red << 16) + (green << 8) + blue;
 
     // Calculate the address of the pixel we want to set.
-    Uint32 *pixel = (Uint32 *)pixel_buffer + y * width + x;
+    Uint32 *pixel = (Uint32 *)pixelBuffer + y * width + x;
 
     // TODO big endian support?
     // #if SDL_BYTEORDER == SDL_BIG_ENDIAN
@@ -203,16 +173,12 @@ void Window::putPixel(int x, int y, glm::vec3 color)
  * Use the pixel buffer to update the texture, then render the
  * texture into the window/screen.
  */
-void Window::render()
-{
-    SDL_UpdateTexture(sdl_texture,
-                      NULL,
-                      pixel_buffer,
-                      width * sizeof(Uint32));
+void Window::render() {
+    SDL_UpdateTexture(sdlTexture, nullptr, pixelBuffer, width * sizeof(Uint32));
 
-    SDL_RenderClear(sdl_renderer);
-    SDL_RenderTexture(sdl_renderer, sdl_texture, NULL, NULL);
-    SDL_RenderPresent(sdl_renderer);
+    SDL_RenderClear(sdlRenderer);
+    SDL_RenderTexture(sdlRenderer, sdlTexture, nullptr, nullptr);
+    SDL_RenderPresent(sdlRenderer);
 }
 
 /*
@@ -220,18 +186,11 @@ void Window::render()
  *
  * Returns true on success.
  */
-bool Window::saveBMP(const char *filename)
-{
+bool Window::saveBMP(const char *filename) {
     // TODO big endian support?
-    SDL_Surface *surface = SDL_CreateSurfaceFrom(width,
-                                                 height,
-                                                 SDL_PIXELFORMAT_ARGB8888,
-                                                 pixel_buffer,
-                                                 width * 4);
-    if (surface == NULL)
-    {
-        cout << "Could not create SDL surface for bitmap: "
-             << SDL_GetError() << endl;
+    SDL_Surface *surface = SDL_CreateSurfaceFrom(width, height, SDL_PIXELFORMAT_ARGB8888, pixelBuffer, width * 4);
+    if (surface == nullptr) {
+        cout << "Could not create SDL surface for bitmap: " << SDL_GetError() << endl;
         return false;
     }
 
@@ -246,21 +205,16 @@ bool Window::saveBMP(const char *filename)
  *
  * Returns true if a quit event was received.
  */
-bool Window::quitEvent()
-{
+bool Window::quitEvent() {
     SDL_Event event;
 
-    while (SDL_PollEvent(&event))
-    {
-        if (event.type == SDL_EVENT_QUIT)
-        {
+    while (SDL_PollEvent(&event)) {
+        if (event.type == SDL_EVENT_QUIT) {
             return true;
         }
 
-        if (event.type == SDL_EVENT_KEY_DOWN)
-        {
-            if (event.key.key == SDLK_ESCAPE)
-            {
+        if (event.type == SDL_EVENT_KEY_DOWN) {
+            if (event.key.key == SDLK_ESCAPE) {
                 return true;
             }
         }
@@ -272,31 +226,27 @@ bool Window::quitEvent()
 /*
  * Updates the window title.
  */
-void Window::setWindowTitle(const char *title)
-{
-    SDL_SetWindowTitle(sdl_window, title);
+void Window::setWindowTitle(const char *title) {
+    SDL_SetWindowTitle(sdlWindow, title);
 }
 
 /*
  * Updates the logical render resolution
  */
-void Window::setRenderResolution(int newWidth, int newHeight)
-{
+void Window::setRenderResolution(int newWidth, int newHeight) {
     this->width = newWidth;
     this->height = newHeight;
 
-    if (sdl_texture != NULL)
-    {
-        SDL_DestroyTexture(sdl_texture);
-        sdl_texture = NULL;
+    if (sdlTexture != nullptr) {
+        SDL_DestroyTexture(sdlTexture);
+        sdlTexture = nullptr;
     }
-    if (pixel_buffer != NULL)
-    {
-        free(pixel_buffer);
-        pixel_buffer = NULL;
+    if (pixelBuffer != nullptr) {
+        free(pixelBuffer);
+        pixelBuffer = nullptr;
     }
 
-    SDL_SetRenderLogicalPresentation(sdl_renderer, width, height, SDL_LOGICAL_PRESENTATION_LETTERBOX);
+    SDL_SetRenderLogicalPresentation(sdlRenderer, width, height, SDL_LOGICAL_PRESENTATION_LETTERBOX);
     createTexture();
     createPixelBuffer();
 }
@@ -304,8 +254,7 @@ void Window::setRenderResolution(int newWidth, int newHeight)
 /*
  * Gets the current logical render resolution
  */
-void Window::getRenderResolution(int &outWidth, int &outHeight)
-{
+void Window::getRenderResolution(int &outWidth, int &outHeight) {
     outWidth = width;
     outHeight = height;
 }
