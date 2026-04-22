@@ -69,18 +69,27 @@ int main(int argc, char *argv[])
     t = SDL_GetTicks();
 
     // Load models
-    models = vector<unique_ptr<Model>>(3);
-    models[0] = make_unique<CornellBox>();
-    models[1] = make_unique<PlyModel>("model/bun_zipper.ply");
-    models[2] = make_unique<ObjModel>("model/sponza/sponza.obj");
-    for (auto &model : models)
-        model->Load();
+    models = vector<unique_ptr<Model>>();
+    models.push_back(make_unique<CornellBox>());
+    models.push_back(make_unique<PlyModel>("model/bunasd_zipper.ply"));
+    models.push_back(make_unique<ObjModel>("model/sponza/sponza.obj"));
+    for (size_t i = 0; i < models.size(); i++)
+        try
+        {
+            models[i]->Load();
+        }
+        catch (const std::exception &e)
+        {
+            std::cerr << e.what() << '\n';
+            models.erase(models.begin() + i);
+            i--; // Adjust index after erasing
+        }
 
     // Initialize shaders
-    shaders = vector<unique_ptr<Shader>>(3);
-    shaders[0] = make_unique<WireframeShader>();
-    shaders[1] = make_unique<DipoleShader>();
-    shaders[2] = make_unique<LambertianShader>();
+    shaders = vector<unique_ptr<Shader>>();
+    shaders.push_back(make_unique<WireframeShader>());
+    shaders.push_back(make_unique<DipoleShader>());
+    shaders.push_back(make_unique<LambertianShader>());
 
     // Set the active model and shader
     activeModelIdx = 0;
