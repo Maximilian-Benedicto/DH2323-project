@@ -12,6 +12,9 @@
 class DipoleShader : public Shader
 {
 public:
+    /**
+     * @brief Different visualization modes for the dipole shader.
+     */
     enum Mode
     {
         NORMAL,           // Visualize surface normals
@@ -20,7 +23,12 @@ public:
         FRESNEL,          // Visualize Fresnel reflectance
         FULL              // Visualize full dipole model
     };
+
+    /**
+     * @brief Current visualization mode.
+     */
     Mode mode;
+
     DipoleShader();
     void render(Uint32 *pixelBuffer, int width, int height, const Model &model, const Light &light, const Camera &camera, std::atomic<bool> &killFlag) override;
 
