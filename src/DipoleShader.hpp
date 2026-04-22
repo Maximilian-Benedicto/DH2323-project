@@ -58,20 +58,31 @@ private:
 
     // Dipole model functions
 
+    // Fresnel and phase functions
+    float FresnelReflectance(float cosTheta);
+    float FresnelTransmittance(float cosTheta);
+    float Fresnel(glm::vec3 wo, glm::vec3 wi);
+    float PhaseFunction(float cosTheta);
+
+    // Distance and geometry functions
     float ScalarDistance(glm::vec3 xi, glm::vec3 xo);
     float PositiveDistance(float r);
     float NegativeDistance(float r);
     float DiffuseReflectance(float r);
-    float FresnelReflectance(float cosTheta);
-    float FresnelTransmittance(float cosTheta);
+    
+    // dipole components
     float MultipleScattering(glm::vec3 xi, glm::vec3 w1, glm::vec3 xo, glm::vec3 w0);
     glm::vec3 OutgoingRadiance(glm::vec3 xo, glm::vec3 wo, glm::vec3 xi, glm::vec3 w1, glm::vec3 wop, glm::vec3 wip);
     glm::vec3 IncidentRadiance(glm::vec3 xi, glm::vec3 wi);
-    float Fresnel(glm::vec3 wo, glm::vec3 wi);
-    float Exponential(glm::vec3 xo, glm::vec3 xi);
-    float GeometryFactor(glm::vec3 n, glm::vec3 wo, glm::vec3 wi);
+
+    // single scattering component
+    
+    float Exponential(glm::vec3 xi, glm::vec3 xo);
+    float CombinedExtinctionCoefficient(glm::vec3 xi, glm::vec3 xo);
     glm::vec3 SingleScattering(glm::vec3 xo, glm::vec3 wo);
-    float PhaseFunction(float cosTheta);
+
+    float GeometryFactor(glm::vec3 wop, glm::vec3 wip);
+    
 };
 
 #endif
