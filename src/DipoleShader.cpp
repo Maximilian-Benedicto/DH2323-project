@@ -254,7 +254,7 @@ float DipoleShader::exponential(vec3 xo, vec3 xi) {
     return 0.0f;
 }
 
-float DipoleShader::geometryFactor(vec3 n, vec3 wo, vec3 wi) {
+float DipoleShader::geometryFactor(vec3 wop, vec3 wip) {
     return 0.0f;
 }
 
