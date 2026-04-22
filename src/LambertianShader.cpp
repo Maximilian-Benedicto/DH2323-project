@@ -112,21 +112,6 @@ bool LambertianShader::closestIntersection(vec3 start, vec3 dir, const Model &mo
 }
 
 vec3 LambertianShader::directLight(const Intersection &hit, const Model &model, const Light &light) {
-    // Check if the light is visible from the intersection point
-    vec3 r = light.position - hit.position;
-    vec3 nUnit = model.triangles[hit.triangleIndex].normal;
-    vec3 start = hit.position + nUnit * 1e-4f;  // Offset start point to avoid self-intersection
-    Intersection reverse;
-    if (closestIntersection(start, r, model, reverse)) {
-        if (length(start - reverse.position) < length(r))
-            return vec3(0, 0, 0);
-    }
-
-    // Compute direct light using Lambert's cosine law
-    vec3 B = light.color / (float)(4 * M_PI * pow(length(r), 2));
-    vec3 rUnit = normalize(r);
-    vec3 D = B * glm::max(dot(rUnit, nUnit), 0.0f);
-
     // Get intersection uv coordinates for texture mapping
     vec3 textureColor(1, 1, 1);
     size_t textureIdx = model.triangles[hit.triangleIndex].textureIdx;
@@ -136,7 +121,22 @@ vec3 LambertianShader::directLight(const Intersection &hit, const Model &model, 
         textureColor = model.textures[textureIdx].sample(uv);
     }
 
-    return D * textureColor;
+    // Check if the light is visible from the intersection point
+    vec3 r = light.position - hit.position;
+    vec3 nUnit = model.triangles[hit.triangleIndex].normal;
+    vec3 start = hit.position + nUnit * 1e-4f;  // Offset start point to avoid self-intersection
+    Intersection reverse;
+    if (closestIntersection(start, r, model, reverse)) {
+        if (length(start - reverse.position) < length(r))
+            return indirectLight * textureColor;
+    }
+
+    // Compute direct light using Lambert's cosine law
+    vec3 B = light.color / (float)(4 * M_PI * pow(length(r), 2));
+    vec3 rUnit = normalize(r);
+    vec3 D = B * glm::max(dot(rUnit, nUnit), 0.0f);
+
+    return (D + indirectLight) * textureColor;
 }
 
 /**
@@ -170,12 +170,10 @@ void LambertianShader::render(Uint32 *pixelBuffer, int width, int height, const 
             Intersection closestHit;
             bool found = closestIntersection(start, dir, model, closestHit);
 
-            // Compute color at intersection point
+            // Compute direct light at the intersection point if found, otherwise use black
             vec3 color(0, 0, 0);
-            if (found) {
-                vec3 directL = directLight(closestHit, model, light);
-                color = model.triangles[closestHit.triangleIndex].color * (directL + indirectLight);
-            }
+            if (found)
+                color = model.triangles[closestHit.triangleIndex].color * directLight(closestHit, model, light);
 
             // Write color to pixel buffer
             Uint8 r = Uint8(glm::clamp(255 * color.r, 0.f, 255.f));
