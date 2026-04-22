@@ -248,9 +248,23 @@ void Update(void)
     static int lastShaderSwitchTime = 0;
     if ((t - lastShaderSwitchTime > 200) && keystate[SDL_SCANCODE_1])
     {
-        activeShaderIdx = (++activeShaderIdx) % shaders.size();
-        changed = true;
-        lastShaderSwitchTime = t;
+        // Use dynamic_cast to check if the current shader is WireframeShader
+        if (WireframeShader *wfShader = dynamic_cast<WireframeShader *>(shaders[activeShaderIdx].get()))
+        {
+            if (wfShader->showBVH)
+                activeShaderIdx = (++activeShaderIdx) % shaders.size();
+
+            wfShader->showBVH = !wfShader->showBVH;
+
+            changed = true;
+            lastShaderSwitchTime = t;
+        }
+        else
+        {
+            activeShaderIdx = (++activeShaderIdx) % shaders.size();
+            changed = true;
+            lastShaderSwitchTime = t;
+        }
     }
 
     // Model switching
@@ -260,16 +274,6 @@ void Update(void)
         activeModelIdx = (++activeModelIdx) % models.size();
         changed = true;
         lastModelSwitchTime = t;
-    }
-    if ((t - lastModelSwitchTime > 200) && keystate[SDL_SCANCODE_3])
-    {
-        // Use dynamic_cast to check if the current shader is WireframeShader
-        if (WireframeShader *wfShader = dynamic_cast<WireframeShader *>(shaders[activeShaderIdx].get()))
-        {
-            wfShader->showBVH = !wfShader->showBVH; // Toggle BVH visualization in wireframe shader
-            changed = true;
-            lastModelSwitchTime = t;
-        }
     }
 
     // Resolution changes
