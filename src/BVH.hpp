@@ -53,8 +53,9 @@ class BVH
 public:
     std::vector<BVHNode> bvhNodes;
     int rootNodeIdx = 0;
-    int nodesUsed = 1;
+    int nodesUsed = 0;
 
+    BVH() = default;
     ~BVH() = default;
 
     /**

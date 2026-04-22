@@ -18,6 +18,7 @@ void CornellBox::Load()
     ShortBlock();
     TallBlock();
     ScaleToUnitCube();
+    bvh = BVH(triangles);
 }
 
 void CornellBox::Room()

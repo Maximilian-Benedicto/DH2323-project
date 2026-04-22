@@ -36,6 +36,7 @@ void PlyModel::Load()
     }
 
     ScaleToUnitCube();
+    bvh = BVH(triangles);
 }
 
 void PlyModel::ScaleToUnitCube()

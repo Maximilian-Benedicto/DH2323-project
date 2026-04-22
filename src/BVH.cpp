@@ -31,6 +31,8 @@ BVH::BVH(std::vector<Triangle> &triangles)
         return;
     }
 
+    nodesUsed = 1;
+
     // Allocate worst-case node count: 2N - 1
     bvhNodes.resize(triangles.size() * 2 - 1);
 

@@ -2,6 +2,7 @@
 #include "Camera.hpp"
 #include "Light.hpp"
 #include "Triangle.hpp"
+#include "Model.hpp"
 #include <iostream>
 #include <algorithm>
 #include <glm/gtc/matrix_transform.hpp>
@@ -48,7 +49,7 @@ void WireframeShader::DrawLine(Uint32 *pixelBuffer, int width, int height, int x
     }
 }
 
-void WireframeShader::render(Uint32 *pixelBuffer, int width, int height, const BVH &bvh, const std::vector<Triangle> &triangles, const Light &light, const Camera &camera, std::atomic<bool> &killFlag)
+void WireframeShader::render(Uint32 *pixelBuffer, int width, int height, const Model &model, const Light &light, const Camera &camera, std::atomic<bool> &killFlag)
 {
     // Clear buffer to black
     for (int i = 0; i < width * height; ++i)
@@ -66,10 +67,13 @@ void WireframeShader::render(Uint32 *pixelBuffer, int width, int height, const B
     // In OpenGL / glm::lookAt, the camera looks in the -z direction, so we add the direction to the position to get the target point
     mat4 viewMatrix = glm::lookAt(camera.position, camera.position + camera.direction, up);
 
-    const int nodeCount = std::min<int>(bvh.nodesUsed, bvh.bvhNodes.size());
+    if (model.bvh.nodesUsed == 0)
+        return;
+
+    const int nodeCount = std::min<int>(model.bvh.nodesUsed, model.bvh.bvhNodes.size());
     for (int idx = 0; idx < nodeCount; ++idx)
     {
-        const BVHNode &node = bvh.bvhNodes[idx];
+        const BVHNode &node = model.bvh.bvhNodes[idx];
         // Kill render thread if flag is set
         if (killFlag)
             return;
@@ -137,7 +141,7 @@ void WireframeShader::render(Uint32 *pixelBuffer, int width, int height, const B
             for (size_t i = start; i < end; i++)
             {
                 // Project triangle vertices to screen space
-                vec3 v[3] = {triangles[i].v0, triangles[i].v1, triangles[i].v2};
+                vec3 v[3] = {model.triangles[i].v0, model.triangles[i].v1, model.triangles[i].v2};
                 int p[3][2];
                 bool outOfBounds[3] = {false, false, false};
                 for (int j = 0; j < 3; ++j)

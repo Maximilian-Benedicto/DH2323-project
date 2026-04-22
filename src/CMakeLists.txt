@@ -13,13 +13,9 @@ add_executable(DH2323Project
     CornellBox.cpp
     PlyModel.cpp
     ObjModel.cpp
+    Texture.cpp
     Material.cpp
     BVH.cpp
-)
-
-add_executable(SlabIntersectionTest
-    SlabIntersectionTest.cpp
-    LambertianShader.cpp
 )
 
 include(FetchContent)
@@ -43,7 +39,7 @@ FetchContent_MakeAvailable(SDL3)
 
 FetchContent_Declare(
     happly
-    GIT_REPOSITORY  https://github.com/nmwsharp/happly
+    GIT_REPOSITORY  https://github.com/nmwsharp/happly.git
     GIT_TAG     master
 )
 
@@ -57,13 +53,30 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(tinyobjloader)
 
+FetchContent_Declare(
+    stb
+    GIT_REPOSITORY  https://github.com/nothings/stb.git
+    GIT_TAG     master
+)
+
+FetchContent_MakeAvailable(stb)
+
+
 target_include_directories(DH2323Project PRIVATE 
     ${happly_SOURCE_DIR}
     ${tinyobjloader_SOURCE_DIR}
+    ${stb_SOURCE_DIR}
 )
 
 target_link_libraries(DH2323Project PRIVATE glm::glm SDL3::SDL3)
-target_link_libraries(SlabIntersectionTest PRIVATE glm::glm SDL3::SDL3)
+
+
+# Copy runtime model assets next to the built executable so relative paths are stable.
+add_custom_command(TARGET DH2323Project POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_CURRENT_SOURCE_DIR}/../model
+        $<TARGET_FILE_DIR:DH2323Project>/model
+)
 
 if(WIN32)
     # Ensure SDL3.dll and other runtime DLL dependencies are placed beside the executable.
