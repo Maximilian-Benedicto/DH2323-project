@@ -234,11 +234,11 @@ float DipoleShader::fresnelTransmittance(float cosTheta) {
     return 0.0f;
 }
 
-float DipoleShader::multipleScattering(vec3 xi, vec3 w1, vec3 xo, vec3 w0) {
+float DipoleShader::multipleScattering(vec3 xi, vec3 wi, vec3 xo, vec3 w0) {
     return 0.0f;
 }
 
-vec3 DipoleShader::outgoingRadiance(vec3 xo, vec3 wo, vec3 xi, vec3 w1, vec3 wop, vec3 wip) {
+vec3 DipoleShader::outgoingRadiance(vec3 xo, vec3 wo, vec3 xi, vec3 wi, vec3 wop, vec3 wip) {
     return vec3(0.0f);
 }
 

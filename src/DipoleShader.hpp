@@ -70,8 +70,8 @@ class DipoleShader : public Shader {
     float diffuseReflectance(float r);
 
     // dipole components
-    float multipleScattering(glm::vec3 xi, glm::vec3 w1, glm::vec3 xo, glm::vec3 w0);
-    glm::vec3 outgoingRadiance(glm::vec3 xo, glm::vec3 wo, glm::vec3 xi, glm::vec3 w1, glm::vec3 wop, glm::vec3 wip);
+    float multipleScattering(glm::vec3 xi, glm::vec3 wi, glm::vec3 xo, glm::vec3 w0);
+    glm::vec3 outgoingRadiance(glm::vec3 xo, glm::vec3 wo, glm::vec3 xi, glm::vec3 wi, glm::vec3 wop, glm::vec3 wip);
     glm::vec3 incidentRadiance(glm::vec3 xi, glm::vec3 wi);
 
     // single scattering component
