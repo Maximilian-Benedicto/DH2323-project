@@ -5,12 +5,11 @@
 #include "Triangle.hpp"
 #include "BVH.hpp"
 
+/// @brief Abstract base class for 3D models.
 class Model {
    public:
     std::vector<Triangle> triangles;
-
     std::vector<Texture> textures;
-
     BVH bvh;
 
     virtual ~Model() = default;

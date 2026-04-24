@@ -12,6 +12,7 @@ class Triangle;
 class Light;
 class Camera;
 
+/// @brief Abstract base class for shaders.
 class Shader {
    public:
     virtual ~Shader() = default;

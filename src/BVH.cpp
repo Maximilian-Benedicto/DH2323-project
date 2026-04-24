@@ -14,11 +14,6 @@ void AABB::grow(const AABB &b) {
     }
 }
 
-float AABB::area() const {
-    glm::vec3 e = max - min;
-    return e.x * e.y + e.y * e.z + e.z * e.x;
-}
-
 BVH::BVH(std::vector<Triangle> &triangles) {
     if (triangles.empty()) {
         nodesUsed = 0;
