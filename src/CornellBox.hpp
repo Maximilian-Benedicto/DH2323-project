@@ -1,8 +1,9 @@
 #ifndef CORNELL_BOX_HPP
 #define CORNELL_BOX_HPP
 
-#include "Model.hpp"
 #include <glm/glm.hpp>
+
+#include "Model.hpp"
 
 /// @brief Simple hardcoded Cornell Box scene with two blocks and a light source on the ceiling.
 /// Provided by DH2323 course staff in the labs.

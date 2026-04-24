@@ -17,8 +17,7 @@ struct Texture {
     /// @brief Number of color channels in the texture (e.g., 3 for RGB, 4 for RGBA).
     int channels = 0;
 
-    /// @brief Whether the texture data was allocated using stb_image's allocator, which requires special handling for
-    /// deallocation.
+    /// @brief Whether the texture data was allocated using stb_image allocator.
     bool usesStbAllocator = true;
 
     /// @brief Construct a Texture by loading an image from the given filepath.

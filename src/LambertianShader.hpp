@@ -6,8 +6,7 @@
 #include <glm/glm.hpp>
 #include "Model.hpp"
 
-/// @brief Simple shader that implements Lambertian reflectance with hard shadows and a constant ambient term for
-/// indirect lighting.
+/// @brief Simple shader that implements Lambertian reflectance with hard shadows and indirect lighting.
 class LambertianShader : public Shader {
    private:
     /// @brief Information about a ray-triangle intersection
@@ -25,8 +24,7 @@ class LambertianShader : public Shader {
     /// @param start Starting point of the ray.
     /// @param dir Direction of the ray.
     /// @param model Model containing the triangles to intersect with.
-    /// @param closestHit Output parameter that will be populated with information about the closest intersection if one
-    /// is found.
+    /// @param closestHit Output parameter that will be populated with information about the closest intersection.
     /// @return true if an intersection is found, false otherwise.
     bool closestIntersection(glm::vec3 start, glm::vec3 dir, const Model &model, Intersection &closestHit);
 

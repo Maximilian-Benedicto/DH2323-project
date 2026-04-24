@@ -43,10 +43,19 @@ float cameraSpeed = 0.05;
 float rotationSpeed = M_PI / 48;
 float lightSpeed = 0.05;
 
-void update(void);
-void draw(void);
+/// @brief Update the scene based on user input and update the camera and light positions accordingly.
+void update();
+
+/// @brief Render the current scene to the window.
+void draw();
+
+/// @brief Stop the render thread by setting the shouldStopRenderThread flag and joining the thread.
 void stopRenderThread();
+
+/// @brief Start the render thread, running until shouldStopRenderThread is set to true.
 void startRenderThread();
+
+/// @brief Reset the camera to its initial position and orientation.
 void resetCamera();
 
 int main(int argc, char *argv[]) {
@@ -107,7 +116,7 @@ void startRenderThread() {
     });
 }
 
-void update(void) {
+void update() {
     int t2 = SDL_GetTicks();
     t = t2;
 
@@ -256,7 +265,6 @@ void update(void) {
 
 void draw() {
     window->render();
-    while (t - SDL_GetTicks() < 16);
 }
 
 void resetCamera() {

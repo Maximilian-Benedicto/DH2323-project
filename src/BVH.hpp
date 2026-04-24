@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <glm/glm.hpp>
 #include <limits>
+
 #include "Triangle.hpp"
 
 /// @brief Axis-aligned bounding box defined by its minimum and maximum corners

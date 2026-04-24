@@ -20,8 +20,10 @@ class Triangle {
 
     /// @brief Normal vector of the triangle, computed from the vertices.
     glm::vec3 normal;
+
     /// @brief Centroid of the triangle, computed from the vertices.
     glm::vec3 centroid;
+
     /// @brief Color of the triangle, used if no texture is applied.
     glm::vec3 color;
 
