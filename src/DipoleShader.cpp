@@ -1,11 +1,12 @@
-#define GLM_ENABLE_EXPERIMENTAL
+#define GLM_ENABLE_EXPERIMENTAL  // Enable experimental features in GLM, needed for rotate() function
+
 #include <glm/gtx/rotate_vector.hpp>
+#include <iostream>
 
 #include "DipoleShader.hpp"
 #include "Camera.hpp"
 #include "Light.hpp"
 #include "Triangle.hpp"
-#include <iostream>
 
 using namespace glm;
 using namespace std;

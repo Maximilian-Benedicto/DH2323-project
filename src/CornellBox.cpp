@@ -2,6 +2,7 @@
 
 #include <glm/glm.hpp>
 #include <vector>
+
 #include "Triangle.hpp"
 #include "CornellBox.hpp"
 

@@ -1,10 +1,11 @@
 #ifndef WIREFRAME_SHADER_HPP
 #define WIREFRAME_SHADER_HPP
 
-#include "Shader.hpp"
 #include <vector>
 #include <glm/glm.hpp>
+
 #include "Model.hpp"
+#include "Shader.hpp"
 
 /// @brief Simple shader that renders the scene in wireframe, optionally showing the BVH structure.
 class WireframeShader : public Shader {

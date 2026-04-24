@@ -2,6 +2,7 @@
 #define MODEL_HPP
 
 #include <vector>
+
 #include "Triangle.hpp"
 #include "BVH.hpp"
 

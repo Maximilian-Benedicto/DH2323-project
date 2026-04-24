@@ -1,5 +1,6 @@
-#include "Material.hpp"
 #include <cmath>
+
+#include "Material.hpp"
 
 Material::Material(glm::vec3 sigma_a, glm::vec3 sigma_s_prime, float eta)
     : sigma_a(sigma_a), sigma_s_prime(sigma_s_prime), eta(eta) {

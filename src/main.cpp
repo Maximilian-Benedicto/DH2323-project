@@ -1,8 +1,10 @@
+
+#define GLM_ENABLE_EXPERIMENTAL  // Enable experimental features in GLM, needed for rotate() function
+
+#include <glm/gtx/rotate_vector.hpp>
 #include <iostream>
 #include <cmath>
 #include <glm/glm.hpp>
-#define GLM_ENABLE_EXPERIMENTAL
-#include <glm/gtx/rotate_vector.hpp>
 #include <algorithm>
 #include <thread>
 #include <atomic>

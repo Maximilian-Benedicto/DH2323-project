@@ -1,10 +1,11 @@
 #ifndef LAMBERTIAN_SHADER_HPP
 #define LAMBERTIAN_SHADER_HPP
 
-#include "Shader.hpp"
 #include <vector>
 #include <glm/glm.hpp>
+
 #include "Model.hpp"
+#include "Shader.hpp"
 
 /// @brief Simple shader that implements Lambertian reflectance with hard shadows and indirect lighting.
 class LambertianShader : public Shader {
