@@ -3,20 +3,21 @@
 
 #include "Model.hpp"
 
-/**
- * @brief Class that can load a .ply model as a list of triangles.
- */
-class PlyModel : public Model
-{
-private:
+/// @brief Model class for loading and representing 3D models from PLY files.
+class PlyModel : public Model {
+   private:
+    /// @brief Filepath to the PLY file to load.
     std::string filename;
 
-    // Scale the model to fit in the volume [-1,1]^3
+    /// @brief Scale the model so that it fits within a unit cube centered at the origin.
     void scaleToUnitCube();
 
-public:
+   public:
+    /// @brief Construct a PlyModel with a given filepath.
+    /// @param filename Filepath to the PLY file to load.
     PlyModel(std::string filename) : filename(filename) {}
 
+    /// @brief Load the PLY model by parsing the PLY file, populating triangles, and building the BVH.
     void load() override;
 };
 

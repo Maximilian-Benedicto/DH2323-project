@@ -5,84 +5,69 @@
 #include <algorithm>
 #include <glm/glm.hpp>
 #include <limits>
+
 #include "Triangle.hpp"
 
-/**
- * @brief Axis-Aligned Bounding Box (AABB)
- */
+/// @brief Axis-aligned bounding box defined by its minimum and maximum corners
 struct AABB {
-    // Minimum corner of the box (initialized to a very large value so it can be grown)
     glm::vec3 min = glm::vec3(std::numeric_limits<float>::infinity());
-
-    // Maximum corner of the box (initialized to a very small value so it can be grown)
     glm::vec3 max = glm::vec3(-std::numeric_limits<float>::infinity());
 
-    // Grow the AABB to include a point
+    /// @brief Expand the bounding box to include a point
+    /// @param p
     void grow(glm::vec3 p);
 
-    // Grow the AABB to include another AABB
+    /// @brief Expand the bounding box to include another bounding box
+    /// @param b
     void grow(const AABB &b);
-
-    // Surface area calculation
-    float area() const;
 };
 
-/**
- * @brief A flat BVH Node structure.
- */
+/// @brief Bounding Volume Hierarchy node
 struct BVHNode {
-    // Bounding box for this node
     AABB aabb;
 
-    /**
-     * If this is a leaf node, leftFirst is the index of the first triangle in the leaf, and triCount is the number of
-     * triangles in the leaf. If this is an internal node, leftFirst is the index of the left child node, and triCount
-     * is 0.
-     */
-    int leftFirst, triCount;
+    /// @brief If leaf node, the index of the first triangle in the leaf. If internal node, the index of the left child.
+    int leftFirst;
 
+    /// @brief If leaf node, the number of triangles in the leaf. If internal node, 0.
+    int triCount;
+
+    /// @brief Whether this node is a leaf node (contains triangles) or an internal node (contains child nodes).
+    /// @return true if this node is a leaf node, false if it is an internal node.
     bool isLeaf() const {
         return triCount > 0;
     };
 };
 
-/**
- * @brief Bounding Volume Hierarchy (BVH) for accelerating ray-triangle intersection tests.
- */
+/// @brief Bounding Volume Hierarchy for accelerating ray-triangle intersection tests.
 class BVH {
    public:
-    /** Flat node storage for iterative traversal. */
+    /// @brief Flat array of BVH nodes. The root node is always at index 0, and the children of node i are at indices
+    /// 2*i+1 and 2*i+2.
     std::vector<BVHNode> bvhNodes;
 
-    /** Root node index when nodesUsed > 0. */
+    /// @brief Index of the root node in bvhNodes.
     int rootNodeIdx = 0;
 
-    /** Number of valid nodes in bvhNodes. Zero indicates an empty BVH. */
+    /// @brief Number of nodes used in the BVH.
     int nodesUsed = 0;
 
     BVH() = default;
     ~BVH() = default;
 
-    /**
-     * @brief Build the BVH from a list of triangles. This will reorder the triangle list to improve spatial locality.
-     * @param inputTriangles The list of triangles to build the BVH from (rearranged in-place)
-     * @details Leaves nodesUsed = 0 for empty input to prevent invalid root-node access.
-     */
+    /// @brief Construct a BVH from a list of triangles.
+    /// @param inputTriangles Triangles will be reordered in-place to improve spatial locality.
     BVH(std::vector<Triangle> &inputTriangles);
 
    private:
-    /**
-     * @brief Update the bounding box of a node based on the triangles it contains (for leaf nodes) or its children (for
-     * internal nodes).
-     * @param nodeIdx The index of the node to update
-     */
+    /// @brief Compute the bounding box of a BVH node based on the triangles it contains.
+    /// @param nodeIdx Index of the node to update the bounds of.
+    /// @param triangles List of triangles in the scene, which are used to compute the bounds of the node.
     void updateNodeBounds(int nodeIdx, std::vector<Triangle> &triangles);
 
-    /**
-     * @brief Recursively subdivide a node into two child nodes. This will reorder the triangle list to improve spatial
-     * locality.
-     * @param nodeIdx The index of the node to subdivide
-     */
+    /// @brief Recursively subdivide a BVH node into two child nodes until a leaf node contains at most 2 triangles.
+    /// @param nodeIdx Index of the node to subdivide.
+    /// @param triangles List of triangles in the scene.
     void subdivide(int nodeIdx, std::vector<Triangle> &triangles);
 };
 

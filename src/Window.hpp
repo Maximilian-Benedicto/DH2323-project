@@ -1,16 +1,13 @@
 #ifndef WINDOW_HPP
 #define WINDOW_HPP
 
-// from https://github.com/lemonad/DH2323-Skeleton (heavily modified)
-
-#define SDL_MAIN_HANDLED  // circumvent failure of SDL_Init() when not using SDL_main() as an entry point.
+#define SDL_MAIN_HANDLED
 
 #include <SDL3/SDL.h>
 #include <glm/glm.hpp>
 
-/**
- * @brief Simple wrapper around SDL that provides a pixel buffer and rendering functionality for the ray tracer.
- */
+/// @brief Window class for creating an SDL window, managing a pixel buffer, and handling rendering and events.
+/// Provided by DH2323 course staff in the labs.
 class Window {
    private:
     int width;
@@ -25,52 +22,75 @@ class Window {
     Uint32 *pixelBuffer = nullptr;
 
    public:
-    /** @brief Release the pixel buffer and SDL-owned resources. */
     ~Window();
 
-    /**
-     * @brief Create a window and backing pixel buffer.
-     * @param width Logical render width in pixels.
-     * @param height Logical render height in pixels.
-     * @param scale Integer presentation scale factor.
-     * @param isFullscreen Whether to start the window in fullscreen mode.
-     */
+    /// @brief Construct a Window with the given width, height, scale factor, and fullscreen mode.
+    /// @param width
+    /// @param height
+    /// @param scale
+    /// @param isFullscreen
     Window(int width, int height, int scale = 1, bool isFullscreen = false);
 
-    /** @brief Clear the pixel buffer to black. */
+    /// @brief Clear the pixel buffer by setting all pixels to black.
     void clearPixels();
 
-    /** @brief Set a single pixel in the logical buffer. */
+    /// @brief Set the color of a pixel in the pixel buffer.
+    /// @param x
+    /// @param y
+    /// @param color
     void putPixel(int x, int y, glm::vec3 color);
 
-    /** @brief Present the current pixel buffer to the window. */
+    /// @brief Update the SDL texture with the current contents of the pixel buffer and present it on the window.
     void render();
 
-    /** @brief Save the current pixel buffer to a BMP image. */
+    /// @brief Save the current contents of the pixel buffer to a BMP image file with the given filename.
+    /// @param filename
+    /// @return true if the image was saved successfully, false otherwise.
     bool saveBMP(const char *filename);
 
-    /** @brief Poll SDL events and report whether the user requested quit. */
+    /// @brief Poll SDL events and return true if a quit event is received (e.g. window close or escape key press).
+    /// @return true if a quit event is received, false otherwise.
     bool quitEvent();
 
-    /** @brief Set the native window title text. */
+    /// @brief Set the title of the SDL window.
+    /// @param title New title for the window.
     void setWindowTitle(const char *title);
 
-    /** @brief Recreate render targets for a new logical resolution. */
+    /// @brief Set the resolution of the pixel buffer used for rendering.
+    /// @param newWidth
+    /// @param newHeight
     void setRenderResolution(int newWidth, int newHeight);
 
-    /** @brief Get the current logical render resolution. */
+    /// @brief Get the current resolution of the pixel buffer used for rendering.
+    /// @param outWidth
+    /// @param outHeight
     void getRenderResolution(int &outWidth, int &outHeight);
 
-    /** @brief Access the raw ARGB8888 pixel buffer. */
+    /// @brief Get a pointer to the pixel buffer used for rendering, which is a flat array of 32-bit RGBA values.
+    /// @return Pointer to the pixel buffer.
     Uint32 *getPixelBuffer() {
         return pixelBuffer;
     }
 
    private:
+    /// @brief Initialize SDL.
+    /// @return true if initialization is successful, false otherwise.
     bool initializeSDL();
+
+    /// @brief Create the pixel buffer for rendering.
+    /// @return true if the pixel buffer was created successfully, false otherwise.
     bool createPixelBuffer();
+
+    /// @brief Create the SDL window.
+    /// @return true if the window was created successfully, false otherwise.
     bool createRenderer();
+
+    /// @brief Create the SDL texture for rendering.
+    /// @return true if the texture was created successfully, false otherwise.
     bool createTexture();
+
+    /// @brief Create the SDL window.
+    /// @return true if the window was created successfully, false otherwise.
     bool createWindow();
 };
 #endif

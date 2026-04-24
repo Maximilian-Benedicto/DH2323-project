@@ -1,28 +1,25 @@
 
-#include "happly.h"
-#include "PlyModel.hpp"
-#include "Triangle.hpp"
 #include <algorithm>
 #include <glm/glm.hpp>
 #include <vector>
 
-/**
- * @brief Load a PLY mesh and build triangles/BVH.
- */
+#include "happly.h"
+#include "PlyModel.hpp"
+#include "Triangle.hpp"
+
 void PlyModel::load() {
     using glm::vec3;
     using namespace std;
 
-    // Construct the data object by reading from file
     happly::PLYData plyIn(filename);
 
-    // Get mesh data from the object
     vector<array<double, 3>> vPos = plyIn.getVertexPositions();
     vector<vector<size_t>> fInd = plyIn.getFaceIndices<size_t>();
 
-    // Write to triangle vector
     triangles.clear();
     triangles.reserve(fInd.size());
+
+    // Create triangles from the vertex positions and face indices (order is flipped to maintain correct winding)
     for (vector<size_t> face : fInd) {
         vec3 v0((float)vPos[face[2]][0], (float)vPos[face[2]][1], (float)vPos[face[2]][2]);
         vec3 v1((float)vPos[face[1]][0], (float)vPos[face[1]][1], (float)vPos[face[1]][2]);
@@ -35,16 +32,8 @@ void PlyModel::load() {
     bvh = BVH(triangles);
 }
 
-/**
- * @brief Normalize model geometry to fit approximately within [-1,1]^3.
- * @details Geometry is centered, uniformly scaled by smallest axis extent, and mirrored on X/Y to match renderer
- * conventions.
- */
 void PlyModel::scaleToUnitCube() {
-    if (triangles.empty())
-        return;
-
-    // 1. Find bounding box to calculate center and max axis length
+    // Compute the bounding box of the model
     glm::vec3 minPos(1e9f);
     glm::vec3 maxPos(-1e9f);
     for (const Triangle &triangle : triangles) {
@@ -52,19 +41,18 @@ void PlyModel::scaleToUnitCube() {
         maxPos = glm::max(maxPos, glm::max(triangle.v0, glm::max(triangle.v1, triangle.v2)));
     }
 
+    // Scale to the unit cube along the longest axis
     glm::vec3 center = (minPos + maxPos) * 0.5f;
     glm::vec3 size = maxPos - minPos;
     float minAxisLength = std::min({size.x, size.y, size.z});
     float scaleSize = 2.0f / minAxisLength;
 
-    // Scale to the volume [-1,1]^3
+    // Apply the scaling and centering
     for (Triangle &triangle : triangles) {
-        // Center the model and scale it uniformly
         triangle.v0 = (triangle.v0 - center) * scaleSize;
         triangle.v1 = (triangle.v1 - center) * scaleSize;
         triangle.v2 = (triangle.v2 - center) * scaleSize;
 
-        // Flip X and Y
         triangle.v0.x *= -1;
         triangle.v1.x *= -1;
         triangle.v2.x *= -1;
@@ -73,10 +61,8 @@ void PlyModel::scaleToUnitCube() {
         triangle.v1.y *= -1;
         triangle.v2.y *= -1;
 
-        // Recalculate normals
         triangle.computeNormal();
 
-        // Recalculate centroids
         triangle.computeCentroid();
     }
 }

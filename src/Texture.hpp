@@ -4,42 +4,36 @@
 #include <glm/glm.hpp>
 #include <string>
 
-/**
- * @brief Move-only texture storage and UV sampling helper.
- * @details Data ownership is tracked by usesStbAllocator to choose the correct deallocator.
- */
+/// @brief Texture class for loading and sampling textures from image files.
 struct Texture {
-    // Texture data is stored as a flat array of unsigned chars (RGBA format)
+    /// @brief Raw pixel data loaded from the image file. Each pixel is represented as 4 bytes (RGBA).
     unsigned char *data = nullptr;
 
-    // Texture dimensions are used navigate the flat data array
+    /// @brief Width of the texture in pixels.
     int width = 0;
+    /// @brief Height of the texture in pixels.
     int height = 0;
 
-    // Number of color channels
+    /// @brief Number of color channels in the texture (e.g., 3 for RGB, 4 for RGBA).
     int channels = 0;
 
-    // True when data was allocated by stb_image and must be released with stbi_image_free.
+    /// @brief Whether the texture data was allocated using stb_image allocator.
     bool usesStbAllocator = true;
 
-    /**
-     * @brief Load a texture from an image file.
-     * @param filepath The path to the image file to load as a texture.
-     */
+    /// @brief Construct a Texture by loading an image from the given filepath.
+    /// @param filepath Filepath to the image file to load as a texture.
     Texture(const std::string &filepath);
     ~Texture();
 
-    // Delete copy constructor and copy assignment operator to prevent accidental copying of the texture data
+    // Overloaded operators and constructors to prevent copying and allow moving of Texture objects.
     Texture(const Texture &) = delete;
     Texture &operator=(const Texture &) = delete;
     Texture(Texture &&other) noexcept;
     Texture &operator=(Texture &&other) noexcept;
 
-    /**
-     * @brief Sample the texture at given UV coordinates.
-     * @param uv The UV coordinates to sample.
-     * @return RGB color in [0,1], with UV clamping and OBJ bottom-left origin handling.
-     */
+    /// @brief Sample the texture at the given UV coordinates.
+    /// @param uv UV coordinates in the range [0, 1]
+    /// @return RGB color sampled from the texture at the given UV coordinates.
     glm::vec3 sample(const glm::vec2 &uv) const;
 };
 

@@ -1,42 +1,34 @@
 #ifndef DIPOLE_SHADER_HPP
 #define DIPOLE_SHADER_HPP
 
-#include "Shader.hpp"
-#include "Model.hpp"
 #include <vector>
 #include <glm/glm.hpp>
 
-/**
- * @brief A shader that implements the dipole diffusion approximation for subsurface scattering.
- */
+#include "Shader.hpp"
+#include "Model.hpp"
+
 class DipoleShader : public Shader {
    public:
-    /**
-     * @brief Different visualization modes for the dipole shader.
-     */
-    enum Mode {
-        NORMAL,            // Visualize surface normals
-        SINGLE_SCATTER,    // Visualize single scattering component
-        MULTIPLE_SCATTER,  // Visualize multiple scattering component
-        FRESNEL,           // Visualize Fresnel reflectance
-        FULL               // Visualize full dipole model
-    };
-
-    /**
-     * @brief Current visualization mode.
-     */
+    /// @brief Rendering modes for the dipole shader.
+    enum Mode { NORMAL, SINGLE_SCATTER, MULTIPLE_SCATTER, FRESNEL, FULL };
     Mode mode;
 
+    /// @brief Construct a dipole shader.
     DipoleShader();
+
+    /// @brief Render the current scene to the window using the dipole method
+    /// @param pixelBuffer Pointer to the pixel buffer to write the rendered image to.
+    /// @param width Width of the render resolution.
+    /// @param height Height of the render resolution.
+    /// @param model The model to render.
+    /// @param light The light source in the scene.
+    /// @param camera The camera to render from.
+    /// @param shouldStopRenderThread Atomic flag to stop rendering.
     void render(Uint32 *pixelBuffer, int width, int height, const Model &model, const Light &light,
                 const Camera &camera, std::atomic<bool> &shouldStopRenderThread) override;
 
    private:
-    // Raytracing functions
-
-    /**
-     * @brief Struct to hold information about an intersection between a ray and the model
-     */
+    /// @brief Intersection information for ray-scene intersection tests.
     struct Intersection {
         glm::vec3 position;
         float distance;
@@ -44,18 +36,9 @@ class DipoleShader : public Shader {
         glm::vec2 uv;
     };
 
-    /**
-     * @brief Find the closest intersection of a ray with the model. Returns true if an intersection is found, false
-     * otherwise.
-     */
+    // Raytracing functions
     bool closestIntersection(glm::vec3 start, glm::vec3 dir, const Model &model, Intersection &closestHit);
-
-    /**
-     * @brief Find the intersection of a ray with an axis-aligned bounding box.
-     */
     bool slabIntersection(const AABB &aabb, const glm::vec3 &start, const glm::vec3 &dir, float &tClose);
-
-    // Dipole model functions
 
     // Fresnel and phase functions
     float fresnelReflectance(float cosTheta, const Material &material);
