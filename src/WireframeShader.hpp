@@ -6,9 +6,6 @@
 #include <glm/glm.hpp>
 #include "Model.hpp"
 
-/**
- * @brief Shader that renders the wireframe of the triangles in the scene
- */
 class WireframeShader : public Shader {
    private:
     void drawLine(Uint32 *pixelBuffer, int width, int height, int x0, int y0, int x1, int y1, Uint32 color);

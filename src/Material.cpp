@@ -7,24 +7,18 @@ Material::Material(glm::vec3 sigma_a, glm::vec3 sigma_s_prime, float eta)
 }
 
 void Material::computeDerivedProperties() {
-    // 1. Compute diffuse Fresnel reflectance F_dr
     f_dr = glm::vec3(-1.440f / (eta * eta) + 0.710f / eta + 0.668f + 0.0636f * eta);
 
-    // 2. Compute internal reflection parameter A
     A = (1.0f + f_dr) / (1.0f - f_dr);
 
-    // 3. Precompute per-channel (RGB) derived properties
     sigma_t_prime = sigma_a + sigma_s_prime;
     alpha_prime = sigma_s_prime / sigma_t_prime;
     sigma_tr = glm::sqrt(3.0f * sigma_a * sigma_t_prime);
     D = 1.0f / (3.0f * sigma_t_prime);
 
-    // 4. Calculate Dipole Source positions
     z_r = 1.0f / sigma_t_prime;
     z_v = z_r + 4.0f * A * D;
 }
-
-// Material definitions measured by Jensen et al. 2001
 
 Material Material::createApple() {
     return Material(glm::vec3(0.0030f, 0.0034f, 0.0460f), glm::vec3(2.29f, 2.39f, 1.97f), 1.3f);

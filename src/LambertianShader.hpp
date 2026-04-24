@@ -1,16 +1,11 @@
 #ifndef LAMBERTIAN_SHADER_HPP
 #define LAMBERTIAN_SHADER_HPP
 
-// From lab2 with modifications
-
 #include "Shader.hpp"
 #include <vector>
 #include <glm/glm.hpp>
 #include "Model.hpp"
 
-/**
- * @brief Shader that implements Lambertian diffuse shading with hard shadows and a simple ambient term.
- */
 class LambertianShader : public Shader {
    private:
     struct Intersection {

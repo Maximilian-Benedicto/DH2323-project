@@ -2,39 +2,23 @@
 #include "BVH.hpp"
 #include "Triangle.hpp"
 
-/**
- * @brief Expand this AABB to include a point.
- * @param p Point in world space.
- */
 void AABB::grow(glm::vec3 p) {
     min = glm::min(min, p);
     max = glm::max(max, p);
 }
 
-/**
- * @brief Expand this AABB to include another valid AABB.
- * @param b Source bounds.
- */
 void AABB::grow(const AABB &b) {
-    if (b.min.x != std::numeric_limits<float>::infinity())  // Only grow if b is valid
-    {
+    if (b.min.x != std::numeric_limits<float>::infinity()) {
         grow(b.min);
         grow(b.max);
     }
 }
 
-/**
- * @brief Compute non-halved AABB surface area term used by split heuristics.
- */
 float AABB::area() const {
     glm::vec3 e = max - min;
     return e.x * e.y + e.y * e.z + e.z * e.x;
 }
 
-/**
- * @brief Build a binary BVH over triangles in place.
- * @details Empty input is represented by nodesUsed == 0 so traversal code can short-circuit safely.
- */
 BVH::BVH(std::vector<Triangle> &triangles) {
     if (triangles.empty()) {
         nodesUsed = 0;
@@ -43,10 +27,8 @@ BVH::BVH(std::vector<Triangle> &triangles) {
 
     nodesUsed = 1;
 
-    // Allocate worst-case node count: 2N - 1
     bvhNodes.resize(triangles.size() * 2 - 1);
 
-    // Initialize the root node
     BVHNode &root = bvhNodes[rootNodeIdx];
     root.leftFirst = 0;
     root.triCount = triangles.size();
@@ -55,17 +37,11 @@ BVH::BVH(std::vector<Triangle> &triangles) {
     subdivide(rootNodeIdx, triangles);
 }
 
-/**
- * @brief Recompute the node AABB from currently assigned triangles.
- * @param nodeIdx Node index to update.
- * @param triangles In-place triangle array used by this BVH.
- */
 void BVH::updateNodeBounds(int nodeIdx, std::vector<Triangle> &triangles) {
     BVHNode &node = bvhNodes[nodeIdx];
     node.aabb.min = glm::vec3(std::numeric_limits<float>::infinity());
     node.aabb.max = glm::vec3(-std::numeric_limits<float>::infinity());
 
-    // Loop over triangles in this node and grow the AABB to include them
     for (int i = 0; i < node.triCount; i++) {
         const Triangle &leafTriangle = triangles[node.leftFirst + i];
         node.aabb.grow(leafTriangle.v0);
@@ -74,26 +50,17 @@ void BVH::updateNodeBounds(int nodeIdx, std::vector<Triangle> &triangles) {
     }
 }
 
-/**
- * @brief Recursively split a node along the longest centroid axis.
- * @details If all centroids land on one side of the split plane, recursion stops to avoid invalid child ranges.
- * @param nodeIdx Node index to split.
- * @param triangles In-place triangle array reordered during partitioning.
- */
 void BVH::subdivide(int nodeIdx, std::vector<Triangle> &triangles) {
     BVHNode &node = bvhNodes[nodeIdx];
 
-    // Terminate recursion if we have a small number of triangles
     if (node.triCount <= 2)
         return;
 
-    // Find the bounding box of the triangle centroids
     AABB centroidBounds;
     for (int i = 0; i < node.triCount; i++) {
         centroidBounds.grow(triangles[node.leftFirst + i].centroid);
     }
 
-    // Split along the longest axis of the centroid bounds
     glm::vec3 extent = centroidBounds.max - centroidBounds.min;
     int axis = 0;
     if (extent.y > extent.x)
@@ -102,7 +69,6 @@ void BVH::subdivide(int nodeIdx, std::vector<Triangle> &triangles) {
         axis = 2;
     float splitPos = centroidBounds.min[axis] + extent[axis] * 0.5f;
 
-    // Start at each end of the list and swap triangles that are on the wrong side of the split
     int i = node.leftFirst;
     int j = i + node.triCount - 1;
     while (i <= j) {
@@ -113,12 +79,10 @@ void BVH::subdivide(int nodeIdx, std::vector<Triangle> &triangles) {
         }
     }
 
-    // Handle edge case: if all triangles ended up on one side, stop subdividing
     int leftCount = i - node.leftFirst;
     if (leftCount == 0 || leftCount == node.triCount)
         return;
 
-    // Create child nodes
     int leftChildIdx = nodesUsed++;
     int rightChildIdx = nodesUsed++;
 
@@ -128,11 +92,9 @@ void BVH::subdivide(int nodeIdx, std::vector<Triangle> &triangles) {
     bvhNodes[rightChildIdx].leftFirst = i;
     bvhNodes[rightChildIdx].triCount = node.triCount - leftCount;
 
-    // Convert current node into an internal node
     node.leftFirst = leftChildIdx;
     node.triCount = 0;
 
-    // Update bounds and recurse
     updateNodeBounds(leftChildIdx, triangles);
     updateNodeBounds(rightChildIdx, triangles);
 

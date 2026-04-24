@@ -6,21 +6,15 @@
 #include <glm/glm.hpp>
 #include <vector>
 
-/**
- * @brief Load a PLY mesh and build triangles/BVH.
- */
 void PlyModel::load() {
     using glm::vec3;
     using namespace std;
 
-    // Construct the data object by reading from file
     happly::PLYData plyIn(filename);
 
-    // Get mesh data from the object
     vector<array<double, 3>> vPos = plyIn.getVertexPositions();
     vector<vector<size_t>> fInd = plyIn.getFaceIndices<size_t>();
 
-    // Write to triangle vector
     triangles.clear();
     triangles.reserve(fInd.size());
     for (vector<size_t> face : fInd) {
@@ -35,16 +29,10 @@ void PlyModel::load() {
     bvh = BVH(triangles);
 }
 
-/**
- * @brief Normalize model geometry to fit approximately within [-1,1]^3.
- * @details Geometry is centered, uniformly scaled by smallest axis extent, and mirrored on X/Y to match renderer
- * conventions.
- */
 void PlyModel::scaleToUnitCube() {
     if (triangles.empty())
         return;
 
-    // 1. Find bounding box to calculate center and max axis length
     glm::vec3 minPos(1e9f);
     glm::vec3 maxPos(-1e9f);
     for (const Triangle &triangle : triangles) {
@@ -57,14 +45,11 @@ void PlyModel::scaleToUnitCube() {
     float minAxisLength = std::min({size.x, size.y, size.z});
     float scaleSize = 2.0f / minAxisLength;
 
-    // Scale to the volume [-1,1]^3
     for (Triangle &triangle : triangles) {
-        // Center the model and scale it uniformly
         triangle.v0 = (triangle.v0 - center) * scaleSize;
         triangle.v1 = (triangle.v1 - center) * scaleSize;
         triangle.v2 = (triangle.v2 - center) * scaleSize;
 
-        // Flip X and Y
         triangle.v0.x *= -1;
         triangle.v1.x *= -1;
         triangle.v2.x *= -1;
@@ -73,10 +58,8 @@ void PlyModel::scaleToUnitCube() {
         triangle.v1.y *= -1;
         triangle.v2.y *= -1;
 
-        // Recalculate normals
         triangle.computeNormal();
 
-        // Recalculate centroids
         triangle.computeCentroid();
     }
 }

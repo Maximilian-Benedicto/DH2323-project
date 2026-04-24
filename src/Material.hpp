@@ -3,35 +3,27 @@
 
 #include <glm/glm.hpp>
 
-/**
- * @brief Material class representing the optical properties of a material for subsurface scattering
- */
 class Material {
    public:
-    // Fundamental properties based on Jensen 2001
-    glm::vec3 sigma_a;        // Absorption coefficient
-    glm::vec3 sigma_s_prime;  // Reduced scattering coefficient
-    float eta;                // Relative index of refraction
+    glm::vec3 sigma_a;
+    glm::vec3 sigma_s_prime;
+    float eta;
 
-    // Derived dipole properties
-    glm::vec3 sigma_t_prime;  // Reduced extinction coefficient
-    glm::vec3 alpha_prime;    // Reduced albedo
-    glm::vec3 sigma_tr;       // Effective transport coefficient
-    glm::vec3 D;              // Diffusion constant
-    glm::vec3 f_dr;           // Average diffuse Fresnel reflectance
-    glm::vec3 A;              // Internal reflection parameter
+    glm::vec3 sigma_t_prime;
+    glm::vec3 alpha_prime;
+    glm::vec3 sigma_tr;
+    glm::vec3 D;
+    glm::vec3 f_dr;
+    glm::vec3 A;
 
-    // Dipole positions
-    glm::vec3 z_r;  // Real source depth
-    glm::vec3 z_v;  // Virtual source height
+    glm::vec3 z_r;
+    glm::vec3 z_v;
 
     Material(glm::vec3 sigma_a, glm::vec3 sigma_s_prime, float eta);
     Material() = default;
 
-    // Recalculates all derived properties from the fundamentals
     void computeDerivedProperties();
 
-    // Factory methods for measured presets from the Jensen 2001 table
     static Material createApple();
     static Material createChicken1();
     static Material createCream();

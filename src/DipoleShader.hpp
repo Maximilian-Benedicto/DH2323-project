@@ -6,25 +6,10 @@
 #include <vector>
 #include <glm/glm.hpp>
 
-/**
- * @brief A shader that implements the dipole diffusion approximation for subsurface scattering.
- */
 class DipoleShader : public Shader {
    public:
-    /**
-     * @brief Different visualization modes for the dipole shader.
-     */
-    enum Mode {
-        NORMAL,            // Visualize surface normals
-        SINGLE_SCATTER,    // Visualize single scattering component
-        MULTIPLE_SCATTER,  // Visualize multiple scattering component
-        FRESNEL,           // Visualize Fresnel reflectance
-        FULL               // Visualize full dipole model
-    };
+    enum Mode { NORMAL, SINGLE_SCATTER, MULTIPLE_SCATTER, FRESNEL, FULL };
 
-    /**
-     * @brief Current visualization mode.
-     */
     Mode mode;
 
     DipoleShader();
@@ -32,11 +17,6 @@ class DipoleShader : public Shader {
                 const Camera &camera, std::atomic<bool> &shouldStopRenderThread) override;
 
    private:
-    // Raytracing functions
-
-    /**
-     * @brief Struct to hold information about an intersection between a ray and the model
-     */
     struct Intersection {
         glm::vec3 position;
         float distance;
@@ -44,35 +24,22 @@ class DipoleShader : public Shader {
         glm::vec2 uv;
     };
 
-    /**
-     * @brief Find the closest intersection of a ray with the model. Returns true if an intersection is found, false
-     * otherwise.
-     */
     bool closestIntersection(glm::vec3 start, glm::vec3 dir, const Model &model, Intersection &closestHit);
 
-    /**
-     * @brief Find the intersection of a ray with an axis-aligned bounding box.
-     */
     bool slabIntersection(const AABB &aabb, const glm::vec3 &start, const glm::vec3 &dir, float &tClose);
 
-    // Dipole model functions
-
-    // Fresnel and phase functions
     float fresnelReflectance(float cosTheta, const Material &material);
     float fresnelTransmittance(float cosTheta, const Material &material);
     float fresnel(glm::vec3 wo, glm::vec3 wi);
     float phaseFunction(float cosTheta);
 
-    // Distance and geometry functions
     float scalarDistance(glm::vec3 xi, glm::vec3 xo);
     glm::vec3 positiveDistance(float r, const Material &material);
     glm::vec3 negativeDistance(float r, const Material &material);
     glm::vec3 diffuseReflectance(float r, const Material &material);
 
-    // dipole components
     glm::vec3 multipleScattering(glm::vec3 xi, glm::vec3 wi, glm::vec3 xo, glm::vec3 w0, const Triangle &triangle);
 
-    // single scattering component
     float exponential(glm::vec3 xi, glm::vec3 xo);
     float combinedExtinctionCoefficient(glm::vec3 xi, glm::vec3 xo);
     glm::vec3 singleScattering(glm::vec3 xo, glm::vec3 wo);

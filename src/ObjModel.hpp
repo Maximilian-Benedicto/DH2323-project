@@ -3,16 +3,12 @@
 
 #include "Model.hpp"
 
-/**
- * @brief Class that can load a .obj file as a list of triangles.
- */
-class ObjModel : public Model
-{
-private:
+class ObjModel : public Model {
+   private:
     std::string filename;
     void scaleToUnitCube();
 
-public:
+   public:
     ObjModel(const std::string &filename) : filename(filename) {}
 
     void load() override;
