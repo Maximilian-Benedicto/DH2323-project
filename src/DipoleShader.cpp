@@ -43,11 +43,17 @@ void DipoleShader::render(Uint32 *pixelBuffer, int width, int height, const Mode
             Intersection closestHit;
             bool found = closestIntersection(start, dir, model, closestHit);
 
-            // TODO: call dipole model functions to compute color
-            // For now, just visualize the normal of the intersected triangle
-            vec3 color(0.0f, 0.0f, 0.0f);
-            if (found)
-                color = model.triangles[closestHit.triangleIndex].normal;
+            vec3 multipleScatterColor(0.0f);
+            vec3 singleScatterColor(0.0f);
+
+            if (found) {
+                const Triangle &hitTriangle = model.triangles[closestHit.triangleIndex];
+                multipleScatterColor =
+                    multipleScattering(closestHit.position, -dir, closestHit.position, -dir, hitTriangle);
+                singleScatterColor = singleScattering(closestHit.position, -dir);
+            }
+
+            vec3 color = multipleScatterColor + singleScatterColor;
 
             // Write color to pixel buffer
             Uint8 r = Uint8(glm::clamp(255 * color.r, 0.f, 255.f));
@@ -211,31 +217,52 @@ bool DipoleShader::slabIntersection(const AABB &aabb, const glm::vec3 &start, co
 }
 
 float DipoleShader::scalarDistance(vec3 xi, vec3 xo) {
-    return 0.0f;
+    return length(xi - xo);
 }
 
-float DipoleShader::positiveDistance(float r) {
-    return 0.0f;
+vec3 DipoleShader::positiveDistance(float r, const Material &material) {
+    vec3 r_squared = vec3(r * r);
+    vec3 z_r_squared = material.z_r * material.z_r;
+    return sqrt(r_squared + z_r_squared);
 }
 
-float DipoleShader::negativeDistance(float r) {
-    return 0.0f;
+vec3 DipoleShader::negativeDistance(float r, const Material &material) {
+    vec3 r_squared = vec3(r * r);
+    vec3 z_v_squared = material.z_v * material.z_v;
+    return sqrt(r_squared + z_v_squared);
 }
 
-float DipoleShader::diffuseReflectance(float r) {
-    return 0.0f;
+vec3 DipoleShader::diffuseReflectance(float r, const Material &material) {
+    vec3 alpha_term = material.alpha_prime / (float)(4.0f * M_PI);
+    vec3 z_r_term = material.sigma_tr * positiveDistance(r, material) + 1.0f;
+    vec3 r_exp_term = exp(-material.sigma_tr * positiveDistance(r, material)) /
+                      (material.sigma_t_prime * pow(positiveDistance(r, material), vec3(3.0f)));
+    vec3 z_v_term = material.z_v * (material.sigma_tr * negativeDistance(r, material) + 1.0f);
+    vec3 v_exp_term = exp(-material.sigma_tr * negativeDistance(r, material)) /
+                      (material.sigma_t_prime * glm::pow(negativeDistance(r, material), vec3(3.0f)));
+
+    return alpha_term * (z_r_term * r_exp_term + z_v_term * v_exp_term);
 }
 
-float DipoleShader::fresnelReflectance(float cosTheta) {
-    return 0.0f;
+float DipoleShader::fresnelReflectance(float cosTheta, const Material &material) {
+    // Not explicitly described in the report, assume that air has eta = 1.0
+    float r0 = pow((1.0f - material.eta) / (1.0f + material.eta), 2.0f);
+    return r0 + (1.0f - r0) * pow(1.0f - cosTheta, 5.0f);
 }
 
-float DipoleShader::fresnelTransmittance(float cosTheta) {
-    return 0.0f;
+float DipoleShader::fresnelTransmittance(float cosTheta, const Material &material) {
+    // Not explicitly described in the report, assume that air has eta = 1.0
+    return 1.0f - fresnelReflectance(cosTheta, material);
 }
 
-float DipoleShader::multipleScattering(vec3 xi, vec3 wi, vec3 xo, vec3 w0) {
-    return 0.0f;
+vec3 DipoleShader::multipleScattering(vec3 xi, vec3 wi, vec3 xo, vec3 w0, const Triangle &triangle) {
+    float cosTheta_i = dot(wi, triangle.normal);
+    float fresnel_i = fresnelTransmittance(cosTheta_i, triangle.material);
+    float cosTheta_o = dot(w0, triangle.normal);
+    float fresnel_o = fresnelTransmittance(cosTheta_o, triangle.material);
+
+    return ((float)(1.0f / M_PI) * fresnel_i * fresnel_o) *
+           diffuseReflectance(scalarDistance(xi, xo), triangle.material);
 }
 
 vec3 DipoleShader::outgoingRadiance(vec3 xo, vec3 wo, vec3 xi, vec3 wi, vec3 wop, vec3 wip) {

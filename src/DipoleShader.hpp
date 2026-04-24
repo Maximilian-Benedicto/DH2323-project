@@ -58,27 +58,26 @@ class DipoleShader : public Shader {
     // Dipole model functions
 
     // Fresnel and phase functions
-    float fresnelReflectance(float cosTheta);
-    float fresnelTransmittance(float cosTheta);
+    float fresnelReflectance(float cosTheta, const Material &material);
+    float fresnelTransmittance(float cosTheta, const Material &material);
     float fresnel(glm::vec3 wo, glm::vec3 wi);
     float phaseFunction(float cosTheta);
 
     // Distance and geometry functions
     float scalarDistance(glm::vec3 xi, glm::vec3 xo);
-    float positiveDistance(float r);
-    float negativeDistance(float r);
-    float diffuseReflectance(float r);
+    glm::vec3 positiveDistance(float r, const Material &material);
+    glm::vec3 negativeDistance(float r, const Material &material);
+    glm::vec3 diffuseReflectance(float r, const Material &material);
 
     // dipole components
-    float multipleScattering(glm::vec3 xi, glm::vec3 wi, glm::vec3 xo, glm::vec3 w0);
-    glm::vec3 outgoingRadiance(glm::vec3 xo, glm::vec3 wo, glm::vec3 xi, glm::vec3 wi, glm::vec3 wop, glm::vec3 wip);
-    glm::vec3 incidentRadiance(glm::vec3 xi, glm::vec3 wi);
+    glm::vec3 multipleScattering(glm::vec3 xi, glm::vec3 wi, glm::vec3 xo, glm::vec3 w0, const Triangle &triangle);
 
     // single scattering component
-
     float exponential(glm::vec3 xi, glm::vec3 xo);
     float combinedExtinctionCoefficient(glm::vec3 xi, glm::vec3 xo);
     glm::vec3 singleScattering(glm::vec3 xo, glm::vec3 wo);
+    glm::vec3 outgoingRadiance(glm::vec3 xo, glm::vec3 wo, glm::vec3 xi, glm::vec3 wi, glm::vec3 wop, glm::vec3 wip);
+    glm::vec3 incidentRadiance(glm::vec3 xi, glm::vec3 wi);
 
     float geometryFactor(glm::vec3 wop, glm::vec3 wip);
 };
