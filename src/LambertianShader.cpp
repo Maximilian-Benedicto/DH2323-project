@@ -111,7 +111,7 @@ vec3 LambertianShader::directLight(const Intersection &hit, const Model &model, 
     // Sample the texture color at the intersection point, if a texture is applied to the triangle
     vec3 textureColor(1, 1, 1);
     size_t textureIdx = model.triangles[hit.triangleIndex].textureIdx;
-    if (textureIdx != -1) {
+    if (textureIdx != (size_t)-1) {
         const Triangle &triangle = model.triangles[hit.triangleIndex];
         vec2 uv = triangle.uv0 * (1 - hit.uv.x - hit.uv.y) + triangle.uv1 * hit.uv.x + triangle.uv2 * hit.uv.y;
         textureColor = model.textures[textureIdx].sample(uv);
