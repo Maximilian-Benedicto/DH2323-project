@@ -6,16 +6,17 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall")
 
 add_executable(DH2323Project 
     main.cpp 
-    Window.cpp 
-    LambertianShader.cpp 
-    DipoleShader.cpp 
-    WireframeShader.cpp
-    CornellBox.cpp
-    PlyModel.cpp
-    ObjModel.cpp
-    Texture.cpp
-    Material.cpp
-    BVH.cpp
+    render/Window.cpp
+    render/Texture.cpp
+    render/Material.cpp
+    render/BVH.cpp
+    shader/LambertianShader.cpp 
+    shader/DipoleShader.cpp 
+    shader/WireframeShader.cpp
+    model/CornellBox.cpp
+    model/PlyModel.cpp
+    model/ObjModel.cpp
+
 )
 
 include(FetchContent)
@@ -63,6 +64,11 @@ FetchContent_MakeAvailable(stb)
 
 
 target_include_directories(DH2323Project PRIVATE 
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/render
+    ${CMAKE_CURRENT_SOURCE_DIR}/shader
+    ${CMAKE_CURRENT_SOURCE_DIR}/model
+    ${CMAKE_CURRENT_SOURCE_DIR}/util
     ${happly_SOURCE_DIR}
     ${tinyobjloader_SOURCE_DIR}
     ${stb_SOURCE_DIR}
