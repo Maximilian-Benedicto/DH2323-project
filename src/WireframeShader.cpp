@@ -1,22 +1,22 @@
 #define GLM_ENABLE_EXPERIMENTAL
-#include <glm/gtx/rotate_vector.hpp>
-#include <iostream>
 #include <algorithm>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/rotate_vector.hpp>
+#include <iostream>
 
-#include "WireframeShader.hpp"
 #include "Camera.hpp"
 #include "Light.hpp"
-#include "Triangle.hpp"
 #include "Model.hpp"
+#include "Triangle.hpp"
+#include "WireframeShader.hpp"
 
 using namespace glm;
 using namespace std;
 
 WireframeShader::WireframeShader() {}
 
-void WireframeShader::drawLine(Uint32 *pixelBuffer, int width, int height, int x0, int y0, int x1, int y1,
-                               Uint32 color) {
+void WireframeShader::drawLine(Uint32* pixelBuffer, int width, int height,
+                               int x0, int y0, int x1, int y1, Uint32 color) {
     // https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
 
     const int dx = abs(x1 - x0);
@@ -47,8 +47,10 @@ void WireframeShader::drawLine(Uint32 *pixelBuffer, int width, int height, int x
     }
 }
 
-void WireframeShader::render(Uint32 *pixelBuffer, int width, int height, const Model &model, const Light &light,
-                             const Camera &camera, std::atomic<bool> &shouldStopRenderThread) {
+void WireframeShader::render(Uint32* pixelBuffer, int width, int height,
+                             const Model& model, const Light& light,
+                             const Camera& camera,
+                             std::atomic<bool>& shouldStopRenderThread) {
     for (int i = 0; i < width * height; ++i) {
         if (shouldStopRenderThread)
             return;
@@ -63,15 +65,17 @@ void WireframeShader::render(Uint32 *pixelBuffer, int width, int height, const M
     up = glm::rotate(up, camera.roll, camera.direction);
 
     // Compute the view matrix for transforming world coordinates to camera space
-    mat4 viewMatrix = glm::lookAt(camera.position, camera.position + camera.direction, up);
+    mat4 viewMatrix =
+        glm::lookAt(camera.position, camera.position + camera.direction, up);
 
     if (model.bvh.nodesUsed == 0)
         return;
 
     // Traverse the BVH and draw the triangles in wireframe, as well as the bounding boxes of the BVH nodes if enabled
-    const int nodeCount = std::min<int>(model.bvh.nodesUsed, model.bvh.bvhNodes.size());
+    const int nodeCount =
+        std::min<int>(model.bvh.nodesUsed, model.bvh.bvhNodes.size());
     for (int idx = 0; idx < nodeCount; ++idx) {
-        const BVHNode &node = model.bvh.bvhNodes[idx];
+        const BVHNode& node = model.bvh.bvhNodes[idx];
 
         if (shouldStopRenderThread)
             return;
@@ -83,7 +87,8 @@ void WireframeShader::render(Uint32 *pixelBuffer, int width, int height, const M
 
             if (min.x > max.x || min.y > max.y || min.z > max.z)
                 continue;
-            if (isinf(min.x) || isinf(min.y) || isinf(min.z) || isinf(max.x) || isinf(max.y) || isinf(max.z))
+            if (isinf(min.x) || isinf(min.y) || isinf(min.z) || isinf(max.x) ||
+                isinf(max.y) || isinf(max.z))
                 continue;
 
             // Define the 8 corners of the bounding box and the 12 edges connecting them
@@ -111,16 +116,23 @@ void WireframeShader::render(Uint32 *pixelBuffer, int width, int height, const M
                 vec3 p2Cam = vec3(p2Cam4);
 
                 if (p1Cam.z < -0.1f && p2Cam.z < -0.1f) {
-                    float px1 = p1Cam.x / p1Cam.z * camera.focalLength + width / 2.0f;
-                    float py1 = -p1Cam.y / p1Cam.z * camera.focalLength + height / 2.0f;
-                    float px2 = p2Cam.x / p2Cam.z * camera.focalLength + width / 2.0f;
-                    float py2 = -p2Cam.y / p2Cam.z * camera.focalLength + height / 2.0f;
+                    float px1 =
+                        p1Cam.x / p1Cam.z * camera.focalLength + width / 2.0f;
+                    float py1 =
+                        -p1Cam.y / p1Cam.z * camera.focalLength + height / 2.0f;
+                    float px2 =
+                        p2Cam.x / p2Cam.z * camera.focalLength + width / 2.0f;
+                    float py2 =
+                        -p2Cam.y / p2Cam.z * camera.focalLength + height / 2.0f;
 
-                    if ((px1 < 0 && px2 < 0) || (px1 >= width && px2 >= width) || (py1 < 0 && py2 < 0) ||
+                    if ((px1 < 0 && px2 < 0) ||
+                        (px1 >= width && px2 >= width) ||
+                        (py1 < 0 && py2 < 0) ||
                         (py1 >= height && py2 >= height))
                         continue;
 
-                    drawLine(pixelBuffer, width, height, (int)px1, (int)py1, (int)px2, (int)py2, lightColor);
+                    drawLine(pixelBuffer, width, height, (int)px1, (int)py1,
+                             (int)px2, (int)py2, lightColor);
                 }
             }
         } else {  // If this is a leaf node, draw the triangles it contains in wireframe.
@@ -129,7 +141,8 @@ void WireframeShader::render(Uint32 *pixelBuffer, int width, int height, const M
 
             // Loop through the triangles in this leaf node
             for (size_t i = start; i < end; i++) {
-                vec3 v[3] = {model.triangles[i].v0, model.triangles[i].v1, model.triangles[i].v2};
+                vec3 v[3] = {model.triangles[i].v0, model.triangles[i].v1,
+                             model.triangles[i].v2};
                 int p[3][2];
                 bool outOfBounds[3] = {false, false, false};
                 for (int j = 0; j < 3; ++j) {
@@ -141,19 +154,24 @@ void WireframeShader::render(Uint32 *pixelBuffer, int width, int height, const M
                         continue;
                     }
 
-                    float px = vCam.x / vCam.z * camera.focalLength + width / 2.0f;
-                    float py = -vCam.y / vCam.z * camera.focalLength + height / 2.0f;
+                    float px =
+                        vCam.x / vCam.z * camera.focalLength + width / 2.0f;
+                    float py =
+                        -vCam.y / vCam.z * camera.focalLength + height / 2.0f;
                     p[j][0] = (int)px;
                     p[j][1] = (int)py;
                 }
 
                 // Draw the edges of the triangle if they are within view
                 if (!outOfBounds[0] && !outOfBounds[1])
-                    drawLine(pixelBuffer, width, height, p[0][0], p[0][1], p[1][0], p[1][1], 0xFF00FF00);
+                    drawLine(pixelBuffer, width, height, p[0][0], p[0][1],
+                             p[1][0], p[1][1], 0xFF00FF00);
                 if (!outOfBounds[1] && !outOfBounds[2])
-                    drawLine(pixelBuffer, width, height, p[1][0], p[1][1], p[2][0], p[2][1], 0xFF00FF00);
+                    drawLine(pixelBuffer, width, height, p[1][0], p[1][1],
+                             p[2][0], p[2][1], 0xFF00FF00);
                 if (!outOfBounds[2] && !outOfBounds[0])
-                    drawLine(pixelBuffer, width, height, p[2][0], p[2][1], p[0][0], p[0][1], 0xFF00FF00);
+                    drawLine(pixelBuffer, width, height, p[2][0], p[2][1],
+                             p[0][0], p[0][1], 0xFF00FF00);
             }
         }
     }
@@ -161,9 +179,12 @@ void WireframeShader::render(Uint32 *pixelBuffer, int width, int height, const M
     // Draw the light source as a small cross if it is within view
     if (!shouldStopRenderThread) {
         float size = 0.1f;
-        vec3 pts[6] = {light.position + vec3(size, 0.0f, 0.0f), light.position - vec3(size, 0.0f, 0.0f),
-                       light.position + vec3(0.0f, size, 0.0f), light.position - vec3(0.0f, size, 0.0f),
-                       light.position + vec3(0.0f, 0.0f, size), light.position - vec3(0.0f, 0.0f, size)};
+        vec3 pts[6] = {light.position + vec3(size, 0.0f, 0.0f),
+                       light.position - vec3(size, 0.0f, 0.0f),
+                       light.position + vec3(0.0f, size, 0.0f),
+                       light.position - vec3(0.0f, size, 0.0f),
+                       light.position + vec3(0.0f, 0.0f, size),
+                       light.position - vec3(0.0f, 0.0f, size)};
 
         Uint32 lightColor = 0xFFFFFF00;
 
@@ -174,12 +195,17 @@ void WireframeShader::render(Uint32 *pixelBuffer, int width, int height, const M
             vec3 p2Cam = vec3(p2Cam4);
 
             if (p1Cam.z < -0.1f && p2Cam.z < -0.1f) {
-                float px1 = p1Cam.x / p1Cam.z * camera.focalLength + width / 2.0f;
-                float py1 = -p1Cam.y / p1Cam.z * camera.focalLength + height / 2.0f;
-                float px2 = p2Cam.x / p2Cam.z * camera.focalLength + width / 2.0f;
-                float py2 = -p2Cam.y / p2Cam.z * camera.focalLength + height / 2.0f;
+                float px1 =
+                    p1Cam.x / p1Cam.z * camera.focalLength + width / 2.0f;
+                float py1 =
+                    -p1Cam.y / p1Cam.z * camera.focalLength + height / 2.0f;
+                float px2 =
+                    p2Cam.x / p2Cam.z * camera.focalLength + width / 2.0f;
+                float py2 =
+                    -p2Cam.y / p2Cam.z * camera.focalLength + height / 2.0f;
 
-                drawLine(pixelBuffer, width, height, (int)px1, (int)py1, (int)px2, (int)py2, lightColor);
+                drawLine(pixelBuffer, width, height, (int)px1, (int)py1,
+                         (int)px2, (int)py2, lightColor);
             }
         }
     }

@@ -1,7 +1,7 @@
 
 #include <SDL3/SDL.h>
-#include <iostream>
 #include <glm/glm.hpp>
+#include <iostream>
 
 #include "Window.hpp"
 
@@ -13,7 +13,8 @@ Window::Window(int width, int height, int scale, bool isFullscreen) {
     this->scale = scale;
     this->isFullscreen = isFullscreen;
 
-    if (!initializeSDL() || !createWindow() || !createRenderer() || !createTexture() || !createPixelBuffer()) {
+    if (!initializeSDL() || !createWindow() || !createRenderer() ||
+        !createTexture() || !createPixelBuffer()) {
         cout << "Could not initialize Window. Exiting." << endl;
         exit(1);
     }
@@ -37,7 +38,8 @@ bool Window::initializeSDL() {
 }
 
 bool Window::createWindow() {
-    SDL_WindowFlags flags = (SDL_WindowFlags)(SDL_WINDOW_HIGH_PIXEL_DENSITY | SDL_WINDOW_RESIZABLE);
+    SDL_WindowFlags flags =
+        (SDL_WindowFlags)(SDL_WINDOW_HIGH_PIXEL_DENSITY | SDL_WINDOW_RESIZABLE);
 
     sdlWindow = SDL_CreateWindow("SDL", width * scale, height * scale, flags);
     if (sdlWindow == nullptr) {
@@ -61,12 +63,14 @@ bool Window::createRenderer() {
 
     SDL_SetRenderVSync(sdlRenderer, 1);
 
-    SDL_SetRenderLogicalPresentation(sdlRenderer, width, height, SDL_LOGICAL_PRESENTATION_LETTERBOX);
+    SDL_SetRenderLogicalPresentation(sdlRenderer, width, height,
+                                     SDL_LOGICAL_PRESENTATION_LETTERBOX);
     return true;
 }
 
 bool Window::createTexture() {
-    sdlTexture = SDL_CreateTexture(sdlRenderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, width, height);
+    sdlTexture = SDL_CreateTexture(sdlRenderer, SDL_PIXELFORMAT_ARGB8888,
+                                   SDL_TEXTUREACCESS_STREAMING, width, height);
     if (sdlTexture == nullptr) {
         cout << "Could not create SDL texture: " << SDL_GetError() << endl;
         return false;
@@ -78,7 +82,7 @@ bool Window::createTexture() {
 }
 
 bool Window::createPixelBuffer() {
-    pixelBuffer = (Uint32 *)calloc(width * height, sizeof(Uint32));
+    pixelBuffer = (Uint32*)calloc(width * height, sizeof(Uint32));
     if (pixelBuffer == nullptr) {
         cout << "Could not create SDL pixel buffer." << endl;
         return false;
@@ -103,7 +107,7 @@ void Window::putPixel(int x, int y, glm::vec3 color) {
 
     Uint32 rgba = (alpha << 24) + (red << 16) + (green << 8) + blue;
 
-    Uint32 *pixel = (Uint32 *)pixelBuffer + y * width + x;
+    Uint32* pixel = (Uint32*)pixelBuffer + y * width + x;
 
     *pixel = rgba;
 }
@@ -116,10 +120,12 @@ void Window::render() {
     SDL_RenderPresent(sdlRenderer);
 }
 
-bool Window::saveBMP(const char *filename) {
-    SDL_Surface *surface = SDL_CreateSurfaceFrom(width, height, SDL_PIXELFORMAT_ARGB8888, pixelBuffer, width * 4);
+bool Window::saveBMP(const char* filename) {
+    SDL_Surface* surface = SDL_CreateSurfaceFrom(
+        width, height, SDL_PIXELFORMAT_ARGB8888, pixelBuffer, width * 4);
     if (surface == nullptr) {
-        cout << "Could not create SDL surface for bitmap: " << SDL_GetError() << endl;
+        cout << "Could not create SDL surface for bitmap: " << SDL_GetError()
+             << endl;
         return false;
     }
 
@@ -146,7 +152,7 @@ bool Window::quitEvent() {
     return false;
 }
 
-void Window::setWindowTitle(const char *title) {
+void Window::setWindowTitle(const char* title) {
     SDL_SetWindowTitle(sdlWindow, title);
 }
 
@@ -163,12 +169,13 @@ void Window::setRenderResolution(int newWidth, int newHeight) {
         pixelBuffer = nullptr;
     }
 
-    SDL_SetRenderLogicalPresentation(sdlRenderer, width, height, SDL_LOGICAL_PRESENTATION_LETTERBOX);
+    SDL_SetRenderLogicalPresentation(sdlRenderer, width, height,
+                                     SDL_LOGICAL_PRESENTATION_LETTERBOX);
     createTexture();
     createPixelBuffer();
 }
 
-void Window::getRenderResolution(int &outWidth, int &outHeight) {
+void Window::getRenderResolution(int& outWidth, int& outHeight) {
     outWidth = width;
     outHeight = height;
 }

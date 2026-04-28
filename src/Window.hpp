@@ -15,11 +15,11 @@ class Window {
     int scale;
     bool isFullscreen;
 
-    SDL_Renderer *sdlRenderer = nullptr;
-    SDL_Texture *sdlTexture = nullptr;
-    SDL_Window *sdlWindow = nullptr;
+    SDL_Renderer* sdlRenderer = nullptr;
+    SDL_Texture* sdlTexture = nullptr;
+    SDL_Window* sdlWindow = nullptr;
 
-    Uint32 *pixelBuffer = nullptr;
+    Uint32* pixelBuffer = nullptr;
 
    public:
     ~Window();
@@ -46,7 +46,7 @@ class Window {
     /// @brief Save the current contents of the pixel buffer to a BMP image file with the given filename.
     /// @param filename
     /// @return true if the image was saved successfully, false otherwise.
-    bool saveBMP(const char *filename);
+    bool saveBMP(const char* filename);
 
     /// @brief Poll SDL events and return true if a quit event is received (e.g. window close or escape key press).
     /// @return true if a quit event is received, false otherwise.
@@ -54,7 +54,7 @@ class Window {
 
     /// @brief Set the title of the SDL window.
     /// @param title New title for the window.
-    void setWindowTitle(const char *title);
+    void setWindowTitle(const char* title);
 
     /// @brief Set the resolution of the pixel buffer used for rendering.
     /// @param newWidth
@@ -64,13 +64,11 @@ class Window {
     /// @brief Get the current resolution of the pixel buffer used for rendering.
     /// @param outWidth
     /// @param outHeight
-    void getRenderResolution(int &outWidth, int &outHeight);
+    void getRenderResolution(int& outWidth, int& outHeight);
 
     /// @brief Get a pointer to the pixel buffer used for rendering, which is a flat array of 32-bit RGBA values.
     /// @return Pointer to the pixel buffer.
-    Uint32 *getPixelBuffer() {
-        return pixelBuffer;
-    }
+    Uint32* getPixelBuffer() { return pixelBuffer; }
 
    private:
     /// @brief Initialize SDL.

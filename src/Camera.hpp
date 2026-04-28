@@ -16,7 +16,10 @@ class Camera {
     /// @param direction
     /// @param focalLength
     Camera(glm::vec3 position, glm::vec3 direction, float focalLength)
-        : position(position), direction(glm::normalize(direction)), focalLength(focalLength), roll(0) {}
+        : position(position),
+          direction(glm::normalize(direction)),
+          focalLength(focalLength),
+          roll(0) {}
 };
 
 #endif

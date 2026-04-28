@@ -4,19 +4,21 @@
 #include <glm/gtx/rotate_vector.hpp>
 #include <iostream>
 
-#include "LambertianShader.hpp"
 #include "Camera.hpp"
+#include "LambertianShader.hpp"
 #include "Light.hpp"
-#include "Triangle.hpp"
 #include "Model.hpp"
 #include "Texture.hpp"
+#include "Triangle.hpp"
 
 using namespace glm;
 using namespace std;
 
 LambertianShader::LambertianShader() : indirectLight(vec3(0.5f, 0.5f, 0.5f)) {}
 
-bool LambertianShader::closestIntersection(vec3 start, vec3 dir, const Model &model, Intersection &closestHit) {
+bool LambertianShader::closestIntersection(vec3 start, vec3 dir,
+                                           const Model& model,
+                                           Intersection& closestHit) {
     if (model.bvh.nodesUsed == 0)
         return false;
     bool found = false;
@@ -29,7 +31,7 @@ bool LambertianShader::closestIntersection(vec3 start, vec3 dir, const Model &mo
         int nodeIdx = stack.back();
         stack.pop_back();
 
-        const BVHNode &node = model.bvh.bvhNodes[nodeIdx];
+        const BVHNode& node = model.bvh.bvhNodes[nodeIdx];
 
         // Skip this node if the ray doesnt intersect with a closer hit than the closest one found so far
         float nodeTClose;
@@ -43,7 +45,7 @@ bool LambertianShader::closestIntersection(vec3 start, vec3 dir, const Model &mo
             int first = node.leftFirst;
             int end = first + node.triCount;
             for (int i = first; i < end; ++i) {
-                const Triangle &triangle = model.triangles[i];
+                const Triangle& triangle = model.triangles[i];
 
                 // Solve the ray-triangle intersection (lab 2)
                 vec3 v0 = triangle.v0;
@@ -79,14 +81,16 @@ bool LambertianShader::closestIntersection(vec3 start, vec3 dir, const Model &mo
         // Get the child nodes
         int leftIdx = node.leftFirst;
         int rightIdx = node.leftFirst + 1;
-        const BVHNode &leftChild = model.bvh.bvhNodes[leftIdx];
-        const BVHNode &rightChild = model.bvh.bvhNodes[rightIdx];
+        const BVHNode& leftChild = model.bvh.bvhNodes[leftIdx];
+        const BVHNode& rightChild = model.bvh.bvhNodes[rightIdx];
 
         // Check for intersection with the child nodes
         float leftClose;
         float rightClose;
-        bool leftIntersect = slabIntersection(leftChild.aabb, start, dir, leftClose);
-        bool rightIntersect = slabIntersection(rightChild.aabb, start, dir, rightClose);
+        bool leftIntersect =
+            slabIntersection(leftChild.aabb, start, dir, leftClose);
+        bool rightIntersect =
+            slabIntersection(rightChild.aabb, start, dir, rightClose);
 
         // Add the child nodes that intersect with the ray to the stack, prioritizing the closer one
         if (leftIntersect && rightIntersect) {
@@ -107,13 +111,15 @@ bool LambertianShader::closestIntersection(vec3 start, vec3 dir, const Model &mo
     return found;
 }
 
-vec3 LambertianShader::directLight(const Intersection &hit, const Model &model, const Light &light) {
+vec3 LambertianShader::directLight(const Intersection& hit, const Model& model,
+                                   const Light& light) {
     // Sample the texture color at the intersection point, if a texture is applied to the triangle
     vec3 textureColor(1, 1, 1);
     size_t textureIdx = model.triangles[hit.triangleIndex].textureIdx;
     if (textureIdx != (size_t)-1) {
-        const Triangle &triangle = model.triangles[hit.triangleIndex];
-        vec2 uv = triangle.uv0 * (1 - hit.uv.x - hit.uv.y) + triangle.uv1 * hit.uv.x + triangle.uv2 * hit.uv.y;
+        const Triangle& triangle = model.triangles[hit.triangleIndex];
+        vec2 uv = triangle.uv0 * (1 - hit.uv.x - hit.uv.y) +
+                  triangle.uv1 * hit.uv.x + triangle.uv2 * hit.uv.y;
         textureColor = model.textures[textureIdx].sample(uv);
     }
 
@@ -124,7 +130,8 @@ vec3 LambertianShader::directLight(const Intersection &hit, const Model &model, 
     Intersection reverse;
     if (closestIntersection(start, r, model, reverse)) {
         if (length(start - reverse.position) < length(r))
-            return indirectLight * textureColor;  // In shadow, only indirect light contributes
+            return indirectLight *
+                   textureColor;  // In shadow, only indirect light contributes
     }
 
     // Compute the direct lighting at the intersection point using the Lambertian reflectance model
@@ -135,8 +142,10 @@ vec3 LambertianShader::directLight(const Intersection &hit, const Model &model, 
     return (D + indirectLight) * textureColor;
 }
 
-void LambertianShader::render(Uint32 *pixelBuffer, int width, int height, const Model &model, const Light &light,
-                              const Camera &camera, std::atomic<bool> &shouldStopRenderThread) {
+void LambertianShader::render(Uint32* pixelBuffer, int width, int height,
+                              const Model& model, const Light& light,
+                              const Camera& camera,
+                              std::atomic<bool>& shouldStopRenderThread) {
     // Compute the camera's right and up vectors
     vec3 right = normalize(cross(vec3(0.0f, 1.0f, 0.0f), camera.direction));
     vec3 up = normalize(cross(camera.direction, right));
@@ -156,7 +165,8 @@ void LambertianShader::render(Uint32 *pixelBuffer, int width, int height, const 
             // Compute the ray direction for this pixel
             float dx = (float)x - width / 2.0f;
             float dy = (float)y - height / 2.0f;
-            vec3 dir = normalize(camera.direction * camera.focalLength + right * dx + up * dy);
+            vec3 dir = normalize(camera.direction * camera.focalLength +
+                                 right * dx + up * dy);
 
             // Find the closest intersection of the ray with the scene
             Intersection closestHit;
@@ -165,7 +175,8 @@ void LambertianShader::render(Uint32 *pixelBuffer, int width, int height, const 
             // Compute the color for this pixel based on the direct lighting at the intersection point
             vec3 color(0, 0, 0);
             if (found)
-                color = model.triangles[closestHit.triangleIndex].color * directLight(closestHit, model, light);
+                color = model.triangles[closestHit.triangleIndex].color *
+                        directLight(closestHit, model, light);
 
             // Convert the color to RGBA format and write it to the pixel buffer
             Uint8 r = Uint8(glm::clamp(255 * color.r, 0.f, 255.f));
@@ -177,7 +188,9 @@ void LambertianShader::render(Uint32 *pixelBuffer, int width, int height, const 
     }
 }
 
-bool LambertianShader::slabIntersection(const AABB &aabb, const glm::vec3 &start, const glm::vec3 &dir, float &tClose) {
+bool LambertianShader::slabIntersection(const AABB& aabb,
+                                        const glm::vec3& start,
+                                        const glm::vec3& dir, float& tClose) {
     // https://en.wikipedia.org/wiki/Slab_method (with modifications)
 
     const vec3 l = aabb.min;

@@ -3,8 +3,8 @@
 #include <glm/glm.hpp>
 #include <vector>
 
-#include "Triangle.hpp"
 #include "CornellBox.hpp"
+#include "Triangle.hpp"
 
 void CornellBox::load() {
     triangles.clear();
@@ -96,7 +96,7 @@ void CornellBox::tallBlock() {
 }
 
 void CornellBox::scaleToUnitCube() {
-    for (Triangle &triangle : triangles) {
+    for (Triangle& triangle : triangles) {
         triangle.v0 *= 2 / kL;
         triangle.v1 *= 2 / kL;
         triangle.v2 *= 2 / kL;

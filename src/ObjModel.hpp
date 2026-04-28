@@ -15,7 +15,7 @@ class ObjModel : public Model {
    public:
     /// @brief Construct an ObjModel with a given filepath.
     /// @param filename Filepath to the OBJ file to load.
-    ObjModel(const std::string &filename) : filename(filename) {}
+    ObjModel(const std::string& filename) : filename(filename) {}
 
     /// @brief Load the OBJ model by parsing the OBJ file, populating triangles and textures, and building the BVH.
     void load() override;

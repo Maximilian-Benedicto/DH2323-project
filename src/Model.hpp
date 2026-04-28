@@ -3,8 +3,8 @@
 
 #include <vector>
 
-#include "Triangle.hpp"
 #include "BVH.hpp"
+#include "Triangle.hpp"
 
 /// @brief Abstract base class for 3D models.
 class Model {

@@ -1,8 +1,8 @@
 #ifndef LAMBERTIAN_SHADER_HPP
 #define LAMBERTIAN_SHADER_HPP
 
-#include <vector>
 #include <glm/glm.hpp>
+#include <vector>
 
 #include "Model.hpp"
 #include "Shader.hpp"
@@ -27,7 +27,8 @@ class LambertianShader : public Shader {
     /// @param model Model containing the triangles to intersect with.
     /// @param closestHit Output parameter that will be populated with information about the closest intersection.
     /// @return true if an intersection is found, false otherwise.
-    bool closestIntersection(glm::vec3 start, glm::vec3 dir, const Model &model, Intersection &closestHit);
+    bool closestIntersection(glm::vec3 start, glm::vec3 dir, const Model& model,
+                             Intersection& closestHit);
 
     /// @brief Check if a ray intersects an axis-aligned bounding box using the slab method.
     /// @param aabb Axis-aligned bounding box to test for intersection.
@@ -35,14 +36,16 @@ class LambertianShader : public Shader {
     /// @param dir Direction of the ray.
     /// @param tClose Distance to the closest intersection with the bounding box.
     /// @return true if the ray intersects the bounding box, false otherwise.
-    bool slabIntersection(const AABB &aabb, const glm::vec3 &start, const glm::vec3 &dir, float &tClose);
+    bool slabIntersection(const AABB& aabb, const glm::vec3& start,
+                          const glm::vec3& dir, float& tClose);
 
     /// @brief Compute the direct lighting at a point of intersection
     /// @param hit Information about the ray-triangle intersection for which to compute direct lighting.
     /// @param model Model containing the triangles in the scene.
     /// @param light Light source in the scene.
     /// @return RGB color of the direct lighting at the point of intersection.
-    glm::vec3 directLight(const Intersection &hit, const Model &model, const Light &light);
+    glm::vec3 directLight(const Intersection& hit, const Model& model,
+                          const Light& light);
 
    public:
     /// @brief Construct a LambertianShader with the given constant ambient term for indirect lighting.
@@ -56,8 +59,9 @@ class LambertianShader : public Shader {
     /// @param light Light source in the scene.
     /// @param camera Camera defining the viewpoint and viewing direction for rendering.
     /// @param shouldStopRenderThread Atomic flag to stop rendering.
-    void render(Uint32 *pixelBuffer, int width, int height, const Model &model, const Light &light,
-                const Camera &camera, std::atomic<bool> &shouldStopRenderThread) override;
+    void render(Uint32* pixelBuffer, int width, int height, const Model& model,
+                const Light& light, const Camera& camera,
+                std::atomic<bool>& shouldStopRenderThread) override;
 };
 
 #endif

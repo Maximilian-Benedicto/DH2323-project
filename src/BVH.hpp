@@ -1,10 +1,10 @@
 #ifndef BVH_HPP
 #define BVH_HPP
 
-#include <vector>
 #include <algorithm>
 #include <glm/glm.hpp>
 #include <limits>
+#include <vector>
 
 #include "Triangle.hpp"
 
@@ -19,7 +19,7 @@ struct AABB {
 
     /// @brief Expand the bounding box to include another bounding box
     /// @param b
-    void grow(const AABB &b);
+    void grow(const AABB& b);
 };
 
 /// @brief Bounding Volume Hierarchy node
@@ -34,9 +34,7 @@ struct BVHNode {
 
     /// @brief Whether this node is a leaf node (contains triangles) or an internal node (contains child nodes).
     /// @return true if this node is a leaf node, false if it is an internal node.
-    bool isLeaf() const {
-        return triCount > 0;
-    };
+    bool isLeaf() const { return triCount > 0; };
 };
 
 /// @brief Bounding Volume Hierarchy for accelerating ray-triangle intersection tests.
@@ -57,18 +55,18 @@ class BVH {
 
     /// @brief Construct a BVH from a list of triangles.
     /// @param inputTriangles Triangles will be reordered in-place to improve spatial locality.
-    BVH(std::vector<Triangle> &inputTriangles);
+    BVH(std::vector<Triangle>& inputTriangles);
 
    private:
     /// @brief Compute the bounding box of a BVH node based on the triangles it contains.
     /// @param nodeIdx Index of the node to update the bounds of.
     /// @param triangles List of triangles in the scene, which are used to compute the bounds of the node.
-    void updateNodeBounds(int nodeIdx, std::vector<Triangle> &triangles);
+    void updateNodeBounds(int nodeIdx, std::vector<Triangle>& triangles);
 
     /// @brief Recursively subdivide a BVH node into two child nodes until a leaf node contains at most 2 triangles.
     /// @param nodeIdx Index of the node to subdivide.
     /// @param triangles List of triangles in the scene.
-    void subdivide(int nodeIdx, std::vector<Triangle> &triangles);
+    void subdivide(int nodeIdx, std::vector<Triangle>& triangles);
 };
 
 #endif

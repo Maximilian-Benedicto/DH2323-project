@@ -1,33 +1,33 @@
 
 #define GLM_ENABLE_EXPERIMENTAL  // Enable experimental features in GLM, needed for rotate() function
 
-#include <glm/gtx/rotate_vector.hpp>
-#include <iostream>
+#include <algorithm>
+#include <atomic>
 #include <cmath>
 #include <glm/glm.hpp>
-#include <algorithm>
-#include <thread>
-#include <atomic>
+#include <glm/gtx/rotate_vector.hpp>
+#include <iostream>
 #include <memory>
+#include <thread>
 
-#include "Window.hpp"
-#include "Triangle.hpp"
 #include "Camera.hpp"
-#include "Light.hpp"
 #include "CornellBox.hpp"
+#include "DipoleShader.hpp"
+#include "LambertianShader.hpp"
+#include "Light.hpp"
+#include "ObjModel.hpp"
 #include "PlyModel.hpp"
 #include "Shader.hpp"
-#include "LambertianShader.hpp"
-#include "DipoleShader.hpp"
+#include "Triangle.hpp"
+#include "Window.hpp"
 #include "WireframeShader.hpp"
-#include "ObjModel.hpp"
 
 using namespace std;
 using glm::vec3;
 
 int screenWidth = 100;
 int screenHeight = 100;
-Window *window;
+Window* window;
 int t;
 
 vector<unique_ptr<Shader>> shaders;
@@ -60,7 +60,7 @@ void startRenderThread();
 /// @brief Reset the camera to its initial position and orientation.
 void resetCamera();
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
     window = new Window(screenWidth, screenHeight, 10, false);
     t = SDL_GetTicks();
 
@@ -68,9 +68,10 @@ int main(int argc, char *argv[]) {
     models.push_back(make_unique<CornellBox>());
     models.push_back(make_unique<PlyModel>("model/bun_zipper.ply"));
     models.push_back(make_unique<ObjModel>("model/sponza/sponza.obj"));
-    for (size_t i = 0; i < models.size(); i++) try {
+    for (size_t i = 0; i < models.size(); i++)
+        try {
             models[i]->load();
-        } catch (const std::exception &e) {
+        } catch (const std::exception& e) {
             std::cerr << e.what() << '\n';
             models.erase(models.begin() + i);
             i--;
@@ -112,9 +113,10 @@ void startRenderThread() {
     shouldStopRenderThread = false;
     int w, h;
     window->getRenderResolution(w, h);
-    Uint32 *buffer = window->getPixelBuffer();
+    Uint32* buffer = window->getPixelBuffer();
     renderThread = std::thread([w, h, buffer]() {
-        shaders[activeShaderIdx]->render(buffer, w, h, *models[activeModelIdx], light, camera, shouldStopRenderThread);
+        shaders[activeShaderIdx]->render(buffer, w, h, *models[activeModelIdx],
+                                         light, camera, shouldStopRenderThread);
     });
 }
 
@@ -122,7 +124,7 @@ void update() {
     int t2 = SDL_GetTicks();
     t = t2;
 
-    const Uint8 *keystate = (const Uint8 *)SDL_GetKeyboardState(NULL);
+    const Uint8* keystate = (const Uint8*)SDL_GetKeyboardState(NULL);
 
     bool hasSceneChanged = false;
     bool hasResolutionChanged = false;
@@ -212,7 +214,8 @@ void update() {
 
     static int lastShaderSwitchTime = 0;
     if ((t - lastShaderSwitchTime > 200) && keystate[SDL_SCANCODE_1]) {
-        if (WireframeShader *wfShader = dynamic_cast<WireframeShader *>(shaders[activeShaderIdx].get())) {
+        if (WireframeShader* wfShader = dynamic_cast<WireframeShader*>(
+                shaders[activeShaderIdx].get())) {
             if (wfShader->isShowingBvh)
                 activeShaderIdx = (++activeShaderIdx) % shaders.size();
 
@@ -245,7 +248,8 @@ void update() {
             lastResChangeTime = t;
             hasResolutionChanged = true;
             hasSceneChanged = false;
-        } else if (keystate[SDL_SCANCODE_MINUS] || keystate[SDL_SCANCODE_KP_MINUS]) {
+        } else if (keystate[SDL_SCANCODE_MINUS] ||
+                   keystate[SDL_SCANCODE_KP_MINUS]) {
             stopRenderThread();
             screenWidth = std::max(screenWidth - 100, 100);
             screenHeight = std::max(screenHeight - 100, 100);

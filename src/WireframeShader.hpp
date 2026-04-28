@@ -1,8 +1,8 @@
 #ifndef WIREFRAME_SHADER_HPP
 #define WIREFRAME_SHADER_HPP
 
-#include <vector>
 #include <glm/glm.hpp>
+#include <vector>
 
 #include "Model.hpp"
 #include "Shader.hpp"
@@ -19,7 +19,8 @@ class WireframeShader : public Shader {
     /// @param x1 Ending x coordinate of the line.
     /// @param y1 Ending y coordinate of the line.
     /// @param color 32-bit RGBA color value to use for the line.
-    void drawLine(Uint32 *pixelBuffer, int width, int height, int x0, int y0, int x1, int y1, Uint32 color);
+    void drawLine(Uint32* pixelBuffer, int width, int height, int x0, int y0,
+                  int x1, int y1, Uint32 color);
 
    public:
     /// @brief Whether to visualize the BVH structure by drawing the bounding boxes of the BVH nodes in wireframe.
@@ -36,8 +37,9 @@ class WireframeShader : public Shader {
     /// @param light Light source in the scene.
     /// @param camera Camera defining the viewpoint and viewing direction for rendering.
     /// @param shouldStopRenderThread Atomic flag to stop rendering.
-    void render(Uint32 *pixelBuffer, int width, int height, const Model &model, const Light &light,
-                const Camera &camera, std::atomic<bool> &shouldStopRenderThread) override;
+    void render(Uint32* pixelBuffer, int width, int height, const Model& model,
+                const Light& light, const Camera& camera,
+                std::atomic<bool>& shouldStopRenderThread) override;
 };
 
 #endif

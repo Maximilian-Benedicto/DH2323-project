@@ -3,8 +3,8 @@
 #include <glm/gtx/rotate_vector.hpp>
 #include <iostream>
 
-#include "DipoleShader.hpp"
 #include "Camera.hpp"
+#include "DipoleShader.hpp"
 #include "Light.hpp"
 #include "Triangle.hpp"
 
@@ -13,8 +13,10 @@ using namespace std;
 
 DipoleShader::DipoleShader() {}
 
-void DipoleShader::render(Uint32 *pixelBuffer, int width, int height, const Model &model, const Light &light,
-                          const Camera &camera, std::atomic<bool> &shouldStopRenderThread) {
+void DipoleShader::render(Uint32* pixelBuffer, int width, int height,
+                          const Model& model, const Light& light,
+                          const Camera& camera,
+                          std::atomic<bool>& shouldStopRenderThread) {
     vec3 right = normalize(cross(vec3(0.0f, 1.0f, 0.0f), camera.direction));
     vec3 up = normalize(cross(camera.direction, right));
 
@@ -30,7 +32,8 @@ void DipoleShader::render(Uint32 *pixelBuffer, int width, int height, const Mode
 
             float dx = (float)x - width / 2.0f;
             float dy = (float)y - height / 2.0f;
-            vec3 dir = normalize(camera.direction * camera.focalLength + right * dx + up * dy);
+            vec3 dir = normalize(camera.direction * camera.focalLength +
+                                 right * dx + up * dy);
 
             Intersection closestHit;
             bool found = closestIntersection(start, dir, model, closestHit);
@@ -39,10 +42,13 @@ void DipoleShader::render(Uint32 *pixelBuffer, int width, int height, const Mode
             vec3 singleScatterColor(0.0f);
 
             if (found) {
-                const Triangle &hitTriangle = model.triangles[closestHit.triangleIndex];
+                const Triangle& hitTriangle =
+                    model.triangles[closestHit.triangleIndex];
                 multipleScatterColor =
-                    multipleScattering(closestHit.position, -dir, closestHit.position, -dir, hitTriangle);
-                singleScatterColor = singleScattering(closestHit.position, -dir);
+                    multipleScattering(closestHit.position, -dir,
+                                       closestHit.position, -dir, hitTriangle);
+                singleScatterColor =
+                    singleScattering(closestHit.position, -dir);
             }
 
             vec3 color = multipleScatterColor + singleScatterColor;
@@ -56,7 +62,8 @@ void DipoleShader::render(Uint32 *pixelBuffer, int width, int height, const Mode
     }
 }
 
-bool DipoleShader::closestIntersection(vec3 start, vec3 dir, const Model &model, Intersection &closestHit) {
+bool DipoleShader::closestIntersection(vec3 start, vec3 dir, const Model& model,
+                                       Intersection& closestHit) {
     bool found = false;
     if (model.bvh.nodesUsed == 0)
         return false;
@@ -69,7 +76,7 @@ bool DipoleShader::closestIntersection(vec3 start, vec3 dir, const Model &model,
         int nodeIdx = stack.back();
         stack.pop_back();
 
-        const BVHNode &node = model.bvh.bvhNodes[nodeIdx];
+        const BVHNode& node = model.bvh.bvhNodes[nodeIdx];
 
         float nodeTClose;
         if (!slabIntersection(node.aabb, start, dir, nodeTClose))
@@ -81,7 +88,7 @@ bool DipoleShader::closestIntersection(vec3 start, vec3 dir, const Model &model,
             int first = node.leftFirst;
             int end = first + node.triCount;
             for (int i = first; i < end; ++i) {
-                const Triangle &triangle = model.triangles[i];
+                const Triangle& triangle = model.triangles[i];
                 vec3 v0 = triangle.v0;
                 vec3 v1 = triangle.v1;
                 vec3 v2 = triangle.v2;
@@ -111,13 +118,15 @@ bool DipoleShader::closestIntersection(vec3 start, vec3 dir, const Model &model,
 
         int leftIdx = node.leftFirst;
         int rightIdx = node.leftFirst + 1;
-        const BVHNode &leftChild = model.bvh.bvhNodes[leftIdx];
-        const BVHNode &rightChild = model.bvh.bvhNodes[rightIdx];
+        const BVHNode& leftChild = model.bvh.bvhNodes[leftIdx];
+        const BVHNode& rightChild = model.bvh.bvhNodes[rightIdx];
 
         float leftClose;
         float rightClose;
-        bool leftIntersect = slabIntersection(leftChild.aabb, start, dir, leftClose);
-        bool rightIntersect = slabIntersection(rightChild.aabb, start, dir, rightClose);
+        bool leftIntersect =
+            slabIntersection(leftChild.aabb, start, dir, leftClose);
+        bool rightIntersect =
+            slabIntersection(rightChild.aabb, start, dir, rightClose);
 
         if (leftIntersect && rightIntersect) {
             if (leftClose < rightClose) {
@@ -137,7 +146,8 @@ bool DipoleShader::closestIntersection(vec3 start, vec3 dir, const Model &model,
     return found;
 }
 
-bool DipoleShader::slabIntersection(const AABB &aabb, const glm::vec3 &start, const glm::vec3 &dir, float &tClose) {
+bool DipoleShader::slabIntersection(const AABB& aabb, const glm::vec3& start,
+                                    const glm::vec3& dir, float& tClose) {
     const vec3 l = aabb.min;
     const vec3 h = aabb.max;
     vec3 tiLow;
@@ -177,40 +187,46 @@ float DipoleShader::scalarDistance(vec3 xi, vec3 xo) {
     return length(xi - xo);
 }
 
-vec3 DipoleShader::positiveDistance(float r, const Material &material) {
+vec3 DipoleShader::positiveDistance(float r, const Material& material) {
     vec3 r_squared = vec3(r * r);
     vec3 z_r_squared = material.z_r * material.z_r;
     return sqrt(r_squared + z_r_squared);
 }
 
-vec3 DipoleShader::negativeDistance(float r, const Material &material) {
+vec3 DipoleShader::negativeDistance(float r, const Material& material) {
     vec3 r_squared = vec3(r * r);
     vec3 z_v_squared = material.z_v * material.z_v;
     return sqrt(r_squared + z_v_squared);
 }
 
-vec3 DipoleShader::diffuseReflectance(float r, const Material &material) {
+vec3 DipoleShader::diffuseReflectance(float r, const Material& material) {
     vec3 alpha_term = material.alpha_prime / (float)(4.0f * M_PI);
     vec3 z_r_term = material.sigma_tr * positiveDistance(r, material) + 1.0f;
     vec3 r_exp_term = exp(-material.sigma_tr * positiveDistance(r, material)) /
-                      (material.sigma_t_prime * pow(positiveDistance(r, material), vec3(3.0f)));
-    vec3 z_v_term = material.z_v * (material.sigma_tr * negativeDistance(r, material) + 1.0f);
+                      (material.sigma_t_prime *
+                       pow(positiveDistance(r, material), vec3(3.0f)));
+    vec3 z_v_term = material.z_v *
+                    (material.sigma_tr * negativeDistance(r, material) + 1.0f);
     vec3 v_exp_term = exp(-material.sigma_tr * negativeDistance(r, material)) /
-                      (material.sigma_t_prime * glm::pow(negativeDistance(r, material), vec3(3.0f)));
+                      (material.sigma_t_prime *
+                       glm::pow(negativeDistance(r, material), vec3(3.0f)));
 
     return alpha_term * (z_r_term * r_exp_term + z_v_term * v_exp_term);
 }
 
-float DipoleShader::fresnelReflectance(float cosTheta, const Material &material) {
+float DipoleShader::fresnelReflectance(float cosTheta,
+                                       const Material& material) {
     float r0 = pow((1.0f - material.eta) / (1.0f + material.eta), 2.0f);
     return r0 + (1.0f - r0) * pow(1.0f - cosTheta, 5.0f);
 }
 
-float DipoleShader::fresnelTransmittance(float cosTheta, const Material &material) {
+float DipoleShader::fresnelTransmittance(float cosTheta,
+                                         const Material& material) {
     return 1.0f - fresnelReflectance(cosTheta, material);
 }
 
-vec3 DipoleShader::multipleScattering(vec3 xi, vec3 wi, vec3 xo, vec3 w0, const Triangle &triangle) {
+vec3 DipoleShader::multipleScattering(vec3 xi, vec3 wi, vec3 xo, vec3 w0,
+                                      const Triangle& triangle) {
     float cosTheta_i = dot(wi, triangle.normal);
     float fresnel_i = fresnelTransmittance(cosTheta_i, triangle.material);
     float cosTheta_o = dot(w0, triangle.normal);
@@ -220,7 +236,8 @@ vec3 DipoleShader::multipleScattering(vec3 xi, vec3 wi, vec3 xo, vec3 w0, const 
            diffuseReflectance(scalarDistance(xi, xo), triangle.material);
 }
 
-vec3 DipoleShader::outgoingRadiance(vec3 xo, vec3 wo, vec3 xi, vec3 wi, vec3 wop, vec3 wip) {
+vec3 DipoleShader::outgoingRadiance(vec3 xo, vec3 wo, vec3 xi, vec3 wi,
+                                    vec3 wop, vec3 wip) {
     return vec3(0.0f);
 }
 

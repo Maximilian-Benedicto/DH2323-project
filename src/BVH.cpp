@@ -7,7 +7,7 @@ void AABB::grow(glm::vec3 p) {
     max = glm::max(max, p);
 }
 
-void AABB::grow(const AABB &b) {
+void AABB::grow(const AABB& b) {
     // Only grow if b is valid
     if (b.min.x != std::numeric_limits<float>::infinity()) {
         grow(b.min);
@@ -15,7 +15,7 @@ void AABB::grow(const AABB &b) {
     }
 }
 
-BVH::BVH(std::vector<Triangle> &triangles) {
+BVH::BVH(std::vector<Triangle>& triangles) {
     if (triangles.empty()) {
         nodesUsed = 0;
         return;
@@ -26,7 +26,7 @@ BVH::BVH(std::vector<Triangle> &triangles) {
     bvhNodes.resize(triangles.size() * 2 - 1);
 
     // Initialize the root node to contain all triangles
-    BVHNode &root = bvhNodes[rootNodeIdx];
+    BVHNode& root = bvhNodes[rootNodeIdx];
     root.leftFirst = 0;
     root.triCount = triangles.size();
 
@@ -35,22 +35,22 @@ BVH::BVH(std::vector<Triangle> &triangles) {
     subdivide(rootNodeIdx, triangles);
 }
 
-void BVH::updateNodeBounds(int nodeIdx, std::vector<Triangle> &triangles) {
-    BVHNode &node = bvhNodes[nodeIdx];
+void BVH::updateNodeBounds(int nodeIdx, std::vector<Triangle>& triangles) {
+    BVHNode& node = bvhNodes[nodeIdx];
     node.aabb.min = glm::vec3(std::numeric_limits<float>::infinity());
     node.aabb.max = glm::vec3(-std::numeric_limits<float>::infinity());
 
     // Grow the bounding box to include all triangles in this node
     for (int i = 0; i < node.triCount; i++) {
-        const Triangle &leafTriangle = triangles[node.leftFirst + i];
+        const Triangle& leafTriangle = triangles[node.leftFirst + i];
         node.aabb.grow(leafTriangle.v0);
         node.aabb.grow(leafTriangle.v1);
         node.aabb.grow(leafTriangle.v2);
     }
 }
 
-void BVH::subdivide(int nodeIdx, std::vector<Triangle> &triangles) {
-    BVHNode &node = bvhNodes[nodeIdx];
+void BVH::subdivide(int nodeIdx, std::vector<Triangle>& triangles) {
+    BVHNode& node = bvhNodes[nodeIdx];
 
     // Stop subdividing at 2 triangles per leaf node
     if (node.triCount <= 2)

@@ -1,10 +1,10 @@
 
 #define STB_IMAGE_IMPLEMENTATION  // Enable the implementation of stb_image in this file
 
-#include "stb_image.h"
 #include "Texture.hpp"
+#include "stb_image.h"
 
-Texture::Texture(const std::string &filepath) {
+Texture::Texture(const std::string& filepath) {
     data = stbi_load(filepath.c_str(), &width, &height, &channels, 3);
     channels = 3;
     usesStbAllocator = true;
@@ -16,11 +16,12 @@ Texture::Texture(const std::string &filepath) {
         usesStbAllocator = false;
 
         // Create a simple 2x2 magenta and black checkerboard texture to indicate a failed load
-        data = new unsigned char[width * height * channels]{255, 0, 255, 0, 0, 0, 0, 0, 0, 255, 0, 255};
+        data = new unsigned char[width * height * channels]{
+            255, 0, 255, 0, 0, 0, 0, 0, 0, 255, 0, 255};
     }
 }
 
-Texture::Texture(Texture &&other) noexcept
+Texture::Texture(Texture&& other) noexcept
     : data(other.data),
       width(other.width),
       height(other.height),
@@ -33,7 +34,7 @@ Texture::Texture(Texture &&other) noexcept
     other.usesStbAllocator = true;
 }
 
-Texture &Texture::operator=(Texture &&other) noexcept {
+Texture& Texture::operator=(Texture&& other) noexcept {
     if (this == &other)
         return *this;
 
@@ -69,7 +70,7 @@ Texture::~Texture() {
     }
 }
 
-glm::vec3 Texture::sample(const glm::vec2 &uv) const {
+glm::vec3 Texture::sample(const glm::vec2& uv) const {
     if (width <= 0 || height <= 0 || channels <= 0 || data == nullptr)
         return glm::vec3(1.0f, 0.0f, 1.0f);
 

@@ -12,7 +12,8 @@ class Light {
     /// @brief Construct a light source with the given position and color.
     /// @param position
     /// @param color
-    Light(glm::vec3 position, glm::vec3 color) : position(position), color(color) {}
+    Light(glm::vec3 position, glm::vec3 color)
+        : position(position), color(color) {}
 };
 
 #endif

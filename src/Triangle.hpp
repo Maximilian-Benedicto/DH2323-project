@@ -36,7 +36,8 @@ class Triangle {
     /// @param v1
     /// @param v2
     /// @param color
-    Triangle(glm::vec3 v0, glm::vec3 v1, glm::vec3 v2, glm::vec3 color) : v0(v0), v1(v1), v2(v2), color(color) {
+    Triangle(glm::vec3 v0, glm::vec3 v1, glm::vec3 v2, glm::vec3 color)
+        : v0(v0), v1(v1), v2(v2), color(color) {
         computeNormal();
         computeCentroid();
         material = Material::createMarble();
@@ -51,9 +52,16 @@ class Triangle {
     /// @param uv2
     /// @param textureIdx
     /// @param color
-    Triangle(glm::vec3 v0, glm::vec3 v1, glm::vec3 v2, glm::vec2 uv0, glm::vec2 uv1, glm::vec2 uv2, size_t textureIdx,
-             glm::vec3 color)
-        : v0(v0), v1(v1), v2(v2), uv0(uv0), uv1(uv1), uv2(uv2), textureIdx(textureIdx), color(color) {
+    Triangle(glm::vec3 v0, glm::vec3 v1, glm::vec3 v2, glm::vec2 uv0,
+             glm::vec2 uv1, glm::vec2 uv2, size_t textureIdx, glm::vec3 color)
+        : v0(v0),
+          v1(v1),
+          v2(v2),
+          uv0(uv0),
+          uv1(uv1),
+          uv2(uv2),
+          textureIdx(textureIdx),
+          color(color) {
         computeNormal();
         computeCentroid();
         material = Material::createMarble();
@@ -67,9 +75,7 @@ class Triangle {
     }
 
     /// @brief Compute the centroid of the triangle based on its vertices.
-    void computeCentroid() {
-        centroid = (v0 + v1 + v2) / 3.0f;
-    }
+    void computeCentroid() { centroid = (v0 + v1 + v2) / 3.0f; }
 };
 
 #endif
