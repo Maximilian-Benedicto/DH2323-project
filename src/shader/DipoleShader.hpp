@@ -37,6 +37,12 @@ class DipoleShader : public Shader {
         glm::vec2 uv;
     };
 
+    /// @brief Sample point and PDF for multiple scattering sampling.
+    struct DipoleSample {
+        glm::vec3 position;
+        float pdf;
+    };
+
     /// TODO: Add more comprehensive comments to the following functions
 
     // Raytracing functions
@@ -60,6 +66,11 @@ class DipoleShader : public Shader {
     // dipole components
     glm::vec3 multipleScattering(glm::vec3 xi, glm::vec3 wi, glm::vec3 xo,
                                  glm::vec3 w0, const Triangle& triangle);
+    DipoleSample samplePointMultipleScattering(const Model& model,
+                                               const Intersection& closestHit);
+    glm::vec3 calculateMultipleScattering(
+        const Intersection& closestHit, const Model& model, const Light& light,
+        const std::vector<DipoleSample>& samples, const glm::vec3& viewDir);
 
     // single scattering component
     float exponential(glm::vec3 xi, glm::vec3 xo);
@@ -70,6 +81,14 @@ class DipoleShader : public Shader {
     glm::vec3 incidentRadiance(glm::vec3 xi, glm::vec3 wi);
 
     float geometryFactor(glm::vec3 wop, glm::vec3 wip);
+
+    DipoleSample samplePointSingleScattering(const Model& model,
+                                             const Intersection& closestHit,
+                                             const Light& light,
+                                             const glm::vec3& viewDir);
+    glm::vec3 calculateSingleScattering(
+        const Intersection& closestHit, const Model& model, const Light& light,
+        const std::vector<DipoleSample>& samples, const glm::vec3& viewDir);
 };
 
 #endif

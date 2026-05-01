@@ -68,6 +68,7 @@ int main(int argc, char* argv[]) {
     models.push_back(make_unique<CornellBox>());
     models.push_back(make_unique<PlyModel>("model/bun_zipper.ply"));
     models.push_back(make_unique<ObjModel>("model/sponza/sponza.obj"));
+    models.push_back(make_unique<ObjModel>("model/diana/diana.obj"));
     for (size_t i = 0; i < models.size(); i++)
         try {
             models[i]->load();

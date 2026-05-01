@@ -2,6 +2,7 @@
 
 #include <glm/gtx/rotate_vector.hpp>
 #include <iostream>
+#include <random>
 
 #include "Camera.hpp"
 #include "DipoleShader.hpp"
@@ -42,13 +43,24 @@ void DipoleShader::render(Uint32* pixelBuffer, int width, int height,
             vec3 singleScatterColor(0.0f);
 
             if (found) {
-                const Triangle& hitTriangle =
-                    model.triangles[closestHit.triangleIndex];
-                multipleScatterColor =
-                    multipleScattering(closestHit.position, -dir,
-                                       closestHit.position, -dir, hitTriangle);
-                singleScatterColor =
-                    singleScattering(closestHit.position, -dir);
+                vec3 viewDir = -dir;
+
+                // Sample points for multiple scattering and calculate the multiple scattering contribution
+                vector<DipoleSample> multipleScatterSamples =
+                    vector<DipoleSample>(32);
+                for (DipoleSample& sample : multipleScatterSamples)
+                    sample = samplePointMultipleScattering(model, closestHit);
+                multipleScatterColor = calculateMultipleScattering(
+                    closestHit, model, light, multipleScatterSamples, viewDir);
+
+                // Sample points for single scattering and calculate the single scattering contribution
+                vector<DipoleSample> singleScatterSamples =
+                    vector<DipoleSample>(32);
+                for (DipoleSample& sample : singleScatterSamples)
+                    sample = samplePointSingleScattering(model, closestHit,
+                                                         light, viewDir);
+                singleScatterColor = calculateSingleScattering(
+                    closestHit, model, light, singleScatterSamples, viewDir);
             }
 
             vec3 color = multipleScatterColor + singleScatterColor;
@@ -60,6 +72,169 @@ void DipoleShader::render(Uint32* pixelBuffer, int width, int height,
             pixelBuffer[y * width + x] = rgba;
         }
     }
+}
+
+DipoleShader::DipoleSample DipoleShader::samplePointMultipleScattering(
+    const Model& model, const Intersection& closestHit) {
+
+    // Initialize random generator once per thread for better performance
+    thread_local std::random_device rd;
+    thread_local std::mt19937 gen(rd());
+    std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+
+    // Get hit information
+    const vec3 normal = model.triangles[closestHit.triangleIndex].normal;
+    const vec3 sigma_tr =
+        model.triangles[closestHit.triangleIndex].material.sigma_tr;
+    const vec3 center = closestHit.position;
+
+    // Pick R, G, or B based on a uniform random number
+    float channel_u = dist(gen);
+
+    float chosen_sigma_tr;
+    if (channel_u < 0.3333f) {
+        chosen_sigma_tr = sigma_tr.x;  // Red
+    } else if (channel_u < 0.6666f) {
+        chosen_sigma_tr = sigma_tr.y;  // Green
+    } else {
+        chosen_sigma_tr = sigma_tr.z;  // Blue
+    }
+
+    // Sample distance using the chosen sigma_tt
+    float u = std::max(dist(gen), 1e-7f);  // Avoid log(0)
+    float d = std::log(u) / chosen_sigma_tr;
+
+    // Calculate the combined distribution fucntion for all channels
+    float pdf_R = sigma_tr.x * std::exp(-sigma_tr.x * d);
+    float pdf_G = sigma_tr.y * std::exp(-sigma_tr.y * d);
+    float pdf_B = sigma_tr.z * std::exp(-sigma_tr.z * d);
+
+    float combined_pdf = (pdf_R + pdf_G + pdf_B) / 3.0f;
+
+    // 4. Transform distance 'd' into a 3D position on the plane
+    vec3 helper = (std::abs(normal.x) > 0.9f) ? vec3{0, 1, 0} : vec3{1, 0, 0};
+    vec3 tangentU = normalize(cross(helper, normal));
+    vec3 tangentV = cross(normal, tangentU);
+
+    float theta = 2.0f * M_PI * dist(gen);
+    float localX = d * std::cos(theta);
+    float localY = d * std::sin(theta);
+
+    vec3 sampledPos = center + (tangentU * localX) + (tangentV * localY);
+
+    return {sampledPos, combined_pdf};
+}
+
+vec3 DipoleShader::calculateMultipleScattering(
+    const Intersection& closestHit, const Model& model, const Light& light,
+    const vector<DipoleSample>& samples, const vec3& viewDir) {
+
+    vec3 result(0.0f);
+    const vec3 normal = model.triangles[closestHit.triangleIndex].normal;
+    const Material material =
+        model.triangles[closestHit.triangleIndex].material;
+    const vec3 xo = closestHit.position;
+    const vec3 wo = normalize(viewDir);
+
+    for (const DipoleSample& sample : samples) {
+
+        // Calculate Incident Radiance (Li) and direction (wi)
+        vec3 xi = sample.position;
+        vec3 wi = normalize(light.position - xi);
+
+        // Check if the sample point is in shadow
+        vec3 r = light.position - xi;
+        vec3 nUnit = normal;
+        vec3 start = xi + nUnit * 1e-4f;
+        Intersection reverse;
+        if (closestIntersection(start, r, model, reverse)) {
+            if (length(start - reverse.position) < length(r))
+                continue;  // In shadow, skip this sample
+        }
+
+        // Compute the incident radiance at the sample point
+        float dist2 = glm::max(dot(r, r), 1e-6f);
+        vec3 Li = light.color / dist2;
+
+        // Calculate how much light enters the medium
+        float cosThetaI = glm::max(0.0f, glm::dot(normal, wi));
+        float Ft_xi = fresnelTransmittance(cosThetaI, material);
+        glm::vec3 enteringIrradiance = Li * Ft_xi * cosThetaI;
+
+        // Evaluate the BSSRDF
+        glm::vec3 Rd = diffuseReflectance(scalarDistance(xi, xo), material);
+
+        // Accumulate the contribution from this sample, weighted by the PDF
+        result += (enteringIrradiance * Rd) / sample.pdf;
+    }
+
+    // Final Average and Normalization
+    result = result / (float)samples.size();
+
+    // Exit the medium and apply Fresnel at the exit point
+    float cosThetaO = glm::max(0.0f, glm::dot(normal, wo));
+    float Ft_xo = fresnelTransmittance(cosThetaO, material);
+
+    // Divide by PI to convert radiant exitance to radiance[cite: 1]
+    return result * (Ft_xo / 3.14159265f);
+}
+
+DipoleShader::DipoleSample DipoleShader::samplePointSingleScattering(
+    const Model& model, const Intersection& closestHit, const Light& light,
+    const vec3& viewDir) {
+
+    // Initialize random generator once per thread for better performance
+    thread_local std::random_device rd;
+    thread_local std::mt19937 gen(rd());
+    std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+
+    const vec3 xo = closestHit.position;
+    const vec3 wo = normalize(viewDir);
+
+    // Compute extinction sigma_t = sigma_a + sigma_s (recover sigma_s from sigma_s_prime)
+    const vec3 sigma_a =
+        model.triangles[closestHit.triangleIndex].material.sigma_a;
+    const vec3 sigma_s_prime =
+        model.triangles[closestHit.triangleIndex].material.sigma_s_prime;
+    const vec3 g = vec3(0.8f);
+    const vec3 sigma_s = sigma_s_prime / (1.0f - g);
+    const vec3 sigma_t = sigma_a + sigma_s;
+
+    // Importance-sample distance per-channel (similar to multiple scattering sampling)
+    float channel_u = dist(gen);
+    float chosen_sigma_t;
+    if (channel_u < 0.3333f)
+        chosen_sigma_t = sigma_t.x;
+    else if (channel_u < 0.6666f)
+        chosen_sigma_t = sigma_t.y;
+    else
+        chosen_sigma_t = sigma_t.z;
+
+    // Sample distance using the chosen sigma_t
+    float u = std::max(dist(gen), 1e-7f);
+    float d = std::log(u) / chosen_sigma_t;
+
+    float pdf_R = sigma_t.x * std::exp(-sigma_t.x * d);
+    float pdf_G = sigma_t.y * std::exp(-sigma_t.y * d);
+    float pdf_B = sigma_t.z * std::exp(-sigma_t.z * d);
+    float combined_pdf = (pdf_R + pdf_G + pdf_B) / 3.0f;
+
+    // Calculate the xi position
+    const vec3 start = xo + wo * d;
+    const vec3 dir = normalize(light.position - start);
+    Intersection shadowTest;
+    if (!closestIntersection(start, dir, model, shadowTest))
+        return {vec3(0.0f), 1.0f};  // No intersection, return zero contribution
+    vec3 xi = shadowTest.position;
+
+    return {xi, combined_pdf};
+}
+
+vec3 DipoleShader::calculateSingleScattering(
+    const Intersection& closestHit, const Model& model, const Light& light,
+    const vector<DipoleSample>& samples, const vec3& viewDir) {
+
+    return vec3(0.0f);  // Placeholder implementation, to be filled in later
 }
 
 bool DipoleShader::closestIntersection(vec3 start, vec3 dir, const Model& model,
@@ -234,33 +409,4 @@ vec3 DipoleShader::multipleScattering(vec3 xi, vec3 wi, vec3 xo, vec3 w0,
 
     return ((float)(1.0f / M_PI) * fresnel_i * fresnel_o) *
            diffuseReflectance(scalarDistance(xi, xo), triangle.material);
-}
-
-vec3 DipoleShader::outgoingRadiance(vec3 xo, vec3 wo, vec3 xi, vec3 wi,
-                                    vec3 wop, vec3 wip) {
-    return vec3(0.0f);
-}
-
-vec3 DipoleShader::incidentRadiance(vec3 xi, vec3 wi) {
-    return vec3(0.0f);
-}
-
-float DipoleShader::fresnel(vec3 wo, vec3 wi) {
-    return 0.0f;
-}
-
-float DipoleShader::exponential(vec3 xo, vec3 xi) {
-    return 0.0f;
-}
-
-float DipoleShader::geometryFactor(vec3 wop, vec3 wip) {
-    return 0.0f;
-}
-
-vec3 DipoleShader::singleScattering(vec3 xo, vec3 wo) {
-    return vec3(0.0f);
-}
-
-float DipoleShader::phaseFunction(float cosTheta) {
-    return 0.0f;
 }
