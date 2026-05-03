@@ -76,6 +76,24 @@ class Triangle {
 
     /// @brief Compute the centroid of the triangle based on its vertices.
     void computeCentroid() { centroid = (v0 + v1 + v2) / 3.0f; }
+
+    /// @brief Compute the area of the triangle.
+    /// @return The area of the triangle.
+    float area() const {
+        return 0.5f * glm::length(glm::cross(v1 - v0, v2 - v0));
+    }
+
+    /// @brief Sample a point uniformly on the triangle's surface using barycentric coordinates.
+    /// @param u1 A random number in the range [0, 1) used for sampling.
+    /// @param u2 A random number in the range [0, 1) used for sampling.
+    /// @return A point sampled uniformly on the triangle's surface.
+    glm::vec3 samplePoint(float u1, float u2) const {
+        float sqrtU1 = std::sqrt(u1);
+        float b0 = 1.0f - sqrtU1;
+        float b1 = u2 * sqrtU1;
+        float b2 = 1.0f - b0 - b1;
+        return v0 * b0 + v1 * b1 + v2 * b2;
+    }
 };
 
 #endif

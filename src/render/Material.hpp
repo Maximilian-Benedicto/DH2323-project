@@ -12,6 +12,9 @@ class Material {
     /// @brief Reduced scattering coefficient
     glm::vec3 sigma_s_prime;
 
+    /// @brief Scattering coefficient
+    glm::vec3 sigma_s;
+
     /// @brief Relative index of refraction
     float eta;
 
@@ -43,7 +46,8 @@ class Material {
     /// @param sigma_a Absorption coefficient
     /// @param sigma_s_prime Reduced scattering coefficient
     /// @param eta Relative index of refraction
-    Material(glm::vec3 sigma_a, glm::vec3 sigma_s_prime, float eta);
+    Material(glm::vec3 sigma_a, glm::vec3 sigma_s_prime, glm::vec3 sigma_s,
+             float eta);
     Material() = default;
 
     /// @brief Compute derived properties for this material based on the input parameters.

@@ -41,51 +41,64 @@ class DipoleShader : public Shader {
     struct DipoleSample {
         glm::vec3 position;
         float pdf;
+        float s_i;
+        float s_o;
+        int triangleIndex;
     };
 
-    /// TODO: Add more comprehensive comments to the following functions
-
-    // Raytracing functions
+    /// @brief
+    /// @param start
+    /// @param dir
+    /// @param model
+    /// @param closestHit
+    /// @return
     bool closestIntersection(glm::vec3 start, glm::vec3 dir, const Model& model,
                              Intersection& closestHit);
+
+    /// @brief
+    /// @param aabb
+    /// @param start
+    /// @param dir
+    /// @param tClose
+    /// @return
     bool slabIntersection(const AABB& aabb, const glm::vec3& start,
                           const glm::vec3& dir, float& tClose);
 
-    // Fresnel and phase functions
-    float fresnelReflectance(float cosTheta, const Material& material);
-    float fresnelTransmittance(float cosTheta, const Material& material);
-    float fresnel(glm::vec3 wo, glm::vec3 wi);
-    float phaseFunction(float cosTheta);
-
-    // Distance and geometry functions
-    float scalarDistance(glm::vec3 xi, glm::vec3 xo);
-    glm::vec3 positiveDistance(float r, const Material& material);
-    glm::vec3 negativeDistance(float r, const Material& material);
-    glm::vec3 diffuseReflectance(float r, const Material& material);
-
-    // dipole components
-    glm::vec3 multipleScattering(glm::vec3 xi, glm::vec3 wi, glm::vec3 xo,
-                                 glm::vec3 w0, const Triangle& triangle);
+    /// @brief
+    /// @param model
+    /// @param closestHit
+    /// @return
     DipoleSample samplePointMultipleScattering(const Model& model,
                                                const Intersection& closestHit);
+    /// @brief
+    /// @param closestHit
+    /// @param model
+    /// @param light
+    /// @param samples
+    /// @param viewDir
+    /// @return
     glm::vec3 calculateMultipleScattering(
         const Intersection& closestHit, const Model& model, const Light& light,
         const std::vector<DipoleSample>& samples, const glm::vec3& viewDir);
 
-    // single scattering component
-    float exponential(glm::vec3 xi, glm::vec3 xo);
-    float combinedExtinctionCoefficient(glm::vec3 xi, glm::vec3 xo);
-    glm::vec3 singleScattering(glm::vec3 xo, glm::vec3 wo);
-    glm::vec3 outgoingRadiance(glm::vec3 xo, glm::vec3 wo, glm::vec3 xi,
-                               glm::vec3 wi, glm::vec3 wop, glm::vec3 wip);
-    glm::vec3 incidentRadiance(glm::vec3 xi, glm::vec3 wi);
-
-    float geometryFactor(glm::vec3 wop, glm::vec3 wip);
-
+    /// @brief
+    /// @param model
+    /// @param closestHit
+    /// @param light
+    /// @param viewDir
+    /// @return
     DipoleSample samplePointSingleScattering(const Model& model,
                                              const Intersection& closestHit,
                                              const Light& light,
                                              const glm::vec3& viewDir);
+
+    /// @brief
+    /// @param closestHit
+    /// @param model
+    /// @param light
+    /// @param samples
+    /// @param viewDir
+    /// @return
     glm::vec3 calculateSingleScattering(
         const Intersection& closestHit, const Model& model, const Light& light,
         const std::vector<DipoleSample>& samples, const glm::vec3& viewDir);
