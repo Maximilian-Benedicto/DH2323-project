@@ -40,65 +40,74 @@ class DipoleShader : public Shader {
     /// @brief Sample point and PDF for multiple scattering sampling.
     struct DipoleSample {
         glm::vec3 position;
+
+        /// @brief PDF of sampling this point, used for weighting the contribution of this sample in the final color calculation.
         float pdf;
+
+        /// @brief Distance from the scatter point to the entry point (xi)
         float s_i;
+
+        /// @brief Distance from the scatter point to the exit point (xo)
         float s_o;
+
+        /// @brief Index of the triangle that was intersected during sampling, or -1 if no intersection occurred.
         int triangleIndex;
     };
 
-    /// @brief
-    /// @param start
-    /// @param dir
-    /// @param model
-    /// @param closestHit
-    /// @return
+    /// @brief Find the closest intersection of a ray with the scene geometry.
+    /// @param start Starting point of the ray.
+    /// @param dir Direction of the ray.
+    /// @param model The model to test for intersection.
+    /// @param closestHit Output parameter that will be set to the closest intersection information if an intersection is found.
+    /// @return True if an intersection is found, false otherwise.
     bool closestIntersection(glm::vec3 start, glm::vec3 dir, const Model& model,
                              Intersection& closestHit);
 
-    /// @brief
-    /// @param aabb
-    /// @param start
-    /// @param dir
-    /// @param tClose
-    /// @return
+    /// @brief Perform slab intersection test between a ray and an axis-aligned bounding box (AABB).
+    /// @param aabb The axis-aligned bounding box to test against.
+    /// @param start Starting point of the ray.
+    /// @param dir Direction of the ray.
+    /// @param tClose Output parameter that will be set to the distance to the closest intersection with the AABB if an intersection is found.
+    /// @return True if the ray intersects the AABB, false otherwise.
     bool slabIntersection(const AABB& aabb, const glm::vec3& start,
                           const glm::vec3& dir, float& tClose);
 
-    /// @brief
-    /// @param model
-    /// @param closestHit
-    /// @return
+    /// @brief Sample an entry point for multiple scattering based on the dipole model.
+    /// @param model The 3D model containing the triangles to sample from.
+    /// @param closestHit The intersection of the ray with the scene at the exit point.
+    /// @return Sampled point and PDF information for multiple scattering sampling.
     DipoleSample samplePointMultipleScattering(const Model& model,
                                                const Intersection& closestHit);
-    /// @brief
-    /// @param closestHit
-    /// @param model
-    /// @param light
-    /// @param samples
-    /// @param viewDir
-    /// @return
+
+    /// @brief Calculate the multiple scattering contribution to the final color at the exit point based on the dipole model.
+    /// @param closestHit The intersection of the ray with the scene at the exit point.
+    /// @param model The 3D model containing the triangles and their material properties.
+    /// @param light The light source in the scene.
+    /// @param samples The sampled entry points and PDF information for multiple scattering sampling.
+    /// @param viewDir The direction from the exit point towards the camera (view direction).
+    /// @return Calculated multiple scattering contribution to the final color at the exit point.
     glm::vec3 calculateMultipleScattering(
         const Intersection& closestHit, const Model& model, const Light& light,
         const std::vector<DipoleSample>& samples, const glm::vec3& viewDir);
 
-    /// @brief
-    /// @param model
-    /// @param closestHit
-    /// @param light
-    /// @param viewDir
-    /// @return
+    /// @brief Sample an entry point for single scattering based on the dipole model.
+    /// @param model The 3D model containing the triangles to sample from.
+    /// @param closestHit The intersection of the ray with the scene at the exit point.
+    /// @param light The light source in the scene.
+    /// @param viewDir The direction from the exit point towards the camera (view direction).
+    /// @return Sampled point and PDF information for single scattering sampling.
     DipoleSample samplePointSingleScattering(const Model& model,
                                              const Intersection& closestHit,
                                              const Light& light,
                                              const glm::vec3& viewDir);
 
-    /// @brief
-    /// @param closestHit
-    /// @param model
-    /// @param light
-    /// @param samples
-    /// @param viewDir
-    /// @return
+    /// @brief Calculate the single scattering contribution to the final color at the exit point based on the dipole model.
+    /// @param closestHit The intersection of the ray with the scene at the exit point.
+    /// @param model The 3D model containing the triangles and their material properties.
+    /// @param light The light source in the scene.
+    /// @param samples The sampled entry points and PDF information for single scattering sampling.
+    /// @param viewDir The direction from the exit point towards the camera (view direction).
+    /// @return Calculated single scattering contribution to the final color at the exit point.
     glm::vec3 calculateSingleScattering(
         const Intersection& closestHit, const Model& model, const Light& light,
         const std::vector<DipoleSample>& samples, const glm::vec3& viewDir);

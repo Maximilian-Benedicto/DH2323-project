@@ -33,7 +33,7 @@ class Material {
     /// @brief Diffuse fresnel reflectance
     glm::vec3 f_dr;
 
-    /// @brief TODO: document
+    /// @brief Fresnel
     glm::vec3 A;
 
     /// @brief Distance from surface to real source
