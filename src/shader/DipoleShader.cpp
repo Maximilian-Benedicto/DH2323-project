@@ -285,12 +285,13 @@ DipoleShader::DipoleSample DipoleShader::samplePointMultipleScattering(
         const float u1 = std::max(dist(gen), 1e-7f);
         const float u2 = dist(gen);
 
-        // Distance is clamped to minimum 1/sigma_t_prime as suggested in Jensen's paper
-        const float minimum = glm::max(
-            1 / DipoleScattering::average(material.sigma_t_prime), sigma_tr);
+        // Clamp to minimum 1/sigma_t_prime as suggested in Jensen's paper
+        const float sigma_t_prime =
+            DipoleScattering::average(material.sigma_t_prime);
+        const float r_min = 1.0f / std::max(sigma_t_prime, 1e-7f);
 
-        // Calculate the distance and angle for sampling the disk
-        const float r = glm::max(-std::log(u1 * u1) / sigma_tr, minimum);
+        // Sample r using the exponential distribution and theta uniformly
+        const float r = r_min - std::log(u1) / sigma_tr;
         const float theta = 2.0f * (float)M_PI * u2;
 
         // Convert to world coordinates
@@ -306,9 +307,9 @@ DipoleShader::DipoleSample DipoleShader::samplePointMultipleScattering(
         if (!closestIntersection(start, dir, model, hit))
             continue;
 
-        // Calculate the PDF for sampling this point based on the dipole model
-        const float pdf = (sigma_tr * sigma_tr) / (2.0f * (float)M_PI) *
-                          std::exp(-sigma_tr * r);
+        // Area PDF for the exponential radial sampling
+        const float pdf_r = sigma_tr * std::exp(-sigma_tr * (r - r_min));
+        const float pdf = pdf_r / (2.0f * (float)M_PI * r);
 
         return {hit.position, pdf, 0.0f, 0.0f, hit.triangleIndex};
     }
@@ -334,6 +335,7 @@ vec3 DipoleShader::calculateMultipleScattering(
     const float Fto =
         DipoleScattering::fresnelTransmittance(cosThetaO, material);
 
+    int validSamples = 0;
     for (const DipoleSample& sample : samples) {
         if (sample.triangleIndex < 0)
             continue;
@@ -370,12 +372,13 @@ vec3 DipoleShader::calculateMultipleScattering(
 
         // Divide by the PDF of this sample
         result += contribution / sample.pdf;
+        ++validSamples;
     }
 
-    // Final average over the number of samples
-    result = result / (float)samples.size();
-
-    return result;
+    // Final average over the number of valid samples
+    if (validSamples == 0)
+        return vec3(0.0f);
+    return result / (float)validSamples;
 }
 
 // SINGLE SCATTERING FUNCTIONS:

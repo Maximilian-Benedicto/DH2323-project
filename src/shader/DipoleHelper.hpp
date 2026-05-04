@@ -11,9 +11,6 @@
 /// @brief Helper functions for the dipole shader.
 namespace DipoleScattering {
 
-/// @brief Anistropy parameter kept constant for all materials, since we don't have measured sigma_s data to compute it from.
-constexpr float g = 0.8f;
-
 /// @brief Calculate the Fresnel reflectance for a given angle and material.
 /// @param cosTheta Cosine of the angle between the normal and the direction.
 /// @param material Material properties of the surface.
@@ -74,6 +71,7 @@ inline glm::vec3 diffuseReflectance(float r, const Material& material) {
 /// @param cosTheta Cosine of the angle between the incident and outgoing directions.
 /// @return Phase function value for the given angle.
 inline float phaseFunction(float cosTheta) {
+    const float g = Material::g;
     const float gSquared = g * g;
     float base = 1.0f + gSquared - 2.0f * g * cosTheta;
     return (1.0f - gSquared) / (4.0f * (float)M_PI * std::pow(base, 1.5f));
