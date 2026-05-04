@@ -264,21 +264,56 @@ DipoleShader::DipoleSample DipoleShader::samplePointMultipleScattering(
     thread_local std::mt19937 gen(rd());
     std::uniform_real_distribution<float> dist(0.0f, 1.0f);
 
-    // Sample a triangle based on area
-    float totalArea = 0.0f;
-    int triangleIndex =
-        DipoleScattering::sampleTriangleIndex(model, dist(gen), totalArea);
-    if (triangleIndex < 0) {
-        return {closestHit.position, 1.0f, 0.0f, 0.0f,
-                closestHit.triangleIndex};
+    // Get the material properties at the exit point
+    const Material material =
+        model.triangles[closestHit.triangleIndex].material;
+    const float sigma_tr = DipoleScattering::average(material.sigma_tr);
+
+    // Exit point and normal
+    const vec3 xo = closestHit.position;
+    const vec3 no = normalize(model.triangles[closestHit.triangleIndex].normal);
+
+    // Find the two orthogonal vectors to the normal to find the tangent plane (for sampling points on the disk around the exit point)
+    const vec3 helper = std::abs(no.x) > 0.9 ? vec3(0, 1, 0) : vec3(1, 0, 0);
+    const vec3 tangent = normalize(cross(helper, no));
+    const vec3 bitangent = normalize(cross(no, tangent));
+
+    // Sample points on a disk around the exit point until we find one that intersects with the model
+    for (int attempt = 0; attempt < MAX_DISK_SAMPLE_ATTEMPTS; ++attempt) {
+
+        // Sample distance r and angle theta
+        const float u1 = std::max(dist(gen), 1e-7f);
+        const float u2 = dist(gen);
+
+        // Distance is clamped to minimum 1/sigma_t_prime as suggested in Jensen's paper
+        const float minimum = glm::max(
+            1 / DipoleScattering::average(material.sigma_t_prime), sigma_tr);
+
+        // Calculate the distance and angle for sampling the disk
+        const float r = glm::max(-std::log(u1 * u1) / sigma_tr, minimum);
+        const float theta = 2.0f * (float)M_PI * u2;
+
+        // Convert to world coordinates
+        const vec3 offset =
+            tangent * (r * std::cos(theta)) + bitangent * (r * std::sin(theta));
+
+        // Calculate the ray from the sampled point towards the model
+        const vec3 start = xo + offset + no;
+        const vec3 dir = -no;
+
+        // Check if this ray intersects with the model
+        Intersection hit;
+        if (!closestIntersection(start, dir, model, hit))
+            continue;
+
+        // Calculate the PDF for sampling this point based on the dipole model
+        const float pdf = (sigma_tr * sigma_tr) / (2.0f * (float)M_PI) *
+                          std::exp(-sigma_tr * r);
+
+        return {hit.position, pdf, 0.0f, 0.0f, hit.triangleIndex};
     }
 
-    // Sample a point on the chosen triangle
-    const Triangle& triangle = model.triangles[triangleIndex];
-    vec3 sampledPos = triangle.samplePoint(dist(gen), dist(gen));
-    float pdf = 1.0f / totalArea;
-
-    return {sampledPos, pdf, 0.0f, 0.0f, triangleIndex};
+    return {vec3(0.0f), 0.0f, 0.0f, 0.0f, -1};
 }
 
 vec3 DipoleShader::calculateMultipleScattering(
@@ -361,28 +396,15 @@ DipoleShader::DipoleSample DipoleShader::samplePointSingleScattering(
     // Get the material properties at the exit point
     const Material material =
         model.triangles[closestHit.triangleIndex].material;
-    const vec3 sigma_t = material.sigma_a + material.sigma_s;
+    const float sigma_t =
+        DipoleScattering::average(material.sigma_a + material.sigma_s);
 
-    // Choose a random color channel to sample based on
-    float channel_u = dist(gen);
-    float chosen_sigma_t;
-    if (channel_u < 0.3333f)
-        chosen_sigma_t = sigma_t.x;
-    else if (channel_u < 0.6666f)
-        chosen_sigma_t = sigma_t.y;
-    else
-        chosen_sigma_t = sigma_t.z;
-
-    // Sample distance using the chosen sigma_t
-    chosen_sigma_t = std::max(chosen_sigma_t, 1e-6f);
-    float u = std::max(dist(gen), 1e-7f);
-    float d = -std::log(u) / chosen_sigma_t;
+    // Sample distance using the average sigma_t across the three channels
+    const float u = std::max(dist(gen), 1e-7f);
+    const float d = -std::log(u) / std::max(sigma_t, 1e-7f);
 
     // Calculate the PDF for the sampled distance
-    float pdf_R = sigma_t.x * std::exp(-sigma_t.x * d);
-    float pdf_G = sigma_t.y * std::exp(-sigma_t.y * d);
-    float pdf_B = sigma_t.z * std::exp(-sigma_t.z * d);
-    float combined_pdf = (pdf_R + pdf_G + pdf_B) / 3.0f;
+    const float pdf = sigma_t * std::exp(-sigma_t * d);
 
     // Calculate the xi position
     const vec3 scatterPoint = xo - wo * d;
@@ -397,7 +419,7 @@ DipoleShader::DipoleSample DipoleShader::samplePointSingleScattering(
     float s_i = length(scatterPoint - xi);
     float s_o = length(scatterPoint - xo);
 
-    return {xi, combined_pdf, s_i, s_o, shadowTest.triangleIndex};
+    return {xi, pdf, s_i, s_o, shadowTest.triangleIndex};
 }
 
 vec3 DipoleShader::calculateSingleScattering(

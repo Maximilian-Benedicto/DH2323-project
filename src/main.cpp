@@ -32,8 +32,8 @@ int t;
 
 DipoleShader::Mode DIPOLE_MODE = DipoleShader::FULL;
 int DIPOLE_THREADS_SQUARED = 4;
-int DIPOLE_MULTIPLE_SCATTER_SAMPLES = 100;
-int DIPOLE_SINGLE_SCATTER_SAMPLES = 100;
+int DIPOLE_MULTIPLE_SCATTER_SAMPLES = 500;
+int DIPOLE_SINGLE_SCATTER_SAMPLES = 500;
 
 vector<unique_ptr<Shader>> shaders;
 vector<unique_ptr<Model>> models;

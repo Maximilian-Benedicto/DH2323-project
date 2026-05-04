@@ -15,6 +15,7 @@ class DipoleShader : public Shader {
     int THREADS_SQUARED = 5;
     int MULTIPLE_SCATTER_SAMPLES = 100;
     int SINGLE_SCATTER_SAMPLES = 100;
+    int MAX_DISK_SAMPLE_ATTEMPTS = 5;
 
     /// @brief Construct a dipole shader.
     DipoleShader();

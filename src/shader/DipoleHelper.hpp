@@ -8,6 +8,7 @@
 #include "Model.hpp"
 #include "Triangle.hpp"
 
+/// @brief Helper functions for the dipole shader.
 namespace DipoleScattering {
 
 /// @brief Anistropy parameter kept constant for all materials, since we don't have measured sigma_s data to compute it from.
@@ -38,24 +39,12 @@ inline float scalarDistance(glm::vec3 xi, glm::vec3 xo) {
     return glm::length(xi - xo);
 }
 
-/// @brief Calculate the positive distance used in the dipole model, which is the distance from the exit point to the real source.
+/// @brief Calculate the positive distance from the exit point to the real/virtual source based on the dipole model.
 /// @param r Distance from the entry point to the exit point.
 /// @param material Material properties of the surface.
 /// @return Per-channel distance from the exit point to the real source.
-inline glm::vec3 positiveDistance(float r, const Material& material) {
-    glm::vec3 r_squared = glm::vec3(r * r);
-    glm::vec3 z_r_squared = material.z_r * material.z_r;
-    return glm::sqrt(r_squared + z_r_squared);
-}
-
-/// @brief Calculate the negative distance used in the dipole model, which is the distance from the exit point to the virtual source.
-/// @param r Distance from the entry point to the exit point.
-/// @param material Material properties of the surface.
-/// @return Per-channel distance from the exit point to the virtual source.
-inline glm::vec3 negativeDistance(float r, const Material& material) {
-    glm::vec3 r_squared = glm::vec3(r * r);
-    glm::vec3 z_v_squared = material.z_v * material.z_v;
-    return glm::sqrt(r_squared + z_v_squared);
+inline glm::vec3 distance(float r, const glm::vec3& z_source) {
+    return glm::sqrt(r * r + z_source * z_source);
 }
 
 /// @brief Calculate the diffuse reflectance at a given distance from the exit point based on the dipole model.
@@ -65,19 +54,17 @@ inline glm::vec3 negativeDistance(float r, const Material& material) {
 inline glm::vec3 diffuseReflectance(float r, const Material& material) {
     glm::vec3 alpha_term = material.alpha_prime / (float)(4.0f * M_PI);
     glm::vec3 z_r_term =
-        material.z_r *
-        (material.sigma_tr * positiveDistance(r, material) + 1.0f);
+        material.z_r * (material.sigma_tr * distance(r, material.z_r) + 1.0f);
     glm::vec3 r_exp_term =
-        glm::exp(-material.sigma_tr * positiveDistance(r, material)) /
+        glm::exp(-material.sigma_tr * distance(r, material.z_r)) /
         (material.sigma_t_prime *
-         glm::pow(positiveDistance(r, material), glm::vec3(3.0f)));
+         glm::pow(distance(r, material.z_r), glm::vec3(3.0f)));
     glm::vec3 z_v_term =
-        material.z_v *
-        (material.sigma_tr * negativeDistance(r, material) + 1.0f);
+        material.z_v * (material.sigma_tr * distance(r, material.z_v) + 1.0f);
     glm::vec3 v_exp_term =
-        glm::exp(-material.sigma_tr * negativeDistance(r, material)) /
+        glm::exp(-material.sigma_tr * distance(r, material.z_v)) /
         (material.sigma_t_prime *
-         glm::pow(negativeDistance(r, material), glm::vec3(3.0f)));
+         glm::pow(distance(r, material.z_v), glm::vec3(3.0f)));
 
     return alpha_term * (z_r_term * r_exp_term + z_v_term * v_exp_term);
 }
@@ -87,35 +74,16 @@ inline glm::vec3 diffuseReflectance(float r, const Material& material) {
 /// @param cosTheta Cosine of the angle between the incident and outgoing directions.
 /// @return Phase function value for the given angle.
 inline float phaseFunction(float cosTheta) {
-    const float g2 = g * g;
-    float denom = 1.0f + g2 - 2.0f * g * cosTheta;
-    return (1.0f - g2) / (4.0f * (float)M_PI * std::pow(denom, 1.5f));
+    const float gSquared = g * g;
+    float base = 1.0f + gSquared - 2.0f * g * cosTheta;
+    return (1.0f - gSquared) / (4.0f * (float)M_PI * std::pow(base, 1.5f));
 }
 
-/// @brief Sample a point on the surface of the model based on the area of its triangles, and compute the necessary information for dipole sampling.
-/// @param model The 3D model containing the triangles to sample from.
-/// @param u A random number in the range [0, 1) used for sampling.
-/// @param totalArea Output parameter that will be set to the total area of the model's triangles, which is used for computing the PDF of the sample.
-/// @return Index of the sampled triangle, or -1 if sampling failed (e.g., if the model has no area).
-inline int sampleTriangleIndex(const Model& model, float u, float& totalArea) {
-    // Total area of the model used for sampling PDF
-    totalArea = 0.0f;
-    for (const Triangle& triangle : model.triangles)
-        totalArea += triangle.area();
-    if (totalArea <= 0.0f)
-        return -1;
-
-    // Sample a triangle based on area
-    float target = u * totalArea;
-    float running = 0.0f;
-    for (size_t i = 0; i < model.triangles.size(); ++i) {
-        running += model.triangles[i].area();
-        if (running >= target)
-            return (int)i;
-    }
-
-    // Return the last triangle.
-    return (int)(model.triangles.size() - 1);
+/// @brief Calculate the average of the three components of a vec3.
+/// @param v The input vec3 for which to calculate the average of its components.
+/// @return The average value of the three components of the input vec3.
+inline float average(const glm::vec3& v) {
+    return (v.x + v.y + v.z) / 3.0f;
 }
 
 }  // namespace DipoleScattering
