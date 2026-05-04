@@ -40,7 +40,7 @@ class Triangle {
         : v0(v0), v1(v1), v2(v2), color(color) {
         computeNormal();
         computeCentroid();
-        material = Material::createApple();
+        material = Material::createWholemilk();
     }
 
     /// @brief Construct a triangle with a given color and texture.
@@ -64,7 +64,7 @@ class Triangle {
           color(color) {
         computeNormal();
         computeCentroid();
-        material = Material::createApple();
+        material = Material::createWholemilk();
     }
 
     /// @brief Compute the normal vector of the triangle based on its vertices.

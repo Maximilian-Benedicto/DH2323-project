@@ -43,7 +43,7 @@ size_t activeShaderIdx;
 std::thread renderThread;
 std::atomic<bool> shouldStopRenderThread(false);
 
-Light light(glm::vec3(0, -0.5, -0.7), 14.0f * glm::vec3(1, 1, 1));
+Light light(glm::vec3(0, -0.5, -0.7), 7.0f * glm::vec3(1, 1, 1));
 Camera camera(glm::vec3(0, 0, -2), glm::vec3(0, 0, 1), screenHeight / 2.0f);
 
 float cameraSpeed = 0.05;
