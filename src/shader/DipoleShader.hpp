@@ -12,9 +12,24 @@ class DipoleShader : public Shader {
     /// @brief Rendering modes for the dipole shader.
     enum Mode { SINGLE_SCATTER, MULTIPLE_SCATTER, FULL };
     Mode mode = FULL;
+    int THREADS_SQUARED = 5;
+    int MULTIPLE_SCATTER_SAMPLES = 100;
+    int SINGLE_SCATTER_SAMPLES = 100;
 
     /// @brief Construct a dipole shader.
     DipoleShader();
+
+    /// @brief Construct a dipole shader with the given parameters.
+    /// @param mode Rendering mode for the dipole shader (single scatter, multiple scatter, or full).
+    /// @param threadsSquared Number of threads to use for rendering, squared (e.g., 10 means 100 threads).
+    /// @param multipleScatterSamples Number of samples to use for estimating the multiple scattering contribution.
+    /// @param singleScatterSamples Number of samples to use for estimating the single scattering contribution.
+    DipoleShader(Mode mode, int threadsSquared, int multipleScatterSamples,
+                 int singleScatterSamples)
+        : mode(mode),
+          THREADS_SQUARED(threadsSquared),
+          MULTIPLE_SCATTER_SAMPLES(multipleScatterSamples),
+          SINGLE_SCATTER_SAMPLES(singleScatterSamples) {}
 
     /// @brief Render the current scene to the window using the dipole method
     /// @param pixelBuffer Pointer to the pixel buffer to write the rendered image to.
@@ -53,6 +68,21 @@ class DipoleShader : public Shader {
         /// @brief Index of the triangle that was intersected during sampling, or -1 if no intersection occurred.
         int triangleIndex;
     };
+
+    /// @brief
+    /// @param pixelBuffer
+    /// @param x1
+    /// @param y1
+    /// @param x2
+    /// @param y2
+    /// @param model
+    /// @param light
+    /// @param camera
+    /// @param shouldStopRenderThread
+    void renderSquare(Uint32* pixelBuffer, int width, int height, int x1,
+                      int y1, int x2, int y2, const Model& model,
+                      const Light& light, const Camera& camera,
+                      std::atomic<bool>& shouldStopRenderThread);
 
     /// @brief Find the closest intersection of a ray with the scene geometry.
     /// @param start Starting point of the ray.

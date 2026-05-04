@@ -30,6 +30,11 @@ int screenHeight = 100;
 Window* window;
 int t;
 
+DipoleShader::Mode DIPOLE_MODE = DipoleShader::FULL;
+int DIPOLE_THREADS_SQUARED = 4;
+int DIPOLE_MULTIPLE_SCATTER_SAMPLES = 100;
+int DIPOLE_SINGLE_SCATTER_SAMPLES = 100;
+
 vector<unique_ptr<Shader>> shaders;
 vector<unique_ptr<Model>> models;
 size_t activeModelIdx;
@@ -80,7 +85,9 @@ int main(int argc, char* argv[]) {
 
     shaders = vector<unique_ptr<Shader>>();
     shaders.push_back(make_unique<WireframeShader>());
-    shaders.push_back(make_unique<DipoleShader>());
+    shaders.push_back(make_unique<DipoleShader>(
+        DIPOLE_MODE, DIPOLE_THREADS_SQUARED, DIPOLE_MULTIPLE_SCATTER_SAMPLES,
+        DIPOLE_SINGLE_SCATTER_SAMPLES));
     shaders.push_back(make_unique<LambertianShader>());
 
     activeModelIdx = 0;

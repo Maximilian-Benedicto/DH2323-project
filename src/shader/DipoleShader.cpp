@@ -3,6 +3,7 @@
 #include <cmath>
 #include <glm/gtx/rotate_vector.hpp>
 #include <random>
+#include <thread>
 
 #include "Camera.hpp"
 #include "DipoleHelper.hpp"
@@ -20,7 +21,39 @@ void DipoleShader::render(Uint32* pixelBuffer, int width, int height,
                           const Camera& camera,
                           std::atomic<bool>& shouldStopRenderThread) {
 
-    // Compute the cameras right and up vectors
+    // Render the image in 10 squares to allow for better multithreading
+    int numSquaresX = THREADS_SQUARED;
+    int numSquaresY = THREADS_SQUARED;
+    int squareWidth = width / numSquaresX;
+    int squareHeight = height / numSquaresY;
+    vector<thread> threads;
+    for (int i = 0; i < numSquaresX; ++i) {
+        for (int j = 0; j < numSquaresY; ++j) {
+            int x1 = i * squareWidth;
+            int y1 = j * squareHeight;
+            int x2 = (i + 1 == numSquaresX) ? width : (i + 1) * squareWidth;
+            int y2 = (j + 1 == numSquaresY) ? height : (j + 1) * squareHeight;
+
+            // Launch a thread to render this square of the image
+            threads.emplace_back(std::thread(
+                [this, x1, y1, x2, y2, width, height, pixelBuffer, &model,
+                 &light, &camera, &shouldStopRenderThread]() {
+                    this->renderSquare(pixelBuffer, width, height, x1, y1, x2,
+                                       y2, model, light, camera,
+                                       shouldStopRenderThread);
+                }));
+        }
+    }
+
+    for (thread& t : threads)
+        t.join();
+}
+
+void DipoleShader::renderSquare(
+    Uint32* pixelBuffer, int width, int height, int x1, int y1, int x2, int y2,
+    const Model& model, const Light& light, const Camera& camera,
+    std::atomic<bool>&
+        shouldStopRenderThread) {  // Compute the cameras right and up vectors
     vec3 right = normalize(cross(vec3(0.0f, 1.0f, 0.0f), camera.direction));
     vec3 up = normalize(cross(camera.direction, right));
 
@@ -31,8 +64,8 @@ void DipoleShader::render(Uint32* pixelBuffer, int width, int height,
     // Rays start at the camera position
     vec3 start = camera.position;
 
-    for (int y = 0; y < height; ++y) {
-        for (int x = 0; x < width; ++x) {
+    for (int y = y1; y < y2; ++y) {
+        for (int x = x1; x < x2; ++x) {
             if (shouldStopRenderThread)
                 return;
 
@@ -55,7 +88,7 @@ void DipoleShader::render(Uint32* pixelBuffer, int width, int height,
 
                 // Sample points for multiple scattering and calculate the multiple scattering contribution
                 vector<DipoleSample> multipleScatterSamples =
-                    vector<DipoleSample>(100);
+                    vector<DipoleSample>(MULTIPLE_SCATTER_SAMPLES);
                 for (DipoleSample& sample : multipleScatterSamples)
                     sample = samplePointMultipleScattering(model, closestHit);
                 multipleScatterColor = calculateMultipleScattering(
@@ -63,7 +96,7 @@ void DipoleShader::render(Uint32* pixelBuffer, int width, int height,
 
                 // Sample points for single scattering and calculate the single scattering contribution
                 vector<DipoleSample> singleScatterSamples =
-                    vector<DipoleSample>(100);
+                    vector<DipoleSample>(SINGLE_SCATTER_SAMPLES);
                 for (DipoleSample& sample : singleScatterSamples)
                     sample = samplePointSingleScattering(model, closestHit,
                                                          light, viewDir);

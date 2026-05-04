@@ -16,6 +16,52 @@ using namespace std;
 
 LambertianShader::LambertianShader() : indirectLight(vec3(0.5f, 0.5f, 0.5f)) {}
 
+void LambertianShader::render(Uint32* pixelBuffer, int width, int height,
+                              const Model& model, const Light& light,
+                              const Camera& camera,
+                              std::atomic<bool>& shouldStopRenderThread) {
+    // Compute the camera's right and up vectors
+    vec3 right = normalize(cross(vec3(0.0f, 1.0f, 0.0f), camera.direction));
+    vec3 up = normalize(cross(camera.direction, right));
+
+    // Apply camera roll
+    up = glm::rotate(up, camera.roll, camera.direction);
+    right = glm::rotate(right, camera.roll, camera.direction);
+
+    // Cast rays from the camera
+    vec3 start = camera.position;
+
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+            if (shouldStopRenderThread)
+                return;
+
+            // Compute the ray direction for this pixel
+            float dx = (float)x - width / 2.0f;
+            float dy = (float)y - height / 2.0f;
+            vec3 dir = normalize(camera.direction * camera.focalLength +
+                                 right * dx + up * dy);
+
+            // Find the closest intersection of the ray with the scene
+            Intersection closestHit;
+            bool found = closestIntersection(start, dir, model, closestHit);
+
+            // Compute the color for this pixel based on the direct lighting at the intersection point
+            vec3 color(0, 0, 0);
+            if (found)
+                color = model.triangles[closestHit.triangleIndex].color *
+                        directLight(closestHit, model, light);
+
+            // Convert the color to RGBA format and write it to the pixel buffer
+            Uint8 r = Uint8(glm::clamp(255 * color.r, 0.f, 255.f));
+            Uint8 g = Uint8(glm::clamp(255 * color.g, 0.f, 255.f));
+            Uint8 b = Uint8(glm::clamp(255 * color.b, 0.f, 255.f));
+            Uint32 rgba = (255 << 24) | (r << 16) | (g << 8) | b;
+            pixelBuffer[y * width + x] = rgba;
+        }
+    }
+}
+
 bool LambertianShader::closestIntersection(vec3 start, vec3 dir,
                                            const Model& model,
                                            Intersection& closestHit) {
@@ -140,52 +186,6 @@ vec3 LambertianShader::directLight(const Intersection& hit, const Model& model,
     vec3 D = B * glm::max(dot(rUnit, nUnit), 0.0f);
 
     return (D + indirectLight) * textureColor;
-}
-
-void LambertianShader::render(Uint32* pixelBuffer, int width, int height,
-                              const Model& model, const Light& light,
-                              const Camera& camera,
-                              std::atomic<bool>& shouldStopRenderThread) {
-    // Compute the camera's right and up vectors
-    vec3 right = normalize(cross(vec3(0.0f, 1.0f, 0.0f), camera.direction));
-    vec3 up = normalize(cross(camera.direction, right));
-
-    // Apply camera roll
-    up = glm::rotate(up, camera.roll, camera.direction);
-    right = glm::rotate(right, camera.roll, camera.direction);
-
-    // Cast rays from the camera
-    vec3 start = camera.position;
-
-    for (int y = 0; y < height; ++y) {
-        for (int x = 0; x < width; ++x) {
-            if (shouldStopRenderThread)
-                return;
-
-            // Compute the ray direction for this pixel
-            float dx = (float)x - width / 2.0f;
-            float dy = (float)y - height / 2.0f;
-            vec3 dir = normalize(camera.direction * camera.focalLength +
-                                 right * dx + up * dy);
-
-            // Find the closest intersection of the ray with the scene
-            Intersection closestHit;
-            bool found = closestIntersection(start, dir, model, closestHit);
-
-            // Compute the color for this pixel based on the direct lighting at the intersection point
-            vec3 color(0, 0, 0);
-            if (found)
-                color = model.triangles[closestHit.triangleIndex].color *
-                        directLight(closestHit, model, light);
-
-            // Convert the color to RGBA format and write it to the pixel buffer
-            Uint8 r = Uint8(glm::clamp(255 * color.r, 0.f, 255.f));
-            Uint8 g = Uint8(glm::clamp(255 * color.g, 0.f, 255.f));
-            Uint8 b = Uint8(glm::clamp(255 * color.b, 0.f, 255.f));
-            Uint32 rgba = (255 << 24) | (r << 16) | (g << 8) | b;
-            pixelBuffer[y * width + x] = rgba;
-        }
-    }
 }
 
 bool LambertianShader::slabIntersection(const AABB& aabb,
