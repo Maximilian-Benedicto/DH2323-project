@@ -55,13 +55,16 @@ class Material {
 
     static Material createApple();
     static Material createChicken1();
+    static Material createChicken2();
     static Material createCream();
     static Material createKetchup();
     static Material createMarble();
     static Material createPotato();
-    static Material createSkimMilk();
+    static Material createSkimmilk();
     static Material createSkin1();
-    static Material createWholeMilk();
+    static Material createSkin2();
+    static Material createSpectralon();
+    static Material createWholemilk();
 };
 
 #endif
