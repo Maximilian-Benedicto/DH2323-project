@@ -224,6 +224,20 @@ void update() {
 
             hasSceneChanged = true;
             lastShaderSwitchTime = t;
+        } else if (DipoleShader* dShader = dynamic_cast<DipoleShader*>(
+                       shaders[activeShaderIdx].get())) {
+            // Rotate modes, or switch shader if at the end of the modes
+            if (dShader->mode == DipoleShader::FULL)
+                dShader->mode = DipoleShader::SINGLE_SCATTER;
+            else if (dShader->mode == DipoleShader::SINGLE_SCATTER)
+                dShader->mode = DipoleShader::MULTIPLE_SCATTER;
+            else if (dShader->mode == DipoleShader::MULTIPLE_SCATTER) {
+                dShader->mode = DipoleShader::FULL;
+                activeShaderIdx = (++activeShaderIdx) % shaders.size();
+            }
+
+            hasSceneChanged = true;
+            lastShaderSwitchTime = t;
         } else {
             activeShaderIdx = (++activeShaderIdx) % shaders.size();
             hasSceneChanged = true;

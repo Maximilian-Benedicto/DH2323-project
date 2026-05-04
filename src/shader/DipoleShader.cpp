@@ -71,7 +71,13 @@ void DipoleShader::render(Uint32* pixelBuffer, int width, int height,
                     closestHit, model, light, singleScatterSamples, viewDir);
             }
 
-            vec3 color = multipleScatterColor + singleScatterColor;
+            vec3 color(0.0f);
+            if (mode == SINGLE_SCATTER)
+                color = singleScatterColor;
+            else if (mode == MULTIPLE_SCATTER)
+                color = multipleScatterColor;
+            else if (mode == FULL)
+                color = singleScatterColor + multipleScatterColor;
 
             Uint8 r = Uint8(glm::clamp(255 * color.r, 0.f, 255.f));
             Uint8 g = Uint8(glm::clamp(255 * color.g, 0.f, 255.f));

@@ -10,8 +10,8 @@
 class DipoleShader : public Shader {
    public:
     /// @brief Rendering modes for the dipole shader.
-    enum Mode { NORMAL, SINGLE_SCATTER, MULTIPLE_SCATTER, FRESNEL, FULL };
-    Mode mode;
+    enum Mode { SINGLE_SCATTER, MULTIPLE_SCATTER, FULL };
+    Mode mode = FULL;
 
     /// @brief Construct a dipole shader.
     DipoleShader();
