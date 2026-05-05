@@ -299,7 +299,7 @@ DipoleShader::DipoleSample DipoleShader::samplePointMultipleScattering(
             tangent * (r * std::cos(theta)) + bitangent * (r * std::sin(theta));
 
         // Calculate the ray from the sampled point towards the model
-        const vec3 eps = glm::epsilon<float>() * no;
+        const vec3 eps = 1e-4f * no;
         const vec3 start = xo + offset + eps;  // Offset slightly
         const vec3 dir = -no;
 
