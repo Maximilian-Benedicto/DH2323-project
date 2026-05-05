@@ -299,7 +299,8 @@ DipoleShader::DipoleSample DipoleShader::samplePointMultipleScattering(
             tangent * (r * std::cos(theta)) + bitangent * (r * std::sin(theta));
 
         // Calculate the ray from the sampled point towards the model
-        const vec3 start = xo + offset + no;
+        const vec3 eps = glm::epsilon<float>() * no;
+        const vec3 start = xo + offset + eps;  // Offset slightly
         const vec3 dir = -no;
 
         // Check if this ray intersects with the model
@@ -335,7 +336,6 @@ vec3 DipoleShader::calculateMultipleScattering(
     const float Fto =
         DipoleScattering::fresnelTransmittance(cosThetaO, material);
 
-    int validSamples = 0;
     for (const DipoleSample& sample : samples) {
         if (sample.triangleIndex < 0)
             continue;
@@ -372,13 +372,10 @@ vec3 DipoleShader::calculateMultipleScattering(
 
         // Divide by the PDF of this sample
         result += contribution / sample.pdf;
-        ++validSamples;
     }
 
     // Final average over the number of valid samples
-    if (validSamples == 0)
-        return vec3(0.0f);
-    return result / (float)validSamples;
+    return result / (float)samples.size();
 }
 
 // SINGLE SCATTERING FUNCTIONS:
