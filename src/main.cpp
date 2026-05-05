@@ -43,7 +43,7 @@ size_t activeShaderIdx;
 std::thread renderThread;
 std::atomic<bool> shouldStopRenderThread(false);
 
-Light light(glm::vec3(0, -0.5, -0.7), 7.0f * glm::vec3(1, 1, 1));
+Light light(glm::vec3(0, -0.5, -0.7), 14.0f * glm::vec3(1, 1, 1));
 Camera camera(glm::vec3(0, 0, -2), glm::vec3(0, 0, 1), screenHeight / 2.0f);
 
 float cameraSpeed = 0.05;
@@ -74,6 +74,8 @@ int main(int argc, char* argv[]) {
     models.push_back(make_unique<PlyModel>("model/bun_zipper.ply"));
     models.push_back(make_unique<ObjModel>("model/sponza/sponza.obj"));
     models.push_back(make_unique<ObjModel>("model/diana/diana.obj"));
+    models.push_back(
+        make_unique<ObjModel>("model/SCULPTURE_LP/SCULPTURE_LP.obj"));
     for (size_t i = 0; i < models.size(); i++)
         try {
             models[i]->load();
