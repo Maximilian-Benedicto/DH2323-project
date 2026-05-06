@@ -31,9 +31,9 @@ Window* window;
 int t;
 
 DipoleShader::Mode DIPOLE_MODE = DipoleShader::FULL;
-int NUM_THREADS = 16;
-int DIPOLE_MULTIPLE_SCATTER_SAMPLES = 1000;
-int DIPOLE_SINGLE_SCATTER_SAMPLES = 1000;
+int NUM_THREADS = 25;
+int DIPOLE_MULTIPLE_SCATTER_SAMPLES = 100;
+int DIPOLE_SINGLE_SCATTER_SAMPLES = 100;
 
 vector<unique_ptr<Shader>> shaders;
 vector<unique_ptr<Model>> models;
@@ -44,8 +44,8 @@ std::thread renderThread;
 std::atomic<bool> shouldStopRenderThread(false);
 
 vec3 cameraInitialPosition =
-    vec3(0, 0, -1) * 555.0f;  // Scale to perfectly fit the Cornell box in view
-Light light(glm::vec3(0, -1, 0) * 250.0f, 1.4e6f * glm::vec3(1, 1, 1));
+    vec3(0, 0, -1) * 555.0f * 0.1f;  // Scale to perfectly fit the Cornell box in view
+Light light(glm::vec3(0, -1, 0) * 250.0f * 0.1f, 1.4e4f * glm::vec3(1, 1, 1));
 Camera camera(cameraInitialPosition, glm::vec3(0, 0, 1), screenHeight / 2.0f);
 
 float cameraSpeed = 5.0f;
@@ -72,7 +72,7 @@ int main(int argc, char* argv[]) {
     t = SDL_GetTicks();
 
     // Initialize the models
-    models.push_back(make_unique<CornellBox>(vec3(-1.0f, -1.0f, 1.0f)));
+    models.push_back(make_unique<CornellBox>(vec3(-1.0f, -1.0f, 1.0f) * 0.1f));
     models.push_back(
         make_unique<PlyModel>(vec3(1.0f, -1.0f, -1.0f) * 0.5e4f, "model/bun_zipper.ply"));
     models.push_back(make_unique<ObjModel>(vec3(1.0f, -1.0f, 1.0f), "model/sponza/sponza.obj"));
