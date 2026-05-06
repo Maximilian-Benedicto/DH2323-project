@@ -2,8 +2,7 @@
 build/
 lib/
 .vscode/
-model/
-!/src/model
+
 
 # Prerequisites
 *.d
