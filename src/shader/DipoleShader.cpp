@@ -295,21 +295,19 @@ vec3 DipoleShader::calculateSingleScattering(const Intersection& closestHit, con
 
         // Entry point, direction and normal
         const vec3 xi = sample.position;
-        const vec3 r_vec = light.position - xi;
-        const float distToLight = length(r_vec);
-        const vec3 wi = r_vec / distToLight;
+        const vec3 wi = normalize(light.position - xi);
         const vec3 ni = model.triangles[sample.triangleIndex].normal;
 
         // Check if the sample point is in shadow
-        const vec3 start = xi + ni * 1e-3f;  // larger offset
+        const vec3 lightRay = light.position - xi;
         Intersection reverse;
-        if (closestIntersection(start, wi, model, reverse)) {
-            if (reverse.distance < distToLight)
+        if (closestIntersection(xi + ni * 1e-3f, normalize(lightRay), model, reverse)) {
+            if (reverse.distance < length(lightRay))
                 continue;  // In shadow, skip this sample
         }
 
         // Incident radiance at the sample point
-        const vec3 Li = light.color / glm::max(distToLight * distToLight, 1e-6f);
+        const vec3 Li = light.color / glm::max(length(lightRay) * length(lightRay), 1e-6f);
 
         // Calculate phase and material properties for the BSSRDF
         const float phase = DipoleScattering::phaseFunction(glm::dot(wi, wo));

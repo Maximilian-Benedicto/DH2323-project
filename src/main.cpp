@@ -32,8 +32,8 @@ int t;
 
 DipoleShader::Mode DIPOLE_MODE = DipoleShader::FULL;
 int NUM_THREADS = 16;
-int DIPOLE_MULTIPLE_SCATTER_SAMPLES = 500;
-int DIPOLE_SINGLE_SCATTER_SAMPLES = 500;
+int DIPOLE_MULTIPLE_SCATTER_SAMPLES = 1000;
+int DIPOLE_SINGLE_SCATTER_SAMPLES = 1000;
 
 vector<unique_ptr<Shader>> shaders;
 vector<unique_ptr<Model>> models;
@@ -45,12 +45,12 @@ std::atomic<bool> shouldStopRenderThread(false);
 
 vec3 cameraInitialPosition =
     vec3(0, 0, -1) * 555.0f;  // Scale to perfectly fit the Cornell box in view
-Light light(glm::vec3(0, -1, 0) * 250.0f, 1.4e6f * glm::vec3(1, 1, 1));
+Light light(glm::vec3(0, -1, 0) * 250.0f, 1.4e5f * glm::vec3(1, 1, 1));
 Camera camera(cameraInitialPosition, glm::vec3(0, 0, 1), screenHeight / 2.0f);
 
-float cameraSpeed = 10.0f;
-float rotationSpeed = M_PI / 48;
-float lightSpeed = 10.0f;
+float cameraSpeed = 5.0f;
+float rotationSpeed = M_PI / 180.0f * 2.0f;  // Rotate 2 degrees per key press
+float lightSpeed = 5.0f;
 
 /// @brief Update the scene based on user input and update the camera and light positions accordingly.
 void update();
@@ -77,7 +77,7 @@ int main(int argc, char* argv[]) {
         make_unique<PlyModel>(vec3(1.0f, -1.0f, -1.0f) * 0.5e4f, "model/bun_zipper.ply"));
     models.push_back(make_unique<ObjModel>(vec3(1.0f, -1.0f, 1.0f), "model/sponza/sponza.obj"));
     models.push_back(
-        make_unique<ObjModel>(vec3(1.0f, -1.0f, -1.0f) * 400.0f, "model/diana/diana.obj"));
+        make_unique<ObjModel>(vec3(1.0f, -1.0f, -1.0f) * 200.0f, "model/diana/diana.obj"));
 
     // Initialize the shaders
     shaders.push_back(make_unique<WireframeShader>(NUM_THREADS));
@@ -224,6 +224,11 @@ void update() {
     if (keystate[SDL_SCANCODE_K]) {
         light.position.z -= lightSpeed;
         hasSceneChanged = true;
+    }
+
+    if (keystate[SDL_SCANCODE_LALT]) {
+        const string filename = "screenshot_" + to_string(time(nullptr)) + ".bmp";
+        window->saveBMP(filename.c_str());
     }
 
     static int lastShaderSwitchTime = 0;
