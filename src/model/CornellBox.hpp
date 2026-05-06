@@ -5,7 +5,7 @@
 
 #include "Model.hpp"
 
-/// @brief Simple hardcoded Cornell Box scene with two blocks and a light source on the ceiling.
+/// @brief Simple Cornell Box scene with two blocks.
 /// Provided by DH2323 course staff in the labs.
 class CornellBox : public Model {
    private:
@@ -25,9 +25,6 @@ class CornellBox : public Model {
 
     /// @brief Add the tall block in the Cornell Box to the scene as triangles.
     void tallBlock();
-
-    /// @brief Center the model at the origin and resize by provided scale factor
-    void scaleAndCenter();
 
    public:
     /// @brief Load the Cornell Box scene by populating triangles and building the BVH.

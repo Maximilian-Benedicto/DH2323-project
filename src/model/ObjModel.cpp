@@ -91,22 +91,19 @@ void ObjModel::load() {
 
             // Get the texture coordinates for the current face if they exist (order is flipped)
             if (idx2.texcoord_index >= 0) {
-                size_t texcoordOffset =
-                    static_cast<size_t>(2 * idx2.texcoord_index);
+                size_t texcoordOffset = static_cast<size_t>(2 * idx2.texcoord_index);
                 if (texcoordOffset + 1 < attrib.texcoords.size())
                     uv0 = vec2(attrib.texcoords[texcoordOffset + 0],
                                attrib.texcoords[texcoordOffset + 1]);
             }
             if (idx1.texcoord_index >= 0) {
-                size_t texcoordOffset =
-                    static_cast<size_t>(2 * idx1.texcoord_index);
+                size_t texcoordOffset = static_cast<size_t>(2 * idx1.texcoord_index);
                 if (texcoordOffset + 1 < attrib.texcoords.size())
                     uv1 = vec2(attrib.texcoords[texcoordOffset + 0],
                                attrib.texcoords[texcoordOffset + 1]);
             }
             if (idx0.texcoord_index >= 0) {
-                size_t texcoordOffset =
-                    static_cast<size_t>(2 * idx0.texcoord_index);
+                size_t texcoordOffset = static_cast<size_t>(2 * idx0.texcoord_index);
                 if (texcoordOffset + 1 < attrib.texcoords.size())
                     uv2 = vec2(attrib.texcoords[texcoordOffset + 0],
                                attrib.texcoords[texcoordOffset + 1]);
@@ -117,14 +114,12 @@ void ObjModel::load() {
             size_t textureIdx = static_cast<size_t>(-1);
             if (materialId >= 0) {
                 size_t materialIdx = static_cast<size_t>(materialId);
-                if (materialIdx < materialHasTexture.size() &&
-                    materialHasTexture[materialIdx])
+                if (materialIdx < materialHasTexture.size() && materialHasTexture[materialIdx])
                     textureIdx = materialIdx;
             }
 
             // Create a triangle for the current face and add it to the list of triangles
-            triangles.push_back(
-                Triangle(v0, v1, v2, uv0, uv1, uv2, textureIdx, vec3(1, 1, 1)));
+            triangles.push_back(Triangle(v0, v1, v2, uv0, uv1, uv2, textureIdx, vec3(1, 1, 1)));
             index_offset += fv;
         }
     }
@@ -132,31 +127,4 @@ void ObjModel::load() {
     scaleAndCenter();
 
     bvh = BVH(triangles);
-}
-
-void ObjModel::scaleAndCenter() {
-
-    AABB bounds;
-    for (const Triangle& triangle : triangles) {
-        bounds.grow(triangle.v0);
-        bounds.grow(triangle.v1);
-        bounds.grow(triangle.v2);
-    }
-
-    for (Triangle& triangle : triangles) {
-        // Center the model at the origin
-        const glm::vec3 center = (bounds.min + bounds.max) / 2.0f;
-        triangle.v0 -= center;
-        triangle.v1 -= center;
-        triangle.v2 -= center;
-
-        // Resize the model by the provided scale factor
-        triangle.v0 *= scale;
-        triangle.v1 *= scale;
-        triangle.v2 *= scale;
-
-        triangle.computeNormal();
-
-        triangle.computeCentroid();
-    }
 }

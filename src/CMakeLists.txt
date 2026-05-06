@@ -10,9 +10,11 @@ add_executable(DH2323Project
     render/Texture.cpp
     render/Material.cpp
     render/BVH.cpp
+    shader/Shader.cpp
     shader/LambertianShader.cpp 
     shader/DipoleShader.cpp 
     shader/WireframeShader.cpp
+    model/Model.cpp
     model/CornellBox.cpp
     model/PlyModel.cpp
     model/ObjModel.cpp

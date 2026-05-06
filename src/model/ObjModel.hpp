@@ -9,15 +9,11 @@ class ObjModel : public Model {
     /// @brief Filepath to the OBJ file to load.
     std::string filename;
 
-    /// @brief Center the model at the origin and resize by provided scale factor
-    void scaleAndCenter();
-
    public:
     /// @brief Construct an ObjModel with a given filepath.
     /// @param scale Scale factor to apply to the model after loading.
     /// @param filename Filepath to the OBJ file to load.
-    ObjModel(glm::vec3 scale, const std::string& filename)
-        : Model(scale), filename(filename) {}
+    ObjModel(glm::vec3 scale, const std::string& filename) : Model(scale), filename(filename) {}
 
     /// @brief Load the OBJ model by parsing the OBJ file, populating triangles and textures, and building the BVH.
     void load() override;

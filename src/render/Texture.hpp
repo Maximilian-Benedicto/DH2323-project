@@ -11,6 +11,7 @@ struct Texture {
 
     /// @brief Width of the texture in pixels.
     int width = 0;
+
     /// @brief Height of the texture in pixels.
     int height = 0;
 

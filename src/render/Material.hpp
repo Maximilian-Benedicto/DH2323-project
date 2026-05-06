@@ -36,7 +36,7 @@ class Material {
     /// @brief Diffuse fresnel reflectance
     glm::vec3 f_dr;
 
-    /// @brief Fresnel
+    /// @brief Fresnel constant
     glm::vec3 A;
 
     /// @brief Distance from surface to real source
@@ -49,8 +49,7 @@ class Material {
     /// @param sigma_a Absorption coefficient
     /// @param sigma_s_prime Reduced scattering coefficient
     /// @param eta Relative index of refraction
-    Material(glm::vec3 sigma_a, glm::vec3 sigma_s_prime, glm::vec3 sigma_s,
-             float eta);
+    Material(glm::vec3 sigma_a, glm::vec3 sigma_s_prime, glm::vec3 sigma_s, float eta);
     Material() = default;
 
     /// @brief Compute derived properties for this material based on the input parameters.

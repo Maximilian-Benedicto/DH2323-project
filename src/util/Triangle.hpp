@@ -29,7 +29,7 @@ class Triangle {
     glm::vec3 color;
 
     /// @brief Material properties of the triangle, used for dipole method.
-    Material material;
+    Material material = Material::createMarble();
 
     /// @brief Construct a triangle with a given color and no texture.
     /// @param v0
@@ -40,7 +40,6 @@ class Triangle {
         : v0(v0), v1(v1), v2(v2), color(color) {
         computeNormal();
         computeCentroid();
-        material = Material::createMarble();
     }
 
     /// @brief Construct a triangle with a given color and texture.
@@ -52,8 +51,8 @@ class Triangle {
     /// @param uv2
     /// @param textureIdx
     /// @param color
-    Triangle(glm::vec3 v0, glm::vec3 v1, glm::vec3 v2, glm::vec2 uv0,
-             glm::vec2 uv1, glm::vec2 uv2, size_t textureIdx, glm::vec3 color)
+    Triangle(glm::vec3 v0, glm::vec3 v1, glm::vec3 v2, glm::vec2 uv0, glm::vec2 uv1, glm::vec2 uv2,
+             size_t textureIdx, glm::vec3 color)
         : v0(v0),
           v1(v1),
           v2(v2),
@@ -64,7 +63,6 @@ class Triangle {
           color(color) {
         computeNormal();
         computeCentroid();
-        material = Material::createMarble();
     }
 
     /// @brief Compute the normal vector of the triangle based on its vertices.
@@ -79,9 +77,7 @@ class Triangle {
 
     /// @brief Compute the area of the triangle.
     /// @return The area of the triangle.
-    float area() const {
-        return 0.5f * glm::length(glm::cross(v1 - v0, v2 - v0));
-    }
+    float area() const { return 0.5f * glm::length(glm::cross(v1 - v0, v2 - v0)); }
 
     /// @brief Sample a point uniformly on the triangle's surface using barycentric coordinates.
     /// @param u1 A random number in the range [0, 1) used for sampling.

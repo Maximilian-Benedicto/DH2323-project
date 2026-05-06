@@ -67,7 +67,6 @@ inline glm::vec3 diffuseReflectance(float r, const Material& material) {
 }
 
 /// @brief Calculate the phase function value for a given angle based on the Henyey-Greenstein phase function.
-/// @details https://en.wikipedia.org/wiki/Henyey%E2%80%93Greenstein_phase_function
 /// @param cosTheta Cosine of the angle between the incident and outgoing directions.
 /// @return Phase function value for the given angle.
 inline float phaseFunction(float cosTheta) {

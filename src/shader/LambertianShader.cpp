@@ -15,9 +15,8 @@
 using namespace glm;
 using namespace std;
 
-void LambertianShader::render(Uint32* pixelBuffer, int width, int height,
-                              const Model& model, const Light& light,
-                              const Camera& camera,
+void LambertianShader::render(Uint32* pixelBuffer, int width, int height, const Model& model,
+                              const Light& light, const Camera& camera,
                               std::atomic<bool>& shouldStopRenderThread) {
 
     // Render the image in 10 squares to allow for better multithreading
@@ -34,13 +33,11 @@ void LambertianShader::render(Uint32* pixelBuffer, int width, int height,
             int y2 = (j + 1 == numSquaresY) ? height : (j + 1) * squareHeight;
 
             // Launch a thread to render this square of the image
-            threads.emplace_back(std::thread(
-                [this, x1, y1, x2, y2, width, height, pixelBuffer, &model,
-                 &light, &camera, &shouldStopRenderThread]() {
-                    this->renderSquare(pixelBuffer, width, height, x1, y1, x2,
-                                       y2, model, light, camera,
-                                       shouldStopRenderThread);
-                }));
+            threads.emplace_back(std::thread([this, x1, y1, x2, y2, width, height, pixelBuffer,
+                                              &model, &light, &camera, &shouldStopRenderThread]() {
+                this->renderSquare(pixelBuffer, width, height, x1, y1, x2, y2, model, light, camera,
+                                   shouldStopRenderThread);
+            }));
         }
     }
 
@@ -48,9 +45,8 @@ void LambertianShader::render(Uint32* pixelBuffer, int width, int height,
         t.join();
 }
 
-void LambertianShader::renderSquare(Uint32* pixelBuffer, int width, int height,
-                                    int x1, int y1, int x2, int y2,
-                                    const Model& model, const Light& light,
+void LambertianShader::renderSquare(Uint32* pixelBuffer, int width, int height, int x1, int y1,
+                                    int x2, int y2, const Model& model, const Light& light,
                                     const Camera& camera,
                                     std::atomic<bool>& shouldStopRenderThread) {
     // Compute the camera's right and up vectors
@@ -72,8 +68,7 @@ void LambertianShader::renderSquare(Uint32* pixelBuffer, int width, int height,
             // Compute the ray direction for this pixel
             float dx = (float)x - width / 2.0f;
             float dy = (float)y - height / 2.0f;
-            vec3 dir = normalize(camera.direction * camera.focalLength +
-                                 right * dx + up * dy);
+            vec3 dir = normalize(camera.direction * camera.focalLength + right * dx + up * dy);
 
             // Find the closest intersection of the ray with the scene
             Intersection closestHit;
@@ -95,101 +90,6 @@ void LambertianShader::renderSquare(Uint32* pixelBuffer, int width, int height,
     }
 }
 
-bool LambertianShader::closestIntersection(vec3 start, vec3 dir,
-                                           const Model& model,
-                                           Intersection& closestHit) {
-    if (model.bvh.nodesUsed == 0)
-        return false;
-    bool found = false;
-    float closestDistance = std::numeric_limits<float>::infinity();
-
-    // Traverse the BVH using a stack
-    std::vector<int> stack;
-    stack.push_back(model.bvh.rootNodeIdx);
-    while (!stack.empty()) {
-        int nodeIdx = stack.back();
-        stack.pop_back();
-
-        const BVHNode& node = model.bvh.bvhNodes[nodeIdx];
-
-        // Skip this node if the ray doesnt intersect with a closer hit than the closest one found so far
-        float nodeTClose;
-        if (!slabIntersection(node.aabb, start, dir, nodeTClose))
-            continue;
-        if (nodeTClose > closestDistance)
-            continue;
-
-        // If this is a leaf node, check for intersection with the triangles in this node
-        if (node.isLeaf()) {
-            int first = node.leftFirst;
-            int end = first + node.triCount;
-            for (int i = first; i < end; ++i) {
-                const Triangle& triangle = model.triangles[i];
-
-                // Solve the ray-triangle intersection (lab 2)
-                vec3 v0 = triangle.v0;
-                vec3 v1 = triangle.v1;
-                vec3 v2 = triangle.v2;
-                vec3 e1 = v1 - v0;
-                vec3 e2 = v2 - v0;
-                vec3 b = start - v0;
-                mat3 A(-dir, e1, e2);
-                vec3 x = inverse(A) * b;
-
-                // Get the uv coordinates and distance
-                float t = x.x;
-                float u = x.y;
-                float v = x.z;
-
-                // Check if the intersection is valid
-                if (!(0 <= t && 0 <= u && 0 <= v && u + v <= 1))
-                    continue;
-
-                // Update the closest hit if this intersection is closer than the closest one found so far
-                vec3 position = start + dir * t;
-                float distance = length(dir * t);
-                if (!found || distance < closestDistance) {
-                    closestHit = {position, distance, i, vec2(u, v)};
-                    closestDistance = distance;
-                    found = true;
-                }
-            }
-            continue;
-        }
-
-        // Get the child nodes
-        int leftIdx = node.leftFirst;
-        int rightIdx = node.leftFirst + 1;
-        const BVHNode& leftChild = model.bvh.bvhNodes[leftIdx];
-        const BVHNode& rightChild = model.bvh.bvhNodes[rightIdx];
-
-        // Check for intersection with the child nodes
-        float leftClose;
-        float rightClose;
-        bool leftIntersect =
-            slabIntersection(leftChild.aabb, start, dir, leftClose);
-        bool rightIntersect =
-            slabIntersection(rightChild.aabb, start, dir, rightClose);
-
-        // Add the child nodes that intersect with the ray to the stack, prioritizing the closer one
-        if (leftIntersect && rightIntersect) {
-            if (leftClose < rightClose) {
-                stack.push_back(rightIdx);
-                stack.push_back(leftIdx);
-            } else {
-                stack.push_back(leftIdx);
-                stack.push_back(rightIdx);
-            }
-        } else if (leftIntersect) {
-            stack.push_back(leftIdx);
-        } else if (rightIntersect) {
-            stack.push_back(rightIdx);
-        }
-    }
-
-    return found;
-}
-
 vec3 LambertianShader::directLight(const Intersection& hit, const Model& model,
                                    const Light& light) {
     // Sample the texture color at the intersection point, if a texture is applied to the triangle
@@ -197,8 +97,8 @@ vec3 LambertianShader::directLight(const Intersection& hit, const Model& model,
     size_t textureIdx = model.triangles[hit.triangleIndex].textureIdx;
     if (textureIdx != (size_t)-1) {
         const Triangle& triangle = model.triangles[hit.triangleIndex];
-        vec2 uv = triangle.uv0 * (1 - hit.uv.x - hit.uv.y) +
-                  triangle.uv1 * hit.uv.x + triangle.uv2 * hit.uv.y;
+        vec2 uv = triangle.uv0 * (1 - hit.uv.x - hit.uv.y) + triangle.uv1 * hit.uv.x +
+                  triangle.uv2 * hit.uv.y;
         textureColor = model.textures[textureIdx].sample(uv);
     }
 
@@ -209,8 +109,7 @@ vec3 LambertianShader::directLight(const Intersection& hit, const Model& model,
     Intersection reverse;
     if (closestIntersection(start, r, model, reverse)) {
         if (length(start - reverse.position) < length(r))
-            return indirectLight *
-                   textureColor;  // In shadow, only indirect light contributes
+            return indirectLight * textureColor;  // In shadow, only indirect light contributes
     }
 
     // Compute the direct lighting at the intersection point using the Lambertian reflectance model
@@ -219,44 +118,4 @@ vec3 LambertianShader::directLight(const Intersection& hit, const Model& model,
     vec3 D = B * glm::max(dot(rUnit, nUnit), 0.0f);
 
     return (D + indirectLight) * textureColor;
-}
-
-bool LambertianShader::slabIntersection(const AABB& aabb,
-                                        const glm::vec3& start,
-                                        const glm::vec3& dir, float& tClose) {
-    // https://en.wikipedia.org/wiki/Slab_method (with modifications)
-
-    const vec3 l = aabb.min;
-    const vec3 h = aabb.max;
-    vec3 tiLow;
-    vec3 tiHigh;
-
-    const float eps = 1e-8f;
-
-    for (int i = 0; i < 3; i++) {
-        if (abs(dir[i]) < eps) {
-            if (start[i] < l[i] || start[i] > h[i])
-                return false;
-
-            tiLow[i] = -std::numeric_limits<float>::infinity();
-            tiHigh[i] = std::numeric_limits<float>::infinity();
-        } else {
-            tiLow[i] = (l[i] - start[i]) / dir[i];
-            tiHigh[i] = (h[i] - start[i]) / dir[i];
-        }
-    }
-
-    vec3 tiClose;
-    vec3 tiFar;
-
-    for (size_t i = 0; i < 3; i++) {
-        tiClose[i] = glm::min(tiLow[i], tiHigh[i]);
-        tiFar[i] = glm::max(tiLow[i], tiHigh[i]);
-    }
-
-    float tNear = glm::max(tiClose.x, glm::max(tiClose.y, tiClose.z));
-    float tFar = glm::min(tiFar.x, glm::min(tiFar.y, tiFar.z));
-
-    tClose = glm::max(tNear, 0.0f);
-    return tFar >= tNear && tFar >= 0.0f;
 }
