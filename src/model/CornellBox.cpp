@@ -3,6 +3,7 @@
 #include <glm/glm.hpp>
 #include <vector>
 
+#include "BVH.hpp"
 #include "CornellBox.hpp"
 #include "Triangle.hpp"
 
@@ -13,19 +14,19 @@ void CornellBox::load() {
     room();
     shortBlock();
     tallBlock();
-    scaleToUnitCube();
+    scaleAndCenter();
     bvh = BVH(triangles);
 }
 
 void CornellBox::room() {
-    const glm::vec3 A(kL, 0, 0);
+    const glm::vec3 A(555, 0, 0);
     const glm::vec3 B(0, 0, 0);
-    const glm::vec3 C(kL, 0, kL);
-    const glm::vec3 D(0, 0, kL);
-    const glm::vec3 E(kL, kL, 0);
-    const glm::vec3 F(0, kL, 0);
-    const glm::vec3 G(kL, kL, kL);
-    const glm::vec3 H(0, kL, kL);
+    const glm::vec3 C(555, 0, 555);
+    const glm::vec3 D(0, 0, 555);
+    const glm::vec3 E(555, 555, 0);
+    const glm::vec3 F(0, 555, 0);
+    const glm::vec3 G(555, 555, 555);
+    const glm::vec3 H(0, 555, 555);
 
     triangles.push_back(Triangle(C, B, A, kGreen));
     triangles.push_back(Triangle(C, D, B, kGreen));
@@ -95,15 +96,26 @@ void CornellBox::tallBlock() {
     triangles.push_back(Triangle(G, H, F, kBlue));
 }
 
-void CornellBox::scaleToUnitCube() {
-    for (Triangle& triangle : triangles) {
-        triangle.v0 *= 2 / kL;
-        triangle.v1 *= 2 / kL;
-        triangle.v2 *= 2 / kL;
+void CornellBox::scaleAndCenter() {
 
-        triangle.v0 -= glm::vec3(1, 1, 1);
-        triangle.v1 -= glm::vec3(1, 1, 1);
-        triangle.v2 -= glm::vec3(1, 1, 1);
+    AABB bounds;
+    for (const Triangle& triangle : triangles) {
+        bounds.grow(triangle.v0);
+        bounds.grow(triangle.v1);
+        bounds.grow(triangle.v2);
+    }
+
+    for (Triangle& triangle : triangles) {
+        // Center the model at the origin
+        const glm::vec3 center = (bounds.min + bounds.max) / 2.0f;
+        triangle.v0 -= center;
+        triangle.v1 -= center;
+        triangle.v2 -= center;
+
+        // Resize the model by the provided scale factor
+        triangle.v0 *= scale;
+        triangle.v1 *= scale;
+        triangle.v2 *= scale;
 
         triangle.v0.x *= -1;
         triangle.v1.x *= -1;

@@ -43,12 +43,13 @@ size_t activeShaderIdx;
 std::thread renderThread;
 std::atomic<bool> shouldStopRenderThread(false);
 
-Light light(glm::vec3(0, -0.5, -0.7), 14.0f * glm::vec3(1, 1, 1));
-Camera camera(glm::vec3(0, 0, -2), glm::vec3(0, 0, 1), screenHeight / 2.0f);
+Light light(glm::vec3(0, -0.5, -0.7) * 555.0f, 140000.0f * glm::vec3(1, 1, 1));
+Camera camera(glm::vec3(0, 0, -2) * 555.0f, glm::vec3(0, 0, 1),
+              screenHeight / 2.0f);
 
-float cameraSpeed = 0.05;
+float cameraSpeed = 10.0f;
 float rotationSpeed = M_PI / 48;
-float lightSpeed = 0.05;
+float lightSpeed = 10.0f;
 
 /// @brief Update the scene based on user input and update the camera and light positions accordingly.
 void update();

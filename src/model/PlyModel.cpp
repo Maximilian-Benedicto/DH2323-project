@@ -31,32 +31,30 @@ void PlyModel::load() {
         triangles.push_back(Triangle(v0, v1, v2, vec3(1.0f, 1.0f, 1.0f)));
     }
 
-    scaleToUnitCube();
+    scaleAndCenter();
     bvh = BVH(triangles);
 }
 
-void PlyModel::scaleToUnitCube() {
-    // Compute the bounding box of the model
-    glm::vec3 minPos(1e9f);
-    glm::vec3 maxPos(-1e9f);
+void PlyModel::scaleAndCenter() {
+
+    AABB bounds;
     for (const Triangle& triangle : triangles) {
-        minPos = glm::min(
-            minPos, glm::min(triangle.v0, glm::min(triangle.v1, triangle.v2)));
-        maxPos = glm::max(
-            maxPos, glm::max(triangle.v0, glm::max(triangle.v1, triangle.v2)));
+        bounds.grow(triangle.v0);
+        bounds.grow(triangle.v1);
+        bounds.grow(triangle.v2);
     }
 
-    // Scale to the unit cube along the longest axis
-    glm::vec3 center = (minPos + maxPos) * 0.5f;
-    glm::vec3 size = maxPos - minPos;
-    float minAxisLength = std::min({size.x, size.y, size.z});
-    float scaleSize = 2.0f / minAxisLength;
-
-    // Apply the scaling and centering
     for (Triangle& triangle : triangles) {
-        triangle.v0 = (triangle.v0 - center) * scaleSize;
-        triangle.v1 = (triangle.v1 - center) * scaleSize;
-        triangle.v2 = (triangle.v2 - center) * scaleSize;
+        // Center the model at the origin
+        const glm::vec3 center = (bounds.min + bounds.max) / 2.0f;
+        triangle.v0 -= center;
+        triangle.v1 -= center;
+        triangle.v2 -= center;
+
+        // Resize the model by the provided scale factor
+        triangle.v0 *= scale;
+        triangle.v1 *= scale;
+        triangle.v2 *= scale;
 
         triangle.v0.x *= -1;
         triangle.v1.x *= -1;

@@ -13,6 +13,7 @@ class Model {
     std::vector<Triangle> triangles;
     std::vector<Texture> textures;
     BVH bvh;
+    float scale = 1.0f;
 
     virtual ~Model() = default;
 

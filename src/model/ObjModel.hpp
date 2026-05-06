@@ -9,8 +9,8 @@ class ObjModel : public Model {
     /// @brief Filepath to the OBJ file to load.
     std::string filename;
 
-    /// @brief Scale the model so that it fits within a unit cube centered at the origin.
-    void scaleToUnitCube();
+    /// @brief Center the model at the origin and resize by provided scale factor
+    void scaleAndCenter();
 
    public:
     /// @brief Construct an ObjModel with a given filepath.
