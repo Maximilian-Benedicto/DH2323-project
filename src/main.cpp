@@ -71,15 +71,21 @@ int main(int argc, char* argv[]) {
     window = new Window(screenWidth, screenHeight, 10, false);
     t = SDL_GetTicks();
 
-    models = vector<unique_ptr<Model>>();
+    // Initialize the models
     models.push_back(make_unique<CornellBox>(vec3(-1.0f, -1.0f, 1.0f)));
-    models.push_back(make_unique<PlyModel>(vec3(1.0f, -1.0f, -1.0f) * 0.5e4f,
-                                           "model/bun_zipper.ply"));
-    models.push_back(make_unique<ObjModel>(vec3(1.0f, -1.0f, 1.0f),
-                                           "model/sponza/sponza.obj"));
-    models.push_back(make_unique<ObjModel>(vec3(1.0f, -1.0f, -1.0f) * 400.0f,
-                                           "model/diana/diana.obj"));
+    models.push_back(
+        make_unique<PlyModel>(vec3(1.0f, -1.0f, -1.0f) * 0.5e4f, "model/bun_zipper.ply"));
+    models.push_back(make_unique<ObjModel>(vec3(1.0f, -1.0f, 1.0f), "model/sponza/sponza.obj"));
+    models.push_back(
+        make_unique<ObjModel>(vec3(1.0f, -1.0f, -1.0f) * 400.0f, "model/diana/diana.obj"));
 
+    // Initialize the shaders
+    shaders.push_back(make_unique<WireframeShader>(NUM_THREADS));
+    shaders.push_back(make_unique<DipoleShader>(
+        DIPOLE_MODE, NUM_THREADS, DIPOLE_MULTIPLE_SCATTER_SAMPLES, DIPOLE_SINGLE_SCATTER_SAMPLES));
+    shaders.push_back(make_unique<LambertianShader>(NUM_THREADS, vec3(0.5f, 0.5f, 0.5f)));
+
+    // Load the models, removing any that fail to load
     for (size_t i = 0; i < models.size(); i++)
         try {
             models[i]->load();
@@ -89,14 +95,7 @@ int main(int argc, char* argv[]) {
             i--;
         }
 
-    shaders = vector<unique_ptr<Shader>>();
-    shaders.push_back(make_unique<WireframeShader>(NUM_THREADS));
-    shaders.push_back(make_unique<DipoleShader>(DIPOLE_MODE, NUM_THREADS,
-                                                DIPOLE_MULTIPLE_SCATTER_SAMPLES,
-                                                DIPOLE_SINGLE_SCATTER_SAMPLES));
-    shaders.push_back(
-        make_unique<LambertianShader>(NUM_THREADS, vec3(0.5f, 0.5f, 0.5f)));
-
+    // Set the active model and shader indices
     activeModelIdx = 0;
     activeShaderIdx = 0;
 
@@ -130,8 +129,8 @@ void startRenderThread() {
     window->getRenderResolution(w, h);
     Uint32* buffer = window->getPixelBuffer();
     renderThread = std::thread([w, h, buffer]() {
-        shaders[activeShaderIdx]->render(buffer, w, h, *models[activeModelIdx],
-                                         light, camera, shouldStopRenderThread);
+        shaders[activeShaderIdx]->render(buffer, w, h, *models[activeModelIdx], light, camera,
+                                         shouldStopRenderThread);
     });
 }
 
@@ -229,8 +228,8 @@ void update() {
 
     static int lastShaderSwitchTime = 0;
     if ((t - lastShaderSwitchTime > 200) && keystate[SDL_SCANCODE_1]) {
-        if (WireframeShader* wfShader = dynamic_cast<WireframeShader*>(
-                shaders[activeShaderIdx].get())) {
+        if (WireframeShader* wfShader =
+                dynamic_cast<WireframeShader*>(shaders[activeShaderIdx].get())) {
             if (wfShader->isShowingBvh) {
                 ++activeShaderIdx;
                 activeShaderIdx %= shaders.size();
@@ -240,8 +239,8 @@ void update() {
 
             hasSceneChanged = true;
             lastShaderSwitchTime = t;
-        } else if (DipoleShader* dShader = dynamic_cast<DipoleShader*>(
-                       shaders[activeShaderIdx].get())) {
+        } else if (DipoleShader* dShader =
+                       dynamic_cast<DipoleShader*>(shaders[activeShaderIdx].get())) {
             // Rotate modes, or switch shader if at the end of the modes
             if (dShader->mode == DipoleShader::FULL)
                 dShader->mode = DipoleShader::SINGLE_SCATTER;
@@ -282,8 +281,7 @@ void update() {
             lastResChangeTime = t;
             hasResolutionChanged = true;
             hasSceneChanged = false;
-        } else if (keystate[SDL_SCANCODE_MINUS] ||
-                   keystate[SDL_SCANCODE_KP_MINUS]) {
+        } else if (keystate[SDL_SCANCODE_MINUS] || keystate[SDL_SCANCODE_KP_MINUS]) {
             stopRenderThread();
             screenWidth = std::max(screenWidth - 100, 100);
             screenHeight = std::max(screenHeight - 100, 100);

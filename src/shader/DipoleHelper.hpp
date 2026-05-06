@@ -45,29 +45,25 @@ inline glm::vec3 distance(float r, const glm::vec3& z_source) {
 }
 
 /// @brief Calculate the diffuse reflectance at a given distance from the exit point based on the dipole model.
-/// @details Equation 4
 /// @param r Distance from the entry point to the exit point.
 /// @param material Material properties of the surface.
 /// @return Per-channel diffuse reflectance at the given distance.
 inline glm::vec3 diffuseReflectance(float r, const Material& material) {
     glm::vec3 alpha_term = material.alpha_prime / (float)(4.0f * M_PI);
 
-    glm::vec3 r_term = (material.sigma_tr * distance(r, material.z_r) + 1.0f);
-    glm::vec3 r_exp_term =
-        glm::exp(-material.sigma_tr * distance(r, material.z_r));
-    glm::vec3 r_denom_term =
-        material.sigma_t_prime *
-        glm::pow(distance(r, material.z_r), glm::vec3(3.0f));
-    glm::vec3 v_term =
-        material.z_v * (material.sigma_tr * distance(r, material.z_v) + 1.0f);
-    glm::vec3 v_exp_term =
-        glm::exp(-material.sigma_tr * distance(r, material.z_v));
-    glm::vec3 v_denom_term =
-        (material.sigma_t_prime *
-         glm::pow(distance(r, material.z_v), glm::vec3(3.0f)));
+    glm::vec3 d_r = distance(r, material.z_r);
+    glm::vec3 d_v = distance(r, material.z_v);
 
-    return alpha_term * ((r_term * r_exp_term) / r_denom_term +
-                         (v_term * v_exp_term) / v_denom_term);
+    glm::vec3 r_term = material.z_r * (material.sigma_tr * d_r + 1.0f);
+    glm::vec3 r_exp_term = glm::exp(-material.sigma_tr * d_r);
+    glm::vec3 r_denom_term = glm::pow(d_r, glm::vec3(3.0f));
+
+    glm::vec3 v_term = material.z_v * (material.sigma_tr * d_v + 1.0f);
+    glm::vec3 v_exp_term = glm::exp(-material.sigma_tr * d_v);
+    glm::vec3 v_denom_term = glm::pow(d_v, glm::vec3(3.0f));
+
+    return alpha_term *
+           ((r_term * r_exp_term) / r_denom_term + (v_term * v_exp_term) / v_denom_term);
 }
 
 /// @brief Calculate the phase function value for a given angle based on the Henyey-Greenstein phase function.

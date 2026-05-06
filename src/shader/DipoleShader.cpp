@@ -14,9 +14,8 @@
 using namespace glm;
 using namespace std;
 
-void DipoleShader::render(Uint32* pixelBuffer, int width, int height,
-                          const Model& model, const Light& light,
-                          const Camera& camera,
+void DipoleShader::render(Uint32* pixelBuffer, int width, int height, const Model& model,
+                          const Light& light, const Camera& camera,
                           std::atomic<bool>& shouldStopRenderThread) {
 
     // Render the image in 10 squares to allow for better multithreading
@@ -33,13 +32,11 @@ void DipoleShader::render(Uint32* pixelBuffer, int width, int height,
             int y2 = (j + 1 == numSquaresY) ? height : (j + 1) * squareHeight;
 
             // Launch a thread to render this square of the image
-            threads.emplace_back(std::thread(
-                [this, x1, y1, x2, y2, width, height, pixelBuffer, &model,
-                 &light, &camera, &shouldStopRenderThread]() {
-                    this->renderSquare(pixelBuffer, width, height, x1, y1, x2,
-                                       y2, model, light, camera,
-                                       shouldStopRenderThread);
-                }));
+            threads.emplace_back(std::thread([this, x1, y1, x2, y2, width, height, pixelBuffer,
+                                              &model, &light, &camera, &shouldStopRenderThread]() {
+                this->renderSquare(pixelBuffer, width, height, x1, y1, x2, y2, model, light, camera,
+                                   shouldStopRenderThread);
+            }));
         }
     }
 
@@ -48,10 +45,9 @@ void DipoleShader::render(Uint32* pixelBuffer, int width, int height,
 }
 
 void DipoleShader::renderSquare(
-    Uint32* pixelBuffer, int width, int height, int x1, int y1, int x2, int y2,
-    const Model& model, const Light& light, const Camera& camera,
-    std::atomic<bool>&
-        shouldStopRenderThread) {  // Compute the cameras right and up vectors
+    Uint32* pixelBuffer, int width, int height, int x1, int y1, int x2, int y2, const Model& model,
+    const Light& light, const Camera& camera,
+    std::atomic<bool>& shouldStopRenderThread) {  // Compute the cameras right and up vectors
     vec3 right = normalize(cross(vec3(0.0f, 1.0f, 0.0f), camera.direction));
     vec3 up = normalize(cross(camera.direction, right));
 
@@ -70,8 +66,7 @@ void DipoleShader::renderSquare(
             // Compute the ray direction for the current pixel
             float dx = (float)x - width / 2.0f;
             float dy = (float)y - height / 2.0f;
-            vec3 dir = normalize(camera.direction * camera.focalLength +
-                                 right * dx + up * dy);
+            vec3 dir = normalize(camera.direction * camera.focalLength + right * dx + up * dy);
 
             // Find the closest intersection of the ray with the scene
             Intersection closestHit;
@@ -89,17 +84,16 @@ void DipoleShader::renderSquare(
                     vector<DipoleSample>(MULTIPLE_SCATTER_SAMPLES);
                 for (DipoleSample& sample : multipleScatterSamples)
                     sample = samplePointMultipleScattering(model, closestHit);
-                multipleScatterColor = calculateMultipleScattering(
-                    closestHit, model, light, multipleScatterSamples, viewDir);
+                multipleScatterColor = calculateMultipleScattering(closestHit, model, light,
+                                                                   multipleScatterSamples, viewDir);
 
                 // Sample points for single scattering and calculate the single scattering contribution
                 vector<DipoleSample> singleScatterSamples =
                     vector<DipoleSample>(SINGLE_SCATTER_SAMPLES);
                 for (DipoleSample& sample : singleScatterSamples)
-                    sample = samplePointSingleScattering(model, closestHit,
-                                                         light, viewDir);
-                singleScatterColor = calculateSingleScattering(
-                    closestHit, model, light, singleScatterSamples, viewDir);
+                    sample = samplePointSingleScattering(model, closestHit, light, viewDir);
+                singleScatterColor = calculateSingleScattering(closestHit, model, light,
+                                                               singleScatterSamples, viewDir);
             }
 
             vec3 color(0.0f);
@@ -165,7 +159,8 @@ bool DipoleShader::closestIntersection(vec3 start, vec3 dir, const Model& model,
                 float v = x.z;
 
                 // Check if the intersection is valid
-                if (!(0 <= t && 0 <= u && 0 <= v && u + v <= 1))
+                const float eps = 1e-5f;  // Small epsilon to fix black borders at triangle edges
+                if (!(eps < t && -eps <= u && -eps <= v && (u + v) <= 1.00001f))
                     continue;
 
                 // Update the closest hit if this intersection is closer than the closest one found so far
@@ -189,10 +184,8 @@ bool DipoleShader::closestIntersection(vec3 start, vec3 dir, const Model& model,
         // Check for intersection with the child nodes
         float leftClose;
         float rightClose;
-        bool leftIntersect =
-            slabIntersection(leftChild.aabb, start, dir, leftClose);
-        bool rightIntersect =
-            slabIntersection(rightChild.aabb, start, dir, rightClose);
+        bool leftIntersect = slabIntersection(leftChild.aabb, start, dir, leftClose);
+        bool rightIntersect = slabIntersection(rightChild.aabb, start, dir, rightClose);
 
         // Add the child nodes that intersect with the ray to the stack, prioritizing the closer one
         if (leftIntersect && rightIntersect) {
@@ -213,8 +206,8 @@ bool DipoleShader::closestIntersection(vec3 start, vec3 dir, const Model& model,
     return found;
 }
 
-bool DipoleShader::slabIntersection(const AABB& aabb, const glm::vec3& start,
-                                    const glm::vec3& dir, float& tClose) {
+bool DipoleShader::slabIntersection(const AABB& aabb, const glm::vec3& start, const glm::vec3& dir,
+                                    float& tClose) {
     // https://en.wikipedia.org/wiki/Slab_method (with modifications)
 
     const vec3 l = aabb.min;
@@ -263,8 +256,7 @@ DipoleShader::DipoleSample DipoleShader::samplePointMultipleScattering(
     std::uniform_real_distribution<float> dist(0.0f, 1.0f);
 
     // Get the material properties at the exit point
-    const Material material =
-        model.triangles[closestHit.triangleIndex].material;
+    const Material material = model.triangles[closestHit.triangleIndex].material;
     const float sigma_tr = DipoleScattering::average(material.sigma_tr);
 
     // Exit point and normal
@@ -284,8 +276,7 @@ DipoleShader::DipoleSample DipoleShader::samplePointMultipleScattering(
         const float u2 = dist(gen);
 
         // Clamp to minimum 1/sigma_t_prime as suggested in Jensen's paper
-        const float sigma_t_prime =
-            DipoleScattering::average(material.sigma_t_prime);
+        const float sigma_t_prime = DipoleScattering::average(material.sigma_t_prime);
         const float r_min = 1.0f / std::max(sigma_t_prime, 1e-7f);
 
         // Sample r using the exponential distribution and theta uniformly
@@ -293,12 +284,12 @@ DipoleShader::DipoleSample DipoleShader::samplePointMultipleScattering(
         const float theta = 2.0f * (float)M_PI * u2;
 
         // Convert to world coordinates
-        const vec3 offset =
-            tangent * (r * std::cos(theta)) + bitangent * (r * std::sin(theta));
+        const vec3 offset = tangent * (r * std::cos(theta)) + bitangent * (r * std::sin(theta));
 
         // Calculate the ray from the sampled point towards the model
-        const vec3 eps = 1e-4f * no;
-        const vec3 start = xo + offset + eps;  // Offset slightly
+        // Project ray from higher along the normal to safely catch curved adjoining geometry without skipping it
+        const float offset_height = std::max(r, 0.01f);
+        const vec3 start = xo + offset + offset_height * no;
         const vec3 dir = -no;
 
         // Check if this ray intersects with the model
@@ -316,13 +307,13 @@ DipoleShader::DipoleSample DipoleShader::samplePointMultipleScattering(
     return {vec3(0.0f), 0.0f, 0.0f, 0.0f, -1};
 }
 
-vec3 DipoleShader::calculateMultipleScattering(
-    const Intersection& closestHit, const Model& model, const Light& light,
-    const vector<DipoleSample>& samples, const vec3& viewDir) {
+vec3 DipoleShader::calculateMultipleScattering(const Intersection& closestHit, const Model& model,
+                                               const Light& light,
+                                               const vector<DipoleSample>& samples,
+                                               const vec3& viewDir) {
 
     vec3 result(0.0f);
-    const Material material =
-        model.triangles[closestHit.triangleIndex].material;
+    const Material material = model.triangles[closestHit.triangleIndex].material;
 
     // Exit point, direction and normal
     const vec3 xo = closestHit.position;
@@ -331,8 +322,7 @@ vec3 DipoleShader::calculateMultipleScattering(
 
     // Calculate the Fresnel transmittance at the exit point
     const float cosThetaO = glm::max(0.0f, glm::dot(no, wo));
-    const float Fto =
-        DipoleScattering::fresnelTransmittance(cosThetaO, material);
+    const float Fto = DipoleScattering::fresnelTransmittance(cosThetaO, material);
 
     for (const DipoleSample& sample : samples) {
         if (sample.triangleIndex < 0)
@@ -340,33 +330,34 @@ vec3 DipoleShader::calculateMultipleScattering(
 
         // Entry point, direction, and normal
         const vec3 xi = sample.position;
-        const vec3 wi = normalize(light.position - xi);
+        const vec3 r_vec = light.position - xi;
+        const float distToLight = length(r_vec);
+        const vec3 wi = r_vec / distToLight;
         const vec3 ni = model.triangles[sample.triangleIndex].normal;
 
         // Check if the sample point is in shadow
-        const vec3 r = light.position - xi;
-        const vec3 start = xi + ni * 1e-4f;
+        const vec3 start =
+            xi +
+            ni * 1e-3f;  // larger offset to definitively clear originating triangle logic holes
         Intersection reverse;
-        if (closestIntersection(start, r, model, reverse)) {
-            if (length(start - reverse.position) < length(r))
+        if (closestIntersection(start, wi, model, reverse)) {
+            if (reverse.distance < distToLight)
                 continue;  // In shadow, skip this sample
         }
 
         // Incident radiance at the sample point
-        const vec3 Li = light.color / glm::max(dot(r, r), 1e-6f);
+        const vec3 Li = light.color / glm::max(distToLight * distToLight, 1e-6f);
 
         // Calculate how much light enters the medium
         const float cosThetaI = glm::max(0.0f, glm::dot(ni, wi));
-        const float Fti =
-            DipoleScattering::fresnelTransmittance(cosThetaI, material);
+        const float Fti = DipoleScattering::fresnelTransmittance(cosThetaI, material);
 
         // Evaluate the BSSRDF
         const vec3 Rd = DipoleScattering::diffuseReflectance(
             DipoleScattering::scalarDistance(xi, xo), material);
 
         // Calculate the contribution from this sample [Equation 5]
-        const vec3 contribution =
-            cosThetaI * (float)(1 / M_PI) * Li * Fti * Rd * Fto;
+        const vec3 contribution = cosThetaI * (float)(1 / M_PI) * Li * Fti * Rd * Fto;
 
         // Divide by the PDF of this sample
         result += contribution / sample.pdf;
@@ -378,9 +369,10 @@ vec3 DipoleShader::calculateMultipleScattering(
 
 // SINGLE SCATTERING FUNCTIONS:
 
-DipoleShader::DipoleSample DipoleShader::samplePointSingleScattering(
-    const Model& model, const Intersection& closestHit, const Light& light,
-    const vec3& viewDir) {
+DipoleShader::DipoleSample DipoleShader::samplePointSingleScattering(const Model& model,
+                                                                     const Intersection& closestHit,
+                                                                     const Light& light,
+                                                                     const vec3& viewDir) {
 
     // Initialize random generator once per thread for better performance
     thread_local std::random_device rd;
@@ -392,10 +384,8 @@ DipoleShader::DipoleSample DipoleShader::samplePointSingleScattering(
     const vec3 wo = normalize(viewDir);
 
     // Get the material properties at the exit point
-    const Material material =
-        model.triangles[closestHit.triangleIndex].material;
-    const float sigma_t =
-        DipoleScattering::average(material.sigma_a + material.sigma_s);
+    const Material material = model.triangles[closestHit.triangleIndex].material;
+    const float sigma_t = DipoleScattering::average(material.sigma_a + material.sigma_s);
 
     // Sample distance using the average sigma_t across the three channels
     const float u = std::max(dist(gen), 1e-7f);
@@ -409,8 +399,7 @@ DipoleShader::DipoleSample DipoleShader::samplePointSingleScattering(
     const vec3 dir = normalize(light.position - scatterPoint);
     Intersection shadowTest;
     if (!closestIntersection(scatterPoint, dir, model, shadowTest))
-        return {vec3(0.0f), 1.0f, 0.0f, 0.0f,
-                -1};  // Ray doesnt exit the medium
+        return {vec3(0.0f), 1.0f, 0.0f, 0.0f, -1};  // Ray doesnt exit the medium
     vec3 xi = shadowTest.position;
 
     // Calculate the distances from the scatter point to the entry and exit points
@@ -420,13 +409,13 @@ DipoleShader::DipoleSample DipoleShader::samplePointSingleScattering(
     return {xi, pdf, s_i, s_o, shadowTest.triangleIndex};
 }
 
-vec3 DipoleShader::calculateSingleScattering(
-    const Intersection& closestHit, const Model& model, const Light& light,
-    const vector<DipoleSample>& samples, const vec3& viewDir) {
+vec3 DipoleShader::calculateSingleScattering(const Intersection& closestHit, const Model& model,
+                                             const Light& light,
+                                             const vector<DipoleSample>& samples,
+                                             const vec3& viewDir) {
 
     vec3 result(0.0f);
-    const Material material =
-        model.triangles[closestHit.triangleIndex].material;
+    const Material material = model.triangles[closestHit.triangleIndex].material;
 
     // Exit direction and normal
     const vec3 wo = normalize(viewDir);
@@ -434,8 +423,7 @@ vec3 DipoleShader::calculateSingleScattering(
 
     // Calculate the Fresnel transmittance at the exit point
     const float cosThetaO = glm::max(0.0f, glm::dot(no, wo));
-    const float Fto =
-        DipoleScattering::fresnelTransmittance(cosThetaO, material);
+    const float Fto = DipoleScattering::fresnelTransmittance(cosThetaO, material);
 
     for (const DipoleSample& sample : samples) {
         if (sample.triangleIndex < 0)
@@ -443,20 +431,21 @@ vec3 DipoleShader::calculateSingleScattering(
 
         // Entry point, direction and normal
         const vec3 xi = sample.position;
-        const vec3 wi = normalize(light.position - xi);
+        const vec3 r_vec = light.position - xi;
+        const float distToLight = length(r_vec);
+        const vec3 wi = r_vec / distToLight;
         const vec3 ni = model.triangles[sample.triangleIndex].normal;
 
         // Check if the sample point is in shadow
-        const vec3 r = light.position - xi;
-        const vec3 start = xi + ni * 1e-4f;
+        const vec3 start = xi + ni * 1e-3f;  // larger offset
         Intersection reverse;
-        if (closestIntersection(start, r, model, reverse)) {
-            if (length(start - reverse.position) < length(r))
+        if (closestIntersection(start, wi, model, reverse)) {
+            if (reverse.distance < distToLight)
                 continue;  // In shadow, skip this sample
         }
 
         // Incident radiance at the sample point
-        const vec3 Li = light.color / glm::max(dot(r, r), 1e-6f);
+        const vec3 Li = light.color / glm::max(distToLight * distToLight, 1e-6f);
 
         // Calculate phase and material properties for the BSSRDF
         const float phase = DipoleScattering::phaseFunction(glm::dot(wi, wo));
@@ -465,14 +454,13 @@ vec3 DipoleShader::calculateSingleScattering(
         const vec3 transmittance_i = glm::exp(-sigma_t * sample.s_i);
         const vec3 transmittance_o = glm::exp(-sigma_t * sample.s_o);
 
-        // Calculate the Fresnel transmittance at the exit point
+        // Calculate the Fresnel transmittance at the entry point
         const float cosThetaI = glm::max(0.0f, glm::dot(ni, wi));
-        const float Fti =
-            DipoleScattering::fresnelTransmittance(cosThetaI, material);
+        const float Fti = DipoleScattering::fresnelTransmittance(cosThetaI, material);
 
         // Calculate the contribution from this sample [Equation 6]
-        vec3 contribution = cosThetaI * material.sigma_s * Li * Fti * Fto *
-                            phase * transmittance_i * transmittance_o;
+        vec3 contribution =
+            material.sigma_s * Li * Fti * Fto * phase * transmittance_i * transmittance_o;
 
         // Divide by the PDF of this sample
         result += contribution / sample.pdf;
