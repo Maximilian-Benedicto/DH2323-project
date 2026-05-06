@@ -26,8 +26,9 @@ class WireframeShader : public Shader {
     /// @brief Whether to visualize the BVH structure by drawing the bounding boxes of the BVH nodes in wireframe.
     bool isShowingBvh = false;
 
-    /// @brief Construct a WireframeShader with the given mode.
-    WireframeShader();
+    /// @brief Construct a WireframeShader with the given number of threads.
+    /// @param numberOfThreads Number of threads to use for rendering (not used in this shader).
+    WireframeShader(int numberOfThreads);
 
     /// @brief Render the scene using this shader.
     /// @param pixelBuffer Pointer to a flat array of 32-bit RGBA values.

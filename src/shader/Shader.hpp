@@ -16,6 +16,10 @@ class Camera;
 /// @brief Abstract base class for shaders.
 class Shader {
    public:
+    /// @brief Number of threads to use for rendering
+    int NUM_THREADS = 16;
+
+    Shader(int numThreads) : NUM_THREADS(numThreads) {};
     virtual ~Shader() = default;
 
     virtual void render(Uint32* pixelBuffer, int width, int height,

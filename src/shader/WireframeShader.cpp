@@ -13,7 +13,8 @@
 using namespace glm;
 using namespace std;
 
-WireframeShader::WireframeShader() {}
+WireframeShader::WireframeShader(int numberOfThreads)
+    : Shader(numberOfThreads), isShowingBvh(false) {}
 
 void WireframeShader::drawLine(Uint32* pixelBuffer, int width, int height,
                                int x0, int y0, int x1, int y1, Uint32 color) {
@@ -178,7 +179,7 @@ void WireframeShader::render(Uint32* pixelBuffer, int width, int height,
 
     // Draw the light source as a small cross if it is within view
     if (!shouldStopRenderThread) {
-        float size = 0.1f;
+        float size = 100.0f;
         vec3 pts[6] = {light.position + vec3(size, 0.0f, 0.0f),
                        light.position - vec3(size, 0.0f, 0.0f),
                        light.position + vec3(0.0f, size, 0.0f),

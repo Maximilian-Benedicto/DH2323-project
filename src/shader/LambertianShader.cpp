@@ -3,6 +3,7 @@
 
 #include <glm/gtx/rotate_vector.hpp>
 #include <iostream>
+#include <thread>
 
 #include "Camera.hpp"
 #include "LambertianShader.hpp"
@@ -14,12 +15,44 @@
 using namespace glm;
 using namespace std;
 
-LambertianShader::LambertianShader() : indirectLight(vec3(0.5f, 0.5f, 0.5f)) {}
-
 void LambertianShader::render(Uint32* pixelBuffer, int width, int height,
                               const Model& model, const Light& light,
                               const Camera& camera,
                               std::atomic<bool>& shouldStopRenderThread) {
+
+    // Render the image in 10 squares to allow for better multithreading
+    int numSquaresX = (int)sqrt(NUM_THREADS);
+    int numSquaresY = (int)sqrt(NUM_THREADS);
+    int squareWidth = width / numSquaresX;
+    int squareHeight = height / numSquaresY;
+    vector<thread> threads;
+    for (int i = 0; i < numSquaresX; ++i) {
+        for (int j = 0; j < numSquaresY; ++j) {
+            int x1 = i * squareWidth;
+            int y1 = j * squareHeight;
+            int x2 = (i + 1 == numSquaresX) ? width : (i + 1) * squareWidth;
+            int y2 = (j + 1 == numSquaresY) ? height : (j + 1) * squareHeight;
+
+            // Launch a thread to render this square of the image
+            threads.emplace_back(std::thread(
+                [this, x1, y1, x2, y2, width, height, pixelBuffer, &model,
+                 &light, &camera, &shouldStopRenderThread]() {
+                    this->renderSquare(pixelBuffer, width, height, x1, y1, x2,
+                                       y2, model, light, camera,
+                                       shouldStopRenderThread);
+                }));
+        }
+    }
+
+    for (thread& t : threads)
+        t.join();
+}
+
+void LambertianShader::renderSquare(Uint32* pixelBuffer, int width, int height,
+                                    int x1, int y1, int x2, int y2,
+                                    const Model& model, const Light& light,
+                                    const Camera& camera,
+                                    std::atomic<bool>& shouldStopRenderThread) {
     // Compute the camera's right and up vectors
     vec3 right = normalize(cross(vec3(0.0f, 1.0f, 0.0f), camera.direction));
     vec3 up = normalize(cross(camera.direction, right));
@@ -31,8 +64,8 @@ void LambertianShader::render(Uint32* pixelBuffer, int width, int height,
     // Cast rays from the camera
     vec3 start = camera.position;
 
-    for (int y = 0; y < height; ++y) {
-        for (int x = 0; x < width; ++x) {
+    for (int y = y1; y < y2; ++y) {
+        for (int x = x1; x < x2; ++x) {
             if (shouldStopRenderThread)
                 return;
 

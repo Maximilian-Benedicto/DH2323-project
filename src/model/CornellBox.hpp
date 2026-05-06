@@ -32,6 +32,10 @@ class CornellBox : public Model {
    public:
     /// @brief Load the Cornell Box scene by populating triangles and building the BVH.
     void load() override;
+
+    /// @brief Construct a CornellBox model with a given scale factor.
+    /// @param scale Scale factor to apply to the model after loading.
+    CornellBox(glm::vec3 scale) : Model(scale) {}
 };
 
 #endif

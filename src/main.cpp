@@ -31,7 +31,7 @@ Window* window;
 int t;
 
 DipoleShader::Mode DIPOLE_MODE = DipoleShader::FULL;
-int DIPOLE_THREADS_SQUARED = 4;
+int NUM_THREADS = 16;
 int DIPOLE_MULTIPLE_SCATTER_SAMPLES = 500;
 int DIPOLE_SINGLE_SCATTER_SAMPLES = 500;
 
@@ -43,9 +43,10 @@ size_t activeShaderIdx;
 std::thread renderThread;
 std::atomic<bool> shouldStopRenderThread(false);
 
-Light light(glm::vec3(0, -0.5, -0.7) * 555.0f, 140000.0f * glm::vec3(1, 1, 1));
-Camera camera(glm::vec3(0, 0, -2) * 555.0f, glm::vec3(0, 0, 1),
-              screenHeight / 2.0f);
+vec3 cameraInitialPosition =
+    vec3(0, 0, -1) * 555.0f;  // Scale to perfectly fit the Cornell box in view
+Light light(glm::vec3(0, -1, 0) * 250.0f, 1.4e6f * glm::vec3(1, 1, 1));
+Camera camera(cameraInitialPosition, glm::vec3(0, 0, 1), screenHeight / 2.0f);
 
 float cameraSpeed = 10.0f;
 float rotationSpeed = M_PI / 48;
@@ -71,12 +72,14 @@ int main(int argc, char* argv[]) {
     t = SDL_GetTicks();
 
     models = vector<unique_ptr<Model>>();
-    models.push_back(make_unique<CornellBox>());
-    models.push_back(make_unique<PlyModel>("model/bun_zipper.ply"));
-    models.push_back(make_unique<ObjModel>("model/sponza/sponza.obj"));
-    models.push_back(make_unique<ObjModel>("model/diana/diana.obj"));
-    models.push_back(
-        make_unique<ObjModel>("model/SCULPTURE_LP/SCULPTURE_LP.obj"));
+    models.push_back(make_unique<CornellBox>(vec3(-1.0f, -1.0f, 1.0f)));
+    models.push_back(make_unique<PlyModel>(vec3(1.0f, -1.0f, -1.0f) * 0.5e4f,
+                                           "model/bun_zipper.ply"));
+    models.push_back(make_unique<ObjModel>(vec3(1.0f, -1.0f, 1.0f),
+                                           "model/sponza/sponza.obj"));
+    models.push_back(make_unique<ObjModel>(vec3(1.0f, -1.0f, -1.0f) * 400.0f,
+                                           "model/diana/diana.obj"));
+
     for (size_t i = 0; i < models.size(); i++)
         try {
             models[i]->load();
@@ -87,11 +90,12 @@ int main(int argc, char* argv[]) {
         }
 
     shaders = vector<unique_ptr<Shader>>();
-    shaders.push_back(make_unique<WireframeShader>());
-    shaders.push_back(make_unique<DipoleShader>(
-        DIPOLE_MODE, DIPOLE_THREADS_SQUARED, DIPOLE_MULTIPLE_SCATTER_SAMPLES,
-        DIPOLE_SINGLE_SCATTER_SAMPLES));
-    shaders.push_back(make_unique<LambertianShader>());
+    shaders.push_back(make_unique<WireframeShader>(NUM_THREADS));
+    shaders.push_back(make_unique<DipoleShader>(DIPOLE_MODE, NUM_THREADS,
+                                                DIPOLE_MULTIPLE_SCATTER_SAMPLES,
+                                                DIPOLE_SINGLE_SCATTER_SAMPLES));
+    shaders.push_back(
+        make_unique<LambertianShader>(NUM_THREADS, vec3(0.5f, 0.5f, 0.5f)));
 
     activeModelIdx = 0;
     activeShaderIdx = 0;
@@ -227,8 +231,10 @@ void update() {
     if ((t - lastShaderSwitchTime > 200) && keystate[SDL_SCANCODE_1]) {
         if (WireframeShader* wfShader = dynamic_cast<WireframeShader*>(
                 shaders[activeShaderIdx].get())) {
-            if (wfShader->isShowingBvh)
-                activeShaderIdx = (++activeShaderIdx) % shaders.size();
+            if (wfShader->isShowingBvh) {
+                ++activeShaderIdx;
+                activeShaderIdx %= shaders.size();
+            }
 
             wfShader->isShowingBvh = !wfShader->isShowingBvh;
 
@@ -243,13 +249,15 @@ void update() {
                 dShader->mode = DipoleShader::MULTIPLE_SCATTER;
             else if (dShader->mode == DipoleShader::MULTIPLE_SCATTER) {
                 dShader->mode = DipoleShader::FULL;
-                activeShaderIdx = (++activeShaderIdx) % shaders.size();
+                ++activeShaderIdx;
+                activeShaderIdx %= shaders.size();
             }
 
             hasSceneChanged = true;
             lastShaderSwitchTime = t;
         } else {
-            activeShaderIdx = (++activeShaderIdx) % shaders.size();
+            ++activeShaderIdx;
+            activeShaderIdx %= shaders.size();
             hasSceneChanged = true;
             lastShaderSwitchTime = t;
         }
@@ -257,7 +265,8 @@ void update() {
 
     static int lastModelSwitchTime = 0;
     if ((t - lastModelSwitchTime > 200) && keystate[SDL_SCANCODE_2]) {
-        activeModelIdx = (++activeModelIdx) % models.size();
+        ++activeModelIdx;
+        activeModelIdx %= models.size();
         hasSceneChanged = true;
         lastModelSwitchTime = t;
     }
@@ -299,7 +308,7 @@ void draw() {
 }
 
 void resetCamera() {
-    camera.position = vec3(0, 0, -2);
+    camera.position = cameraInitialPosition;
     camera.direction = vec3(0, 0, 1);
     camera.roll = 0;
 }

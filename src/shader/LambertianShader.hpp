@@ -47,9 +47,29 @@ class LambertianShader : public Shader {
     glm::vec3 directLight(const Intersection& hit, const Model& model,
                           const Light& light);
 
+    /// @brief Render a square region of the pixel buffer, used for multithreaded rendering.
+    /// @param pixelBuffer
+    /// @param width
+    /// @param height
+    /// @param x1
+    /// @param y1
+    /// @param x2
+    /// @param y2
+    /// @param model
+    /// @param light
+    /// @param camera
+    /// @param shouldStopRenderThread
+    void renderSquare(Uint32* pixelBuffer, int width, int height, int x1,
+                      int y1, int x2, int y2, const Model& model,
+                      const Light& light, const Camera& camera,
+                      std::atomic<bool>& shouldStopRenderThread);
+
    public:
-    /// @brief Construct a LambertianShader with the given constant ambient term for indirect lighting.
-    LambertianShader();
+    /// @brief
+    /// @param numberOfThreads
+    /// @param indirectLight
+    LambertianShader(int numberOfThreads, glm::vec3 indirectLight)
+        : Shader(numberOfThreads), indirectLight(indirectLight) {}
 
     /// @brief Render the scene using this shader.
     /// @param pixelBuffer Pointer to a flat array of 32-bit RGBA values.

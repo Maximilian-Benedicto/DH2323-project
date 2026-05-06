@@ -56,14 +56,6 @@ void PlyModel::scaleAndCenter() {
         triangle.v1 *= scale;
         triangle.v2 *= scale;
 
-        triangle.v0.x *= -1;
-        triangle.v1.x *= -1;
-        triangle.v2.x *= -1;
-
-        triangle.v0.y *= -1;
-        triangle.v1.y *= -1;
-        triangle.v2.y *= -1;
-
         triangle.computeNormal();
 
         triangle.computeCentroid();

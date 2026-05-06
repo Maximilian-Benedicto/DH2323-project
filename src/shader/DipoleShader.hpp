@@ -11,14 +11,11 @@ class DipoleShader : public Shader {
    public:
     /// @brief Rendering modes for the dipole shader.
     enum Mode { SINGLE_SCATTER, MULTIPLE_SCATTER, FULL };
+
     Mode mode = FULL;
-    int THREADS_SQUARED = 5;
     int MULTIPLE_SCATTER_SAMPLES = 100;
     int SINGLE_SCATTER_SAMPLES = 100;
     int MAX_DISK_SAMPLE_ATTEMPTS = 5;
-
-    /// @brief Construct a dipole shader.
-    DipoleShader();
 
     /// @brief Construct a dipole shader with the given parameters.
     /// @param mode Rendering mode for the dipole shader (single scatter, multiple scatter, or full).
@@ -27,8 +24,8 @@ class DipoleShader : public Shader {
     /// @param singleScatterSamples Number of samples to use for estimating the single scattering contribution.
     DipoleShader(Mode mode, int threadsSquared, int multipleScatterSamples,
                  int singleScatterSamples)
-        : mode(mode),
-          THREADS_SQUARED(threadsSquared),
+        : Shader(threadsSquared),
+          mode(mode),
           MULTIPLE_SCATTER_SAMPLES(multipleScatterSamples),
           SINGLE_SCATTER_SAMPLES(singleScatterSamples) {}
 

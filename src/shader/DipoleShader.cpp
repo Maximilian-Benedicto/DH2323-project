@@ -14,16 +14,14 @@
 using namespace glm;
 using namespace std;
 
-DipoleShader::DipoleShader() {}
-
 void DipoleShader::render(Uint32* pixelBuffer, int width, int height,
                           const Model& model, const Light& light,
                           const Camera& camera,
                           std::atomic<bool>& shouldStopRenderThread) {
 
     // Render the image in 10 squares to allow for better multithreading
-    int numSquaresX = THREADS_SQUARED;
-    int numSquaresY = THREADS_SQUARED;
+    int numSquaresX = (int)sqrt(NUM_THREADS);
+    int numSquaresY = (int)sqrt(NUM_THREADS);
     int squareWidth = width / numSquaresX;
     int squareHeight = height / numSquaresY;
     vector<thread> threads;
