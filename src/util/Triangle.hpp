@@ -29,7 +29,7 @@ class Triangle {
     glm::vec3 color;
 
     /// @brief Material properties of the triangle, used for dipole method.
-    Material material = Material::createMarble();
+    Material material = Material::createApple();
 
     /// @brief Construct a triangle with a given color and no texture.
     /// @param v0

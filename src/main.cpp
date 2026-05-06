@@ -45,7 +45,7 @@ std::atomic<bool> shouldStopRenderThread(false);
 
 vec3 cameraInitialPosition =
     vec3(0, 0, -1) * 555.0f;  // Scale to perfectly fit the Cornell box in view
-Light light(glm::vec3(0, -1, 0) * 250.0f, 1.4e5f * glm::vec3(1, 1, 1));
+Light light(glm::vec3(0, -1, 0) * 250.0f, 1.4e6f * glm::vec3(1, 1, 1));
 Camera camera(cameraInitialPosition, glm::vec3(0, 0, 1), screenHeight / 2.0f);
 
 float cameraSpeed = 5.0f;
