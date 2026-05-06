@@ -155,9 +155,9 @@ DipoleShader::DipoleSample DipoleShader::samplePointMultipleScattering(
         const vec3 offset = tangent * (r * std::cos(theta)) + bitangent * (r * std::sin(theta));
 
         // Calculate the ray from the sampled point towards the model
-        // Project ray from higher along the normal to safely catch curved adjoining geometry without skipping it
-        const float offset_height = std::max(r, 0.01f);
-        const vec3 start = xo + offset + offset_height * no;
+        // Radius based offset to handle curved surfaces
+        const float heightOffset = std::max(r, 0.01f);
+        const vec3 start = xo + offset + heightOffset * no;
         const vec3 dir = -no;
 
         // Check if this ray intersects with the model
@@ -198,23 +198,19 @@ vec3 DipoleShader::calculateMultipleScattering(const Intersection& closestHit, c
 
         // Entry point, direction, and normal
         const vec3 xi = sample.position;
-        const vec3 r_vec = light.position - xi;
-        const float distToLight = length(r_vec);
-        const vec3 wi = r_vec / distToLight;
+        const vec3 wi = normalize(light.position - xi);
         const vec3 ni = model.triangles[sample.triangleIndex].normal;
 
         // Check if the sample point is in shadow
-        const vec3 start =
-            xi +
-            ni * 1e-3f;  // larger offset to definitively clear originating triangle logic holes
+        const vec3 lightRay = light.position - xi;
         Intersection reverse;
-        if (closestIntersection(start, wi, model, reverse)) {
-            if (reverse.distance < distToLight)
+        if (closestIntersection(xi + ni * 1e-3f, normalize(lightRay), model, reverse)) {
+            if (reverse.distance < length(lightRay))
                 continue;  // In shadow, skip this sample
         }
 
         // Incident radiance at the sample point
-        const vec3 Li = light.color / glm::max(distToLight * distToLight, 1e-6f);
+        const vec3 Li = light.color / glm::max(length(lightRay) * length(lightRay), 1e-6f);
 
         // Calculate how much light enters the medium
         const float cosThetaI = glm::max(0.0f, glm::dot(ni, wi));
@@ -224,7 +220,7 @@ vec3 DipoleShader::calculateMultipleScattering(const Intersection& closestHit, c
         const vec3 Rd = DipoleScattering::diffuseReflectance(
             DipoleScattering::scalarDistance(xi, xo), material);
 
-        // Calculate the contribution from this sample [Equation 5]
+        // Calculate the contribution from this sample
         const vec3 contribution = cosThetaI * (float)(1 / M_PI) * Li * Fti * Rd * Fto;
 
         // Divide by the PDF of this sample
@@ -317,7 +313,6 @@ vec3 DipoleShader::calculateSingleScattering(const Intersection& closestHit, con
 
         // Calculate phase and material properties for the BSSRDF
         const float phase = DipoleScattering::phaseFunction(glm::dot(wi, wo));
-        /// TODO: Calculate sigma_tc using geometry constant G
         const vec3 sigma_t = material.sigma_a + material.sigma_s;
         const vec3 transmittance_i = glm::exp(-sigma_t * sample.s_i);
         const vec3 transmittance_o = glm::exp(-sigma_t * sample.s_o);
@@ -326,7 +321,7 @@ vec3 DipoleShader::calculateSingleScattering(const Intersection& closestHit, con
         const float cosThetaI = glm::max(0.0f, glm::dot(ni, wi));
         const float Fti = DipoleScattering::fresnelTransmittance(cosThetaI, material);
 
-        // Calculate the contribution from this sample [Equation 6]
+        // Calculate the contribution from this sample
         vec3 contribution =
             material.sigma_s * Li * Fti * Fto * phase * transmittance_i * transmittance_o;
 
