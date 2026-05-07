@@ -305,5 +305,5 @@ void draw() {
 void resetCamera() {
     camera.position = CAMERA_INITIAL_POSITION;
     camera.direction = CAMERA_INITIAL_DIRECTION;
-    camera.roll = 0;
+    camera.roll = CAMERA_INITIAL_ROLL;
 }
