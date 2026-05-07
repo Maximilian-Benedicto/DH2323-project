@@ -44,9 +44,6 @@ class BVH {
     /// 2*i+1 and 2*i+2.
     std::vector<BVHNode> bvhNodes;
 
-    /// @brief Index of the root node in bvhNodes.
-    int rootNodeIdx = 0;
-
     /// @brief Number of nodes used in the BVH.
     int nodesUsed = 0;
 

@@ -11,7 +11,7 @@ bool Shader::closestIntersection(vec3 start, vec3 dir, const Model& model,
 
     // Traverse the BVH using a stack
     std::vector<int> stack;
-    stack.push_back(model.bvh.rootNodeIdx);
+    stack.push_back(0);  // Start with the root node index
     while (!stack.empty()) {
         int nodeIdx = stack.back();
         stack.pop_back();

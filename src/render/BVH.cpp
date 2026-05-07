@@ -1,6 +1,7 @@
 
 #include "BVH.hpp"
 #include "Triangle.hpp"
+#include "config.hpp"
 
 void AABB::grow(glm::vec3 p) {
     min = glm::min(min, p);
@@ -26,13 +27,13 @@ BVH::BVH(std::vector<Triangle>& triangles) {
     bvhNodes.resize(triangles.size() * 2 - 1);
 
     // Initialize the root node to contain all triangles
-    BVHNode& root = bvhNodes[rootNodeIdx];
+    BVHNode& root = bvhNodes[0];
     root.leftFirst = 0;
     root.triCount = triangles.size();
 
     // Recursively build the BVH
-    updateNodeBounds(rootNodeIdx, triangles);
-    subdivide(rootNodeIdx, triangles);
+    updateNodeBounds(0, triangles);
+    subdivide(0, triangles);
 }
 
 void BVH::updateNodeBounds(int nodeIdx, std::vector<Triangle>& triangles) {
@@ -52,8 +53,8 @@ void BVH::updateNodeBounds(int nodeIdx, std::vector<Triangle>& triangles) {
 void BVH::subdivide(int nodeIdx, std::vector<Triangle>& triangles) {
     BVHNode& node = bvhNodes[nodeIdx];
 
-    // Stop subdividing at 2 triangles per leaf node
-    if (node.triCount <= 2)
+    // Stop subdividing at x triangles per leaf node
+    if (node.triCount <= BVH_MAX_TRIANGLES_PER_LEAF)
         return;
 
     // Compute the bounding box of the triangle centroids to determine the split axis and position
