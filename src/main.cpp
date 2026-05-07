@@ -21,19 +21,17 @@
 #include "Triangle.hpp"
 #include "Window.hpp"
 #include "WireframeShader.hpp"
+#include "config.hpp"
 
 using namespace std;
 using glm::vec3;
 
-int screenWidth = 100;
-int screenHeight = 100;
+int screenWidth = SCREEN_WIDTH;
+int screenHeight = SCREEN_HEIGHT;
 Window* window;
 int t;
 
 DipoleShader::Mode DIPOLE_MODE = DipoleShader::FULL;
-int NUM_THREADS = 25;
-int DIPOLE_MULTIPLE_SCATTER_SAMPLES = 100;
-int DIPOLE_SINGLE_SCATTER_SAMPLES = 100;
 
 vector<unique_ptr<Shader>> shaders;
 vector<unique_ptr<Model>> models;
@@ -43,14 +41,8 @@ size_t activeShaderIdx;
 std::thread renderThread;
 std::atomic<bool> shouldStopRenderThread(false);
 
-vec3 cameraInitialPosition =
-    vec3(0, 0, -1) * 555.0f * 0.1f;  // Scale to perfectly fit the Cornell box in view
-Light light(glm::vec3(0, -1, 0) * 250.0f * 0.1f, 1.4e4f * glm::vec3(1, 1, 1));
-Camera camera(cameraInitialPosition, glm::vec3(0, 0, 1), screenHeight / 2.0f);
-
-float cameraSpeed = 5.0f;
-float rotationSpeed = M_PI / 180.0f * 2.0f;  // Rotate 2 degrees per key press
-float lightSpeed = 5.0f;
+Light light(LIGHT_INITIAL_POSITION, LIGHT_INITIAL_COLOR);
+Camera camera(CAMERA_INITIAL_POSITION, CAMERA_INITIAL_DIRECTION, screenHeight / 2.0f);
 
 /// @brief Update the scene based on user input and update the camera and light positions accordingly.
 void update();
@@ -147,52 +139,52 @@ void update() {
     vec3 up = vec3(0.0f, 1.0f, 0.0f);
 
     if (keystate[SDL_SCANCODE_W]) {
-        camera.position += camera.direction * cameraSpeed;
+        camera.position += camera.direction * CAMERA_MOVE_SPEED;
         hasSceneChanged = true;
     }
     if (keystate[SDL_SCANCODE_S]) {
-        camera.position -= camera.direction * cameraSpeed;
+        camera.position -= camera.direction * CAMERA_MOVE_SPEED;
         hasSceneChanged = true;
     }
     if (keystate[SDL_SCANCODE_A]) {
-        camera.position -= right * cameraSpeed;
+        camera.position -= right * CAMERA_MOVE_SPEED;
         hasSceneChanged = true;
     }
     if (keystate[SDL_SCANCODE_D]) {
-        camera.position += right * cameraSpeed;
+        camera.position += right * CAMERA_MOVE_SPEED;
         hasSceneChanged = true;
     }
     if (keystate[SDL_SCANCODE_SPACE]) {
-        camera.position -= up * cameraSpeed;
+        camera.position -= up * CAMERA_MOVE_SPEED;
         hasSceneChanged = true;
     }
     if (keystate[SDL_SCANCODE_LSHIFT]) {
-        camera.position += up * cameraSpeed;
+        camera.position += up * CAMERA_MOVE_SPEED;
         hasSceneChanged = true;
     }
 
     if (keystate[SDL_SCANCODE_UP]) {
-        camera.direction = glm::rotate(camera.direction, rotationSpeed, right);
+        camera.direction = glm::rotate(camera.direction, CAMERA_ROTATE_SPEED, right);
         hasSceneChanged = true;
     }
     if (keystate[SDL_SCANCODE_DOWN]) {
-        camera.direction = glm::rotate(camera.direction, -rotationSpeed, right);
+        camera.direction = glm::rotate(camera.direction, -CAMERA_ROTATE_SPEED, right);
         hasSceneChanged = true;
     }
     if (keystate[SDL_SCANCODE_LEFT]) {
-        camera.direction = glm::rotate(camera.direction, -rotationSpeed, up);
+        camera.direction = glm::rotate(camera.direction, -CAMERA_ROTATE_SPEED, up);
         hasSceneChanged = true;
     }
     if (keystate[SDL_SCANCODE_RIGHT]) {
-        camera.direction = glm::rotate(camera.direction, rotationSpeed, up);
+        camera.direction = glm::rotate(camera.direction, CAMERA_ROTATE_SPEED, up);
         hasSceneChanged = true;
     }
     if (keystate[SDL_SCANCODE_Q]) {
-        camera.roll -= rotationSpeed;
+        camera.roll -= CAMERA_ROTATE_SPEED;
         hasSceneChanged = true;
     }
     if (keystate[SDL_SCANCODE_E]) {
-        camera.roll += rotationSpeed;
+        camera.roll += CAMERA_ROTATE_SPEED;
         hasSceneChanged = true;
     }
 
@@ -202,27 +194,27 @@ void update() {
     }
 
     if (keystate[SDL_SCANCODE_J]) {
-        light.position.x -= lightSpeed;
+        light.position.x -= LIGHT_MOVE_SPEED;
         hasSceneChanged = true;
     }
     if (keystate[SDL_SCANCODE_L]) {
-        light.position.x += lightSpeed;
+        light.position.x += LIGHT_MOVE_SPEED;
         hasSceneChanged = true;
     }
     if (keystate[SDL_SCANCODE_U]) {
-        light.position.y += lightSpeed;
+        light.position.y += LIGHT_MOVE_SPEED;
         hasSceneChanged = true;
     }
     if (keystate[SDL_SCANCODE_O]) {
-        light.position.y -= lightSpeed;
+        light.position.y -= LIGHT_MOVE_SPEED;
         hasSceneChanged = true;
     }
     if (keystate[SDL_SCANCODE_I]) {
-        light.position.z += lightSpeed;
+        light.position.z += LIGHT_MOVE_SPEED;
         hasSceneChanged = true;
     }
     if (keystate[SDL_SCANCODE_K]) {
-        light.position.z -= lightSpeed;
+        light.position.z -= LIGHT_MOVE_SPEED;
         hasSceneChanged = true;
     }
 
@@ -311,7 +303,7 @@ void draw() {
 }
 
 void resetCamera() {
-    camera.position = cameraInitialPosition;
-    camera.direction = vec3(0, 0, 1);
+    camera.position = CAMERA_INITIAL_POSITION;
+    camera.direction = CAMERA_INITIAL_DIRECTION;
     camera.roll = 0;
 }

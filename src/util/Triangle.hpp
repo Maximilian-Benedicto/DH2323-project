@@ -6,6 +6,7 @@
 
 #include "Material.hpp"
 #include "Texture.hpp"
+#include "config.hpp"
 
 /// @brief Triangle class representing a single triangle in the scene
 class Triangle {
@@ -29,7 +30,7 @@ class Triangle {
     glm::vec3 color;
 
     /// @brief Material properties of the triangle, used for dipole method.
-    Material material = Material::createChicken2();
+    Material material = DEFAULT_MATERIAL;
 
     /// @brief Construct a triangle with a given color and no texture.
     /// @param v0

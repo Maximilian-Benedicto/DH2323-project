@@ -17,7 +17,7 @@ class Camera;
 class Shader {
    public:
     /// @brief Number of threads to use for rendering
-    int NUM_THREADS = 16;
+    int numThreads = 16;
 
     /// @brief Information about a ray-triangle intersection
     struct Intersection {
@@ -29,7 +29,7 @@ class Shader {
 
     /// @brief
     /// @param numThreads
-    Shader(int numThreads) : NUM_THREADS(numThreads) {};
+    Shader(int numThreads) : numThreads(numThreads) {};
 
     /// @brief Find the closest intersection of a ray with the scene.
     /// @param start Starting point of the ray.

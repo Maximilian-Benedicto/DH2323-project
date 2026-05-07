@@ -20,8 +20,8 @@ void LambertianShader::render(Uint32* pixelBuffer, int width, int height, const 
                               std::atomic<bool>& shouldStopRenderThread) {
 
     // Render the image in 10 squares to allow for better multithreading
-    int numSquaresX = (int)sqrt(NUM_THREADS);
-    int numSquaresY = (int)sqrt(NUM_THREADS);
+    int numSquaresX = (int)sqrt(numThreads);
+    int numSquaresY = (int)sqrt(numThreads);
     int squareWidth = width / numSquaresX;
     int squareHeight = height / numSquaresY;
     vector<thread> threads;
