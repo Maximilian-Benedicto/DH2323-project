@@ -1,41 +1,139 @@
-\documentclass[twocolumn]{article}
-\usepackage[utf8]{inputenc}
+\documentclass[sigconf]{acmart}
+
 \usepackage{graphicx}
-\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{float}
+
+\settopmatter{printacmref=false,printfolios=false}
+
+% C++ code listing style
+\lstdefinestyle{cppstyle}{
+    language=C++,
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{blue}\bfseries,
+    commentstyle=\color{gray},
+    stringstyle=\color{magenta},
+    numbers=left,
+    numberstyle=\tiny,
+    stepnumber=1,
+    showstringspaces=false,
+    tabsize=2,
+    breaklines=true,
+    frame=single,
+    captionpos=b
+}
+\lstset{style=cppstyle}
+
+
 
 \title{DH2323 Project Report}
-\author{Your Name}
-\date{\today}
+
+\author{Maximilian Benedicto}
+\email{mbene@kth.se}
+\affiliation{%
+    \institution{KTH Royal Institute of Technology}
+    \city{Stockholm}
+    \country{Sweden}}
+
+\author{Arman Montazeri}
+\email{armanmo@kth.se}
+\affiliation{%
+    \institution{KTH Royal Institute of Technology}
+    \city{Stockholm}
+    \country{Sweden}}
+
+\renewcommand{\shortauthors}{Benedicto and Montazeri}
 
 \begin{document}
-\maketitle
+
+% Teaser figure appears below the title in the ACM SIGGRAPH format.
+\begin{teaserfigure}
+    \centering
+    \includegraphics[width=\textwidth]{../img/DianaGrid1000Samples.png}
+    \caption{Marble statue: Lambertian, Wireframe, BVH and Dipole (1000 Samples)}
+    \Description{Comparison render of a marble statue using multiple shading modes.}
+    \label{fig:teaser}
+\end{teaserfigure}
 
 \begin{abstract}
-    This report details the design, implementation, and theoretical aspects of the computer graphics project for the DH2323 course.
+    \cite{example_ref}
 \end{abstract}
 
+\maketitle
+
 \section{Introduction}
-Introduction to the project topic and objectives. Example citation \cite{example_ref}.
 
-\section{Theoretical Background}
-Description of the mathematical and computer graphics theories used in the project.
+\section{Related work}
 
-\section{Implementation Details}
-Explanation of how the program was designed and works, referencing the C++ source code.
+\section{Methodology}
 
-\section{Results}
-Discussion of the final output, including references to screenshots in the \texttt{img} folder.
+\section{Implementation}
 
-\section{Reflective Evaluation}
-Critical reflective evaluation of what was done, why it was done, and what was learned. Describe challenges and interesting aspects.
+\subsection{Multithreaded shaders}
 
-\section{Perceptual User Study}
-Description of how the project could be improved by, informed by, or related to perceptual user studies (at least half a page).
+\subsection{Bounding Volume Hierarchy}
 
-\section{Contributions}
-Outline of individual contributions to the final project.
+\begin{lstlisting}
+struct AABB {
+    glm::vec3 min = glm::vec3(std::numeric_limits<float>::infinity());
+    glm::vec3 max = glm::vec3(-std::numeric_limits<float>::infinity());
 
-\bibliographystyle{ieeetr}
+    void grow(glm::vec3 p);
+    void grow(const AABB& b);
+};
+\end{lstlisting}
+
+\begin{lstlisting}
+struct BVHNode {
+    AABB aabb;
+
+    int leftFirst;
+    int triCount;
+
+    bool isLeaf() const { return triCount > 0; };
+};
+\end{lstlisting}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\textwidth]{../img/BunnyGrid1000Triangles.png}
+    \caption{Left: Stanford Bunny Wireframe, Right: Stanford Bunny BVH (1000 Triangles per leaf)}
+    \label{fig:bunny}
+\end{figure}
+
+\subsection{Material}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\textwidth]{../img/CornellGrid100Samples.png}
+    \caption{Cornell Box scaled at 5.55cm across, all 12 Materials (100 Samples)}
+    \label{fig:cornell}
+\end{figure}
+
+\begin{align}
+F_{dr} &= -\frac{1.440}{\eta^2} + \frac{0.710}{\eta} + 0.668 + 0.0636 \eta,\\
+\sigma_s &= \frac{\sigma_s'}{1 - g},\\
+\sigma_t' &= \sigma_a + \sigma_s',\\
+\alpha' &= \frac{\sigma_s'}{\sigma_t'},\\
+\sigma_{tr} &= 3 \sigma_a \sigma_t',\\
+A &= \frac{1 + f_{dr}}{1 - f_{dr}},\\
+D &= \frac{1}{3 \sigma_t'},\\
+z_r &= \frac{1}{\sigma_t'},\\
+z_v &= z_r + 4 A D.
+\end{align}
+
+\subsection{Single Scattering}
+
+\subsection{Multiple Scattering}
+
+\section{Discussion}
+
+\section{Future perceptual study}
+
+\section{Contribution}
+
+\bibliographystyle{ACM-Reference-Format}
 \bibliography{references}
 
 \end{document}

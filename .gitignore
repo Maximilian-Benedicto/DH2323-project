@@ -3,6 +3,8 @@ build/
 lib/
 .vscode/
 
+# Other
+.DS_Store
 
 # Prerequisites
 *.d
