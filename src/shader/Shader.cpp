@@ -60,7 +60,7 @@ bool Shader::closestIntersection(vec3 start, vec3 dir, const Model& model,
                     found = true;
                 }
             }
-            continue;
+            continue;  // No need to check child nodes if this is a leaf
         }
 
         // Get the child nodes
