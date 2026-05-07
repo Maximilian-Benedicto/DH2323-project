@@ -6,8 +6,6 @@ from pathlib import Path
 from PIL import Image
 
 DEFAULT_ORDER = [
-    "CornellWireframe.png",
-    "CornellLambertian.png",
     "CornellApple.png",
     "CornellChicken1.png",
     "CornellChicken2.png",
@@ -35,7 +33,7 @@ def load_images(folder: Path, order: list[str]) -> list[Image.Image]:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Combine 14 Cornell images into a 2x6 grid."
+        description="Combine 12 Cornell images into a 2x6 grid."
     )
     parser.add_argument(
         "folder",
@@ -55,8 +53,8 @@ def main() -> None:
         raise SystemExit(f"Not a folder: {folder}")
 
     images = load_images(folder, DEFAULT_ORDER)
-    if len(images) != 14:
-        raise SystemExit("Expected 14 images in the order list.")
+    if len(images) != 12:
+        raise SystemExit("Expected 12 images in the order list.")
 
     widths = {img.width for img in images}
     heights = {img.height for img in images}
@@ -65,7 +63,7 @@ def main() -> None:
 
     img_w = images[0].width
     img_h = images[0].height
-    cols = 7
+    cols = 6
     rows = 2
     canvas = Image.new("RGBA", (cols * img_w, rows * img_h))
 
