@@ -1,11 +1,9 @@
-\documentclass[sigconf]{acmart}
+\documentclass[sigconf,nonacm]{acmart}
 
 \usepackage{graphicx}
 \usepackage{xcolor}
 \usepackage{listings}
 \usepackage{float}
-
-\settopmatter{printacmref=false,printfolios=false}
 
 % C++ code listing style
 \lstdefinestyle{cppstyle}{
@@ -76,8 +74,8 @@
 
 \begin{lstlisting}
 struct AABB {
-    glm::vec3 min = glm::vec3(std::numeric_limits<float>::infinity());
-    glm::vec3 max = glm::vec3(-std::numeric_limits<float>::infinity());
+    glm::vec3 min;
+    glm::vec3 max;
 
     void grow(glm::vec3 p);
     void grow(const AABB& b);
@@ -95,32 +93,32 @@ struct BVHNode {
 };
 \end{lstlisting}
 
-\begin{figure}
+\begin{figure}[H]
     \centering
-    \includegraphics[width=\textwidth]{../img/BunnyGrid1000Triangles.png}
+    \includegraphics[width=0.5\textwidth]{../img/BunnyGrid1000Triangles.png}
     \caption{Left: Stanford Bunny Wireframe, Right: Stanford Bunny BVH (1000 Triangles per leaf)}
     \label{fig:bunny}
 \end{figure}
 
 \subsection{Material}
 
-\begin{figure}
+\begin{figure}[H]
     \centering
-    \includegraphics[width=\textwidth]{../img/CornellGrid100Samples.png}
+    \includegraphics[width=0.5\textwidth]{../img/CornellGrid100Samples.png}
     \caption{Cornell Box scaled at 5.55cm across, all 12 Materials (100 Samples)}
     \label{fig:cornell}
 \end{figure}
 
 \begin{align}
-F_{dr} &= -\frac{1.440}{\eta^2} + \frac{0.710}{\eta} + 0.668 + 0.0636 \eta,\\
-\sigma_s &= \frac{\sigma_s'}{1 - g},\\
-\sigma_t' &= \sigma_a + \sigma_s',\\
-\alpha' &= \frac{\sigma_s'}{\sigma_t'},\\
-\sigma_{tr} &= 3 \sigma_a \sigma_t',\\
-A &= \frac{1 + f_{dr}}{1 - f_{dr}},\\
-D &= \frac{1}{3 \sigma_t'},\\
-z_r &= \frac{1}{\sigma_t'},\\
-z_v &= z_r + 4 A D.
+    F_{dr}      & = -\frac{1.440}{\eta^2} + \frac{0.710}{\eta} + 0.668 + 0.0636 \eta, \\
+    \sigma_s    & = \frac{\sigma_s'}{1 - g},                                          \\
+    \sigma_t'   & = \sigma_a + \sigma_s',                                             \\
+    \alpha'     & = \frac{\sigma_s'}{\sigma_t'},                                      \\
+    \sigma_{tr} & = 3 \sigma_a \sigma_t',                                             \\
+    A           & = \frac{1 + f_{dr}}{1 - f_{dr}},                                    \\
+    D           & = \frac{1}{3 \sigma_t'},                                            \\
+    z_r         & = \frac{1}{\sigma_t'},                                              \\
+    z_v         & = z_r + 4 A D.
 \end{align}
 
 \subsection{Single Scattering}

@@ -1,0 +1,18 @@
+# LaTeX auxiliary files and output
+*.aux
+*.log
+*.out
+*.toc
+*.lof
+*.lot
+*.bbl
+*.blg
+*.synctex.gz
+*.fdb_latexmk
+*.fls
+*.pdf
+
+# maxos, windows and vscode specific files
+.DS_Store
+Thumbs.db
+.vscode/
