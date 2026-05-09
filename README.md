@@ -6,6 +6,8 @@ This repository contains the final project for the course **DH2323 Computer Grap
 - Maximilian Benedicto
 - Arman Montazeri
 
+![Lambertian, Wireframe, BVH, Dipole](img/DianaGrid1000Samples.png)
+
 ## Overview
 
 A custom software rendering engine built in C++. The project implements various rendering techniques including:
