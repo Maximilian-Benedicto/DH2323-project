@@ -1,12 +1,12 @@
 # DH2323-project
 
+![Lambertian, Wireframe, BVH, Dipole](img/DianaGrid1000Samples.png)
+
 This repository contains the final project for the course **DH2323 Computer Graphics and Interaction** at KTH Royal Institute of Technology.
 
 **Authors:**
 - Maximilian Benedicto
 - Arman Montazeri
-
-![Lambertian, Wireframe, BVH, Dipole](img/DianaGrid1000Samples.png)
 
 ## Overview
 
