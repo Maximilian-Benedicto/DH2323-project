@@ -2,12 +2,13 @@
 #define MATERIAL_HPP
 
 #include <glm/glm.hpp>
+#include "config.hpp"
 
 /// @brief Material properties for subsurface scattering (based on Jensen et al. dipole model).
 class Material {
    public:
-    /// @brief Anisotropy factor for the Henyey-Greenstein phase function. Set to 0.8 by default.
-    static constexpr float g = 0.8f;
+    /// @brief Anisotropy factor for the Henyey-Greenstein phase function.
+    static constexpr float g = ANISOTROPY_FACTOR;
 
     /// @brief Absorption coefficient
     glm::vec3 sigma_a;
