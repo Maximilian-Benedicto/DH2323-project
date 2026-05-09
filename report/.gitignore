@@ -1,4 +1,4 @@
-# LaTeX auxiliary files and output
+# LaTeX auxiliary files
 *.aux
 *.log
 *.out
@@ -10,7 +10,6 @@
 *.synctex.gz
 *.fdb_latexmk
 *.fls
-*.pdf
 
 # maxos, windows and vscode specific files
 .DS_Store
