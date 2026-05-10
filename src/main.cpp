@@ -66,7 +66,7 @@ int main(int argc, char* argv[]) {
     // Initialize the models
     models.push_back(make_unique<CornellBox>(vec3(-1.0f, -1.0f, 1.0f) * 0.1f));
     models.push_back(
-        make_unique<PlyModel>(vec3(1.0f, -1.0f, -1.0f) * 0.5e4f, "model/bun_zipper.ply"));
+        make_unique<PlyModel>(vec3(1.0f, -1.0f, -1.0f) * 0.5e3f, "model/bun_zipper.ply"));
     models.push_back(make_unique<ObjModel>(vec3(1.0f, -1.0f, 1.0f), "model/sponza/sponza.obj"));
     models.push_back(
         make_unique<ObjModel>(vec3(1.0f, -1.0f, -1.0f) * 200.0f, "model/diana/diana.obj"));
@@ -215,6 +215,14 @@ void update() {
     }
     if (keystate[SDL_SCANCODE_K]) {
         light.position.z -= LIGHT_MOVE_SPEED;
+        hasSceneChanged = true;
+    }
+    if (keystate[SDL_SCANCODE_N]) {
+        light.color *= 0.9f;
+        hasSceneChanged = true;
+    }
+    if (keystate[SDL_SCANCODE_M]) {
+        light.color *= 1.1f;
         hasSceneChanged = true;
     }
 

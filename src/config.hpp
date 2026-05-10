@@ -22,7 +22,7 @@
 #define BVH_MAX_TRIANGLES_PER_LEAF 2
 
 // Default material for objects that don't specify one
-#define DEFAULT_MATERIAL Material::createApple();
+#define DEFAULT_MATERIAL Material::createMarble();
 
 // Camera configuration
 #define CAMERA_INITIAL_POSITION glm::vec3(0, 0, -1) * 555.0f * 0.1f
@@ -33,7 +33,7 @@
 
 // Light configuration
 #define LIGHT_INITIAL_POSITION glm::vec3(0, -1, 0) * 250.0f * 0.1f
-#define LIGHT_INITIAL_COLOR 1.4e5f * glm::vec3(1, 1, 1)
+#define LIGHT_INITIAL_COLOR 1.4e4f * glm::vec3(1, 1, 1)
 #define LIGHT_MOVE_SPEED 5.0f
 
 #endif  // CONFIG_HPP

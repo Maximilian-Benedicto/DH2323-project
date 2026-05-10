@@ -65,6 +65,7 @@ The application features an interactive camera, movable light source, and on-the
 - **J / L**: Move Light -X / +X
 - **U / O**: Move Light +Y / -Y
 - **I / K**: Move Light +Z / -Z
+- **N / M**: Decrease / Increase Light Intensity
 
 ### Application Controls
 - **1**: Switch Shader (cycles through Wireframe, Dipole Scattering modes, and Lambertian)
