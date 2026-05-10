@@ -47,3 +47,27 @@ After building successfully, run the executable from the `build` directory:
 ```bash
 ./DH2323Project
 ```
+
+## Controls
+
+The application features an interactive camera, movable light source, and on-the-fly shader/model switching. 
+
+### Camera Controls
+- **W / S**: Move Forward / Backward
+- **A / D**: Move Left / Right
+- **Space / LShift**: Move Down / Up
+- **Up / Down Arrows**: Pitch Up / Down
+- **Left / Right Arrows**: Yaw Left / Right
+- **Q / E**: Roll Left / Right
+- **Backspace**: Reset Camera Position
+
+### Light Controls
+- **J / L**: Move Light -X / +X
+- **U / O**: Move Light +Y / -Y
+- **I / K**: Move Light +Z / -Z
+
+### Application Controls
+- **1**: Switch Shader (cycles through Wireframe, Dipole Scattering modes, and Lambertian)
+- **2**: Switch Model
+- **+ / -**: Increase / Decrease Render Resolution
+- **Left Alt**: Save Screenshot (saved as `screenshot_<timestamp>.bmp`)

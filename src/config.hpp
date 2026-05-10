@@ -12,8 +12,8 @@
 #define SCREEN_HEIGHT 100
 
 // Dipole subsurface scattering samples
-#define DIPOLE_MULTIPLE_SCATTER_SAMPLES 100
-#define DIPOLE_SINGLE_SCATTER_SAMPLES 100
+#define DIPOLE_MULTIPLE_SCATTER_SAMPLES 1000
+#define DIPOLE_SINGLE_SCATTER_SAMPLES 1000
 
 // Anisotropy for subsurface scattering simulation (0.85 per Jensen et al. paper)
 #define ANISOTROPY_FACTOR 0.85f
@@ -22,7 +22,7 @@
 #define BVH_MAX_TRIANGLES_PER_LEAF 2
 
 // Default material for objects that don't specify one
-#define DEFAULT_MATERIAL Material::createMarble()
+#define DEFAULT_MATERIAL Material::createApple();
 
 // Camera configuration
 #define CAMERA_INITIAL_POSITION glm::vec3(0, 0, -1) * 555.0f * 0.1f
