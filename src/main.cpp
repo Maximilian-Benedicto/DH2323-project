@@ -68,6 +68,7 @@ int main(int argc, char* argv[]) {
     models.push_back(make_unique<PlyModel>(BUNNY_SCALE, "model/bun_zipper.ply"));
     models.push_back(make_unique<ObjModel>(SPONZA_SCALE, "model/sponza/sponza.obj"));
     models.push_back(make_unique<ObjModel>(DIANA_SCALE, "model/diana/diana.obj"));
+    models.push_back(make_unique<ObjModel>(CYLINDER_SCALE, "model/cylinder/cylinder.obj"));
 
     // Initialize the shaders
     shaders.push_back(make_unique<WireframeShader>(NUM_THREADS));
