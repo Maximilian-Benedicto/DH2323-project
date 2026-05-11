@@ -36,12 +36,13 @@
 \providecommand\natexlab[1]{#1}
 \providecommand\showeprint[2][]{arXiv:#2}
 
-\bibitem[Author and Author(2026)]%
-        {example_ref}
-\bibfield{author}{\bibinfo{person}{A. Author} {and} \bibinfo{person}{B. Author}.} \bibinfo{year}{2026}\natexlab{}.
-\newblock \showarticletitle{Example Computer Graphics Paper}.
-\newblock \bibinfo{journal}{\emph{Journal of Computer Graphics}}  \bibinfo{volume}{10} (\bibinfo{year}{2026}), \bibinfo{pages}{100--115}.
+\bibitem[Jensen et~al\mbox{.}(2001)]%
+        {jensen2001practical}
+\bibfield{author}{\bibinfo{person}{Henrik~Wann Jensen}, \bibinfo{person}{Stephen~R. Marschner}, \bibinfo{person}{Marc Levoy}, {and} \bibinfo{person}{Pat Hanrahan}.} \bibinfo{year}{2001}\natexlab{}.
+\newblock \showarticletitle{A practical model for subsurface light transport}. In \bibinfo{booktitle}{\emph{Proceedings of the 28th Annual Conference on Computer Graphics and Interactive Techniques}} \emph{(\bibinfo{series}{SIGGRAPH '01})}. \bibinfo{publisher}{Association for Computing Machinery}, \bibinfo{address}{New York, NY, USA}, \bibinfo{pages}{511--518}.
 \newblock
+\showISBNx{158113374X}
+\href{https://doi.org/10.1145/383259.383319}{doi:\nolinkurl{10.1145/383259.383319}}
 
 
 \end{thebibliography}
