@@ -36,4 +36,10 @@
 #define LIGHT_INITIAL_COLOR 1.4e4f * glm::vec3(1, 1, 1)
 #define LIGHT_MOVE_SPEED 5.0f
 
+// Models configuration
+#define CORNELL_SCALE vec3(-1.0f, -1.0f, 1.0f) * 0.1f
+#define BUNNY_SCALE vec3(1.0f, -1.0f, -1.0f) * 0.5e3f
+#define SPONZA_SCALE vec3(1.0f, -1.0f, 1.0f)
+#define DIANA_SCALE vec3(1.0f, -1.0f, -1.0f) * 200.0f
+
 #endif  // CONFIG_HPP
