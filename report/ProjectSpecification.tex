@@ -1,0 +1,53 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{hyperref}
+
+\title{Preliminary Project Specification: Subsurface Light Transport using the Dipole Method}
+\author{Maximilian Benedicto \& Arman Montazeri}
+\date{13 April 2026}
+
+\begin{document}
+
+\maketitle
+
+\noindent
+\textbf{Intended Grade:} A-C \\
+\textbf{Project Blog:} TBA
+
+\section{Project Overview}
+The primary objective of this project is to implement a mathematical model for advanced light transport, specifically focusing on translucent materials. Standard BRDF (Bidirectional Reflectance Distribution Function) models assume light scatters at the exact point of contact. To accurately render materials like skin, wax, marble, and milk, light must be allowed to enter the material, scatter internally, and exit at a different point.
+
+To achieve this, we will implement the dipole method for subsurface scattering, based on the foundational paper by Jensen et al. \cite{jensen2001practical}. This involves approximating the BSSRDF (Bidirectional Scattering-Surface Reflectance Distribution Function) using a diffusion approximation with a dipole source configuration.
+
+\section{Technical Stack}
+\begin{itemize}
+    \item \texttt{C++}
+    \item GLM
+    \item SDL2
+\end{itemize}
+
+\section{Tentative Milestones}
+\begin{itemize}
+    \item \textbf{Framework Setup:} Initialize C++ project with SDL2 and GLM. Get a basic window open with a writable pixel buffer.
+    \item \textbf{Basic Raycasting:} Implement a simple camera model and ray-triangle intersection to render basic geometry.
+    \item \textbf{Direct Illumination:} Implement basic Lambertian shading to ensure the lighting and geometry systems work.
+    \item \textbf{Dipole Implementation:} Implement the core math from the Jensen paper.
+    \item \textbf{Integration \& Sampling:} Integrate the BSSRDF into the rendering loop.
+    \item \textbf{Refinement:} Bug fixes, capturing final render images for the project report/blog.
+\end{itemize}
+
+\section{Potential Challenges}
+\begin{itemize}
+    \item \textbf{Understanding of the mathematics:} The biggest challenge will be reading and interpreting the paper; this will probably take longer than implementation.
+    \item \textbf{Computational cost:} We will mainly render on the CPU, without multithreading. This will be computationally expensive. We might not be able to render at interactive framerates, but this is not the goal anyways.
+    \item \textbf{The blog:} We will most likely not have time to write the blog.
+\end{itemize}
+
+\noindent \textit{Note: we will probably use other online sources to research some of the rendering mathematics terminology, including possibly using some generative AI to investigate some of the concepts, being aware of its limitations.}
+
+\bibliographystyle{ieeetr}
+\bibliography{references}
+
+
+
+\end{document}
