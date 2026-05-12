@@ -39,7 +39,7 @@
 // Models configuration
 #define CORNELL_SCALE vec3(-1.0f, -1.0f, 1.0f) * 0.1f
 #define BUNNY_SCALE vec3(1.0f, -1.0f, -1.0f) * 0.5e3f
-#define SPONZA_SCALE vec3(1.0f, -1.0f, 1.0f)
+#define SPONZA_SCALE vec3(-1.0f, -1.0f, 1.0f)
 #define DIANA_SCALE vec3(1.0f, -1.0f, -1.0f) * 200.0f
 #define CYLINDER_SCALE vec3(1.0f, 1.0f, 1.0f) * 30.0f
 
