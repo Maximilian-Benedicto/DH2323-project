@@ -2,7 +2,7 @@
 %%% Do NOT edit. File created by BibTeX with style
 %%% ACM-Reference-Format-Journals [18-Jan-2012].
 
-\begin{thebibliography}{7}
+\begin{thebibliography}{8}
 
 %%% ====================================================================
 %%% NOTE TO THE USER: you can override these defaults by providing
@@ -52,7 +52,7 @@
 \bibitem[contributors(2026a)]%
         {wikipedia2026moller}
 \bibfield{author}{\bibinfo{person}{Wikipedia contributors}.} \bibinfo{year}{2026}\natexlab{a}.
-\newblock \bibinfo{title}{Moller--Trumbore intersection algorithm --- {Wikipedia}{,} The Free Encyclopedia}.
+\newblock \bibinfo{title}{Moller--Trumbore intersection algorithm --- Wikipedia, The Free Encyclopedia}.
 \newblock
 \urldef\tempurl%
 \url{https://en.wikipedia.org/wiki/Möller–Trumbore_intersection_algorithm}
@@ -65,7 +65,7 @@
 \bibitem[contributors(2026b)]%
         {wikipedia2026slab}
 \bibfield{author}{\bibinfo{person}{Wikipedia contributors}.} \bibinfo{year}{2026}\natexlab{b}.
-\newblock \bibinfo{title}{Slab method --- {Wikipedia}{,} The Free Encyclopedia}.
+\newblock \bibinfo{title}{Slab method --- Wikipedia, The Free Encyclopedia}.
 \newblock
 \urldef\tempurl%
 \url{https://en.wikipedia.org/wiki/Slab_method}
@@ -86,6 +86,16 @@
 \tempurl}
 \newblock
 \shownote{Final project for CSE 528 Computer Graphics Fall 2013. Accessed: 2026-05-11}.
+
+
+\bibitem["Google"(2026)]%
+        {google2026gemini}
+\bibfield{author}{\bibinfo{person}{"Google"}.} \bibinfo{year}{"2026"}\natexlab{}.
+\newblock \bibinfo{title}{"Gemini Deep Research"}.
+\newblock \bibinfo{howpublished}{"https://gemini.google/overview/deep-research/"}.
+\newblock
+\newblock
+\shownote{"Online; accessed 12-May-2026"}.
 
 
 \bibitem[Jensen et~al\mbox{.}(2001)]%
