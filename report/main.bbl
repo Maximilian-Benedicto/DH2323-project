@@ -2,7 +2,7 @@
 %%% Do NOT edit. File created by BibTeX with style
 %%% ACM-Reference-Format-Journals [18-Jan-2012].
 
-\begin{thebibliography}{8}
+\begin{thebibliography}{10}
 
 %%% ====================================================================
 %%% NOTE TO THE USER: you can override these defaults by providing
@@ -50,8 +50,21 @@
 
 
 \bibitem[contributors(2026a)]%
-        {wikipedia2026moller}
+        {wikipedia2026henyey}
 \bibfield{author}{\bibinfo{person}{Wikipedia contributors}.} \bibinfo{year}{2026}\natexlab{a}.
+\newblock \bibinfo{title}{Henyey--Greenstein phase function --- Wikipedia, The Free Encyclopedia}.
+\newblock
+\urldef\tempurl%
+\url{https://en.wikipedia.org/wiki/Henyey–Greenstein_phase_function}
+\showURL{%
+\tempurl}
+\newblock
+\shownote{Online; accessed 12-May-2026}.
+
+
+\bibitem[contributors(2026b)]%
+        {wikipedia2026moller}
+\bibfield{author}{\bibinfo{person}{Wikipedia contributors}.} \bibinfo{year}{2026}\natexlab{b}.
 \newblock \bibinfo{title}{Moller--Trumbore intersection algorithm --- Wikipedia, The Free Encyclopedia}.
 \newblock
 \urldef\tempurl%
@@ -62,9 +75,22 @@
 \shownote{Online; accessed 11-May-2026}.
 
 
-\bibitem[contributors(2026b)]%
+\bibitem[contributors(2026c)]%
+        {wikipedia2026schlick}
+\bibfield{author}{\bibinfo{person}{Wikipedia contributors}.} \bibinfo{year}{2026}\natexlab{c}.
+\newblock \bibinfo{title}{Schlick's approximation --- Wikipedia, The Free Encyclopedia}.
+\newblock
+\urldef\tempurl%
+\url{https://en.wikipedia.org/wiki/Schlick's_approximation}
+\showURL{%
+\tempurl}
+\newblock
+\shownote{Online; accessed 12-May-2026}.
+
+
+\bibitem[contributors(2026d)]%
         {wikipedia2026slab}
-\bibfield{author}{\bibinfo{person}{Wikipedia contributors}.} \bibinfo{year}{2026}\natexlab{b}.
+\bibfield{author}{\bibinfo{person}{Wikipedia contributors}.} \bibinfo{year}{2026}\natexlab{d}.
 \newblock \bibinfo{title}{Slab method --- Wikipedia, The Free Encyclopedia}.
 \newblock
 \urldef\tempurl%
@@ -88,14 +114,17 @@
 \shownote{Final project for CSE 528 Computer Graphics Fall 2013. Accessed: 2026-05-11}.
 
 
-\bibitem["Google"(2026)]%
+\bibitem[Google(2026)]%
         {google2026gemini}
-\bibfield{author}{\bibinfo{person}{"Google"}.} \bibinfo{year}{"2026"}\natexlab{}.
-\newblock \bibinfo{title}{"Gemini Deep Research"}.
-\newblock \bibinfo{howpublished}{"https://gemini.google/overview/deep-research/"}.
+\bibfield{author}{\bibinfo{person}{Google}.} \bibinfo{year}{2026}\natexlab{}.
+\newblock \bibinfo{title}{Gemini Deep Research}.
 \newblock
+\urldef\tempurl%
+\url{https://gemini.google/overview/deep-research/}
+\showURL{%
+\tempurl}
 \newblock
-\shownote{"Online; accessed 12-May-2026"}.
+\shownote{Online; accessed 12-May-2026}.
 
 
 \bibitem[Jensen et~al\mbox{.}(2001)]%

@@ -211,7 +211,7 @@ The mathematical core of the sampling logic relies on Monte Carlo importance sam
 
 For both single and multiple scattering, the PDF is dictated by the material's optical constants. Because these constants are defined as RGB vectors, we simplify the sampling heuristic by averaging the three color channels to determine the scalar probabilities used for ray generation.
 
-In the single-scattering simulation, the penetration distance $d$ along the refracted outgoing ray is sampled from the exponential density function $\sigma_t e^{-\sigma_t d}$. This determines the internal scatter point $s$, representing the physical location where the photon interacts with the medium. From this scatter point, a shadow ray is traced toward the light source; the intersection of this ray with the geometric boundary defines the incident entry point $x_i$.
+In the single-scattering simulation, the penetration distance $d$ along the refracted outgoing ray is sampled from the exponential density function $\sigma_t e^{-\sigma_t d}$. This determines the internal scatter point $s$, representing the physical location where the photon interacts with the medium. From this scatter point, a shadow ray is traced toward the light source; the intersection of this ray with the geometric boundary defines the incident entry point $x_i$. The distances from $x_i$ to $s$ and from $s$ to $x_o$ are denoted as $s_i$ and $s_o$, respectively, and are used in the radiance evaluation step.
 
 \begin{figure}[H]
     \centering
@@ -233,7 +233,72 @@ For the multiple scattering approximation, potential entry points ($x_i$) are sa
 
 \subsubsection{Radiance Calculation}
 
-%% TODO
+To accurately evaluate the radiance at the exit point, several helper functions are implemented within the shader. These include Schlick's approximation \cite{wikipedia2026schlick} for the Fresnel reflectance ($F_r$) and transmittance ($F_t$), the dipole diffusion profile ($R_d$), and the Henyey-Greenstein phase function \cite{wikipedia2026henyey} ($p$). The complete set of evaluating equations is defined as follows:
+
+\begin{subequations}
+    \label{eq:radiance_calculation}
+    \begin{align}
+        F_0                                  & = \left( \frac{1 - \eta}{1 + \eta} \right)^2,                                                                                                                    \\
+        F_r(\vec{\omega}_i ; \vec{\omega}_o) & = F_0 + (1 - F_0)(1 - (\vec{\omega}_i \cdot \vec{\omega}_o))^5,                                                                                                  \\
+        F_t(\vec{\omega}_i ; \vec{\omega}_o) & = 1 - F_r(\vec{\omega}_i \cdot \vec{\omega}_o),                                                                                                                  \\
+        d_r                                  & = \sqrt{r^2 + z_r^2},                                                                                                                                            \\
+        d_v                                  & = \sqrt{r^2 + z_v^2},                                                                                                                                            \\
+        R_d(r)                               & = \frac{\alpha'}{4\pi} \left[ \frac{z_r(\sigma_{tr} d_r + 1) e^{-\sigma_{tr} d_r}}{d_r^3} + \frac{z_v(\sigma_{tr} d_v + 1) e^{-\sigma_{tr} d_v}}{d_v^3} \right], \\
+        p(\vec{\omega}_i ; \vec{\omega}_o)   & = \frac{1 - g^2}{4\pi (1 + g^2 - 2g (\vec{\omega}_i \cdot \vec{\omega}_o))^{3/2}}.
+    \end{align}
+\end{subequations}
+
+With the sample points generated and material parameters deduced, the total single and multiple scattering components are independently calculated via Monte Carlo integration over $N$ samples. To find the incident radiance $L_i$ in our specific lighting model, a shadow ray is cast to test visibility against the single point light source. If unoccluded, $L_i$ is evaluated using an inverse-square distance falloff. The exact algorithms for single and multiple scattering radiances are outlined in \eqref{alg:single_scattering} and \eqref{alg:multiple_scattering}, respectively.
+
+\begin{algorithm}[H]
+    \caption{Radiance evaluation for single scattering.}
+    \begin{algorithmic}
+        \Function{SingleScattering}{$x_o, \vec{\omega}_o$}
+        \State $L^{(1)} \gets 0$
+        \State Calculate exit Fresnel transmittance $F_{to}$ at $x_o$
+        \For{$i = 1$ to $N$}
+        \State Sample entry point $x_i$, density $p_i$, and distances $s_i$, $s_o$
+        \State Cast shadow ray from $x_i$ to light source
+        \If{shadow ray is occluded}
+        \State \textbf{continue}
+        \EndIf
+        \State Calculate incident radiance $L_i$ and direction $\vec{\omega}_i$ at $x_i$
+        \State Calculate entry Fresnel transmittance $F_{ti}$ at $x_i$
+        \State Evaluate phase function $P \gets p(\vec{\omega}_i \cdot \vec{\omega}_o)$
+        \State Calculate transmittances $T_i \gets e^{-\sigma_t s_i}$ and $T_o \gets e^{-\sigma_t s_o}$
+        \State $L_{contrib} \gets \sigma_s L_i F_{ti} F_{to} P \, T_i \, T_o$
+        \State $L^{(1)} \gets L^{(1)} + \frac{L_{contrib}}{p_i}$
+        \EndFor
+        \State \Return $\frac{L^{(1)}}{N}$
+        \EndFunction
+    \end{algorithmic}
+    \label{alg:single_scattering}
+\end{algorithm}
+
+\begin{algorithm}[H]
+
+    \caption{Radiance evaluation for multiple scattering.}
+    \begin{algorithmic}
+        \Function{MultipleScattering}{$x_o, \vec{\omega}_o$}
+        \State $L_d \gets 0$
+        \State Calculate exit Fresnel transmittance $F_{to}$ at $x_o$
+        \For{$i = 1$ to $N$}
+        \State Sample entry point $x_i$ on tangent disc, density $p_i$
+        \State Cast shadow ray from $x_i$ to light source
+        \If{shadow ray is occluded}
+        \State \textbf{continue}
+        \EndIf
+        \State Calculate incident radiance $L_i$ and direction $\vec{\omega}_i$ at $x_i$
+        \State Calculate entry Fresnel transmittance $F_{ti}$ at $x_i$
+        \State Evaluate diffuse reflectance $R_d(\|x_i - x_o\|)$
+        \State $L_{contrib} \gets \frac{1}{\pi} (\vec{n}_i \cdot \vec{\omega}_i) L_i F_{ti} R_d F_{to}$
+        \State $L_d \gets L_d + \frac{L_{contrib}}{p_i}$
+        \EndFor
+        \State \Return $\frac{L_d}{N}$
+        \EndFunction
+    \end{algorithmic}
+    \label{alg:multiple_scattering}
+\end{algorithm}
 
 \section{Future Perceptual Study}
 
