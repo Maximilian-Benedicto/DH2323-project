@@ -2,7 +2,7 @@
 
 ![Lambertian, Wireframe, BVH, Dipole](img/DianaGrid1000Samples.png)
 
-This repository contains the final project for the course **DH2323 Computer Graphics and Interaction** at KTH Royal Institute of Technology.
+This repository contains the final project for the course **DH2323 Computer Graphics and Interaction**.
 
 **Authors:**
 - Maximilian Benedicto
@@ -11,9 +11,9 @@ This repository contains the final project for the course **DH2323 Computer Grap
 ## Overview
 
 A custom software rendering engine built in C++. The project implements various rendering techniques including:
-- **Subsurface Scattering**: Utilizing the Dipole model for realistic rendering of translucent materials.
+- **Subsurface Scattering**: Dipole model for realistic rendering of translucent materials.
 - **Acceleration Structures**: Bounding Volume Hierarchies (BVH) for efficient ray-scene intersection.
-- **Model Loading**: Support for `.obj` and `.ply` mesh configurations.
+- **Model Loading**: Support for `.obj` and `.ply` meshes.
 - **Materials and Shading**: Lambertian shading, wireframe rendering, and textured materials.
 
 ## Dependencies
@@ -38,7 +38,7 @@ cd DH2323-project
 mkdir build
 cd build
 cmake ..
-make -j4
+make
 ```
 
 ## Running
@@ -49,8 +49,6 @@ After building successfully, run the executable from the `build` directory:
 ```
 
 ## Controls
-
-The application features an interactive camera, movable light source, and on-the-fly shader/model switching. 
 
 ### Camera Controls
 - **W / S**: Move Forward / Backward
