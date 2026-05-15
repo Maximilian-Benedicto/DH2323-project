@@ -5,6 +5,7 @@ lib/
 
 # Other
 .DS_Store
+ProjectSubmission/
 
 # Prerequisites
 *.d
